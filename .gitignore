@@ -1,0 +1,16 @@
+node_modules
+.env
+dist
+dist-ssr
+*.local
+*.log
+npm-debug.log*
+server/public/assets
+.DS_Store
+.idea
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
