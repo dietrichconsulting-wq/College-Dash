@@ -2,12 +2,83 @@ import { motion, Reorder } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { getSchoolColors, getSchoolShortName } from '../utils/schoolColors';
 
+// ── Radial Progress Ring ──
+function ProgressRing({ percent = 0 }) {
+  const size = 88;
+  const strokeWidth = 7;
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const filled = (percent / 100) * circumference;
+  const empty = circumference - filled;
+
+  // Color gradient based on progress
+  const getColor = (pct) => {
+    if (pct >= 80) return 'var(--color-success)';
+    if (pct >= 50) return '#3B82F6';
+    if (pct >= 25) return '#F59E0B';
+    return 'var(--color-primary)';
+  };
+
+  const color = getColor(percent);
+
+  return (
+    <div className="progress-ring">
+      <svg
+        width={size}
+        height={size}
+        viewBox={`0 0 ${size} ${size}`}
+        className="progress-ring__svg"
+      >
+        {/* Background track */}
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke="rgba(0, 0, 0, 0.05)"
+          strokeWidth={strokeWidth}
+        />
+        {/* Animated filled arc */}
+        <motion.circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke={color}
+          strokeWidth={strokeWidth}
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          initial={{ strokeDashoffset: circumference }}
+          animate={{ strokeDashoffset: empty }}
+          transition={{ duration: 1.2, ease: [0.4, 0, 0.2, 1], delay: 0.3 }}
+          style={{
+            transformOrigin: 'center',
+            transform: 'rotate(-90deg)',
+          }}
+        />
+      </svg>
+      {/* Center text */}
+      <div className="progress-ring__label">
+        <motion.span
+          className="progress-ring__value"
+          style={{ color }}
+          initial={{ opacity: 0, scale: 0.5 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.6, type: 'spring', stiffness: 300, damping: 20 }}
+        >
+          {percent}%
+        </motion.span>
+        <span className="progress-ring__caption">complete</span>
+      </div>
+    </div>
+  );
+}
+
 export default function ProfileSummary({ profile, completionPercent, onReorderSchools, onEditSchools }) {
   const stats = [
     { label: 'GPA', value: profile?.gpa?.toFixed(2) || '--', accent: false },
     { label: 'SAT', value: profile?.sat || '--', accent: false },
     { label: 'Major', value: profile?.proposedMajor || '--', small: true },
-    { label: 'Progress', value: `${completionPercent}%`, accent: true },
   ];
 
   const schools = (profile?.schools || []).filter(s => s?.name && s.name.trim() !== '');
@@ -32,8 +103,8 @@ export default function ProfileSummary({ profile, completionPercent, onReorderSc
       transition={{ delay: 0.1 }}
       className="flex items-start justify-between gap-6 mb-8 w-full"
     >
-      {/* Stats on the left — vertical metric layout */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 flex-1">
+      {/* Stats + Progress ring on the left */}
+      <div className="profile-stats-row">
         {stats.map((s, i) => (
           <motion.div
             key={s.label}
@@ -64,45 +135,54 @@ export default function ProfileSummary({ profile, completionPercent, onReorderSc
             </span>
           </motion.div>
         ))}
+
+        {/* Progress Ring Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 + stats.length * 0.06 }}
+          className="card-elevated progress-ring-card"
+        >
+          <span className="progress-ring-card__label">PROGRESS</span>
+          <ProgressRing percent={completionPercent} />
+        </motion.div>
       </div>
 
-      {/* School icons on the right */}
-      <div className="flex flex-col items-center gap-2 flex-shrink-0">
+      {/* School chips */}
+      <div className="school-chips-section">
         {orderedSchools.length > 0 ? (
           <>
+            <span className="school-chips-section__label">YOUR SCHOOLS</span>
             <Reorder.Group
               axis="x"
               values={orderedSchools}
               onReorder={handleReorder}
-              className="flex items-center gap-3"
+              className="school-chips-row"
               as="div"
             >
               {orderedSchools.map((school, i) => (
-                <SchoolIcon key={school.name} school={school} index={i} />
+                <SchoolChip key={school.name} school={school} index={i} isTop={i === 0} />
               ))}
             </Reorder.Group>
             <button
               onClick={onEditSchools}
-              className="text-text-muted hover:text-text transition-colors"
-              style={{ fontSize: 'var(--font-size-micro)' }}
+              className="school-chips-section__edit"
             >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
               edit schools
             </button>
           </>
         ) : (
           <button
             onClick={onEditSchools}
-            className="flex flex-col items-center gap-1 px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl hover:border-gray-400 hover:bg-gray-50 transition-all"
+            className="school-chips-section__add"
           >
-            <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
             </svg>
-            <span
-              className="font-medium text-text-muted"
-              style={{ fontSize: 'var(--font-size-micro)' }}
-            >
-              Add Schools
-            </span>
+            Add Schools
           </button>
         )}
       </div>
@@ -110,50 +190,41 @@ export default function ProfileSummary({ profile, completionPercent, onReorderSc
   );
 }
 
-function SchoolIcon({ school, index }) {
+function SchoolChip({ school, index, isTop }) {
   const colors = getSchoolColors(school.name);
   const shortName = getSchoolShortName(school.name);
+  const primaryColor = colors?.primary || '#2563EB';
 
   return (
     <Reorder.Item
       value={school}
       as="div"
-      className="relative group cursor-grab active:cursor-grabbing"
-      whileDrag={{ scale: 1.15, zIndex: 50 }}
+      className="school-chip-wrapper"
+      whileDrag={{ scale: 1.08, zIndex: 50 }}
     >
-      <div
-        className="w-16 h-16 rounded-full border-3 shadow-md flex items-center justify-center overflow-hidden"
-        style={{
-          borderColor: colors?.primary || '#888',
-          backgroundColor: colors?.primary || '#666',
-        }}
-        title={`${index === 0 ? '#1: ' : ''}${school.name}`}
+      <motion.div
+        className={`school-chip ${isTop ? 'school-chip--active' : ''}`}
+        style={
+          isTop
+            ? {
+              background: primaryColor,
+              color: '#fff',
+              borderColor: primaryColor,
+              boxShadow: `0 2px 10px ${primaryColor}30`,
+            }
+            : {
+              background: `${primaryColor}0A`,
+              color: primaryColor,
+              borderColor: `${primaryColor}25`,
+            }
+        }
+        whileHover={{ y: -2 }}
+        transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+        title={`${isTop ? '#1 – ' : `#${index + 1} – `}${school.name} (drag to reorder)`}
       >
-        <span
-          className="text-white font-bold leading-tight text-center select-none px-1"
-          style={{ fontSize: 'var(--font-size-micro)' }}
-        >
-          {shortName}
-        </span>
-      </div>
-      {index === 0 && (
-        <div
-          className="absolute -top-1 -right-1 w-5 h-5 rounded-full text-white font-bold flex items-center justify-center shadow-md"
-          style={{
-            backgroundColor: colors?.accent || '#f5a623',
-            fontSize: '9px',
-          }}
-        >
-          1
-        </div>
-      )}
-      {/* Tooltip */}
-      <div
-        className="absolute -bottom-9 left-1/2 -translate-x-1/2 bg-gray-800 text-white px-2 py-1 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10"
-        style={{ fontSize: 'var(--font-size-micro)' }}
-      >
-        {index === 0 ? 'Top choice' : `#${index + 1}`}: {school.name}
-      </div>
+        {isTop && <span className="school-chip__badge">★</span>}
+        <span className="school-chip__name">{shortName}</span>
+      </motion.div>
     </Reorder.Item>
   );
 }
