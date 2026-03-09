@@ -25,11 +25,17 @@ export default function KanbanBoard({ columns, onMoveTask, onCreateTask, onDelet
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-bold text-navy">Your Tasks</h2>
+      <div className="flex items-center justify-between mb-5">
+        <h2
+          className="font-semibold text-navy"
+          style={{ fontSize: 'var(--font-size-section-header)' }}
+        >
+          Your Tasks
+        </h2>
         <button
           onClick={() => setModalOpen(true)}
-          className="px-4 py-2 bg-navy text-white text-sm font-medium rounded-lg hover:bg-navy-light transition-colors"
+          className="px-4 py-2 bg-navy text-white font-medium rounded-lg hover:bg-navy-light transition-colors"
+          style={{ fontSize: 'var(--font-size-small)' }}
         >
           + Add Task
         </button>

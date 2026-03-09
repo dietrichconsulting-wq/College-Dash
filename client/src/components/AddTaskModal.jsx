@@ -48,14 +48,24 @@ export default function AddTaskModal({ open, onClose, onSave, task }) {
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
             onClick={e => e.stopPropagation()}
-            className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md"
+            className="card-elevated p-6 w-full max-w-md"
+            style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.15)' }}
           >
-            <h2 className="text-lg font-bold mb-4" style={{ color: 'var(--color-primary)' }}>
+            <h2
+              className="font-bold mb-5"
+              style={{
+                color: 'var(--color-primary)',
+                fontSize: 'var(--font-size-section-header)',
+              }}
+            >
               {isEditing ? 'Edit Task' : 'Add New Task'}
             </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-1">Title</label>
+                <label
+                  className="block font-medium mb-1"
+                  style={{ fontSize: 'var(--font-size-small)' }}
+                >Title</label>
                 <input
                   type="text"
                   value={form.title}
@@ -67,7 +77,10 @@ export default function AddTaskModal({ open, onClose, onSave, task }) {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Description</label>
+                <label
+                  className="block font-medium mb-1"
+                  style={{ fontSize: 'var(--font-size-small)' }}
+                >Description</label>
                 <textarea
                   value={form.description}
                   onChange={e => setForm({ ...form, description: e.target.value })}
@@ -78,7 +91,10 @@ export default function AddTaskModal({ open, onClose, onSave, task }) {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Category</label>
+                  <label
+                    className="block font-medium mb-1"
+                    style={{ fontSize: 'var(--font-size-small)' }}
+                  >Category</label>
                   <select
                     value={form.category}
                     onChange={e => setForm({ ...form, category: e.target.value })}
@@ -101,14 +117,18 @@ export default function AddTaskModal({ open, onClose, onSave, task }) {
                 <button
                   type="button"
                   onClick={onClose}
-                  className="flex-1 py-2 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
+                  className="flex-1 py-2 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors"
+                  style={{ fontSize: 'var(--font-size-small)' }}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-2 text-white rounded-lg text-sm font-medium transition-colors hover:opacity-85"
-                  style={{ backgroundColor: 'var(--color-primary)' }}
+                  className="flex-1 py-2 text-white rounded-lg font-medium transition-colors hover:opacity-85"
+                  style={{
+                    backgroundColor: 'var(--color-primary)',
+                    fontSize: 'var(--font-size-small)',
+                  }}
                 >
                   {isEditing ? 'Save Changes' : 'Add Task'}
                 </button>

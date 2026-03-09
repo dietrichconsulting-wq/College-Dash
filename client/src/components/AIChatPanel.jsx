@@ -32,8 +32,18 @@ export default function AIChatPanel({ open, onClose, messages, loading, onSend }
           >
             <div className="px-4 py-3 bg-navy text-white flex items-center justify-between">
               <div>
-                <h3 className="font-semibold text-sm">AI College Advisor</h3>
-                <p className="text-[10px] text-blue-200">Ask about portfolios & scholarships</p>
+                <h3
+                  className="font-semibold"
+                  style={{ fontSize: 'var(--font-size-body)' }}
+                >
+                  AI College Advisor
+                </h3>
+                <p
+                  className="text-blue-200"
+                  style={{ fontSize: 'var(--font-size-micro)' }}
+                >
+                  Ask about portfolios & scholarships
+                </p>
               </div>
               <button
                 onClick={onClose}
@@ -45,9 +55,14 @@ export default function AIChatPanel({ open, onClose, messages, loading, onSend }
 
             <div ref={scrollRef} className="flex-1 overflow-y-auto p-4">
               {messages.length === 0 && (
-                <div className="text-center text-text-muted text-sm mt-8">
-                  <p className="font-medium mb-2">Welcome to your AI College Advisor!</p>
-                  <p className="text-xs">Try asking:</p>
+                <div className="text-center text-text-muted mt-8">
+                  <p
+                    className="font-medium mb-2"
+                    style={{ fontSize: 'var(--font-size-body)' }}
+                  >
+                    Welcome to your AI College Advisor!
+                  </p>
+                  <p style={{ fontSize: 'var(--font-size-micro)' }}>Try asking:</p>
                   <div className="mt-3 space-y-2">
                     {[
                       'What portfolio pieces should I include for CS?',
@@ -57,7 +72,8 @@ export default function AIChatPanel({ open, onClose, messages, loading, onSend }
                       <button
                         key={q}
                         onClick={() => onSend(q)}
-                        className="block w-full text-left text-xs bg-blue-50 text-navy px-3 py-2 rounded-lg hover:bg-blue-100 transition-colors"
+                        className="block w-full text-left bg-blue-50 text-navy px-3 py-2 rounded-lg hover:bg-blue-100 transition-colors"
+                        style={{ fontSize: 'var(--font-size-micro)' }}
                       >
                         {q}
                       </button>

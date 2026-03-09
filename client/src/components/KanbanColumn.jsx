@@ -15,8 +15,18 @@ export default function KanbanColumn({ columnId, tasks, onSyncCalendar, onDelete
     <div className="flex flex-col bg-column rounded-xl min-h-[300px] w-full">
       <div className={`${style.header} px-4 py-3 rounded-t-xl flex items-center gap-2`}>
         <span className={`${style.dot} w-2.5 h-2.5 rounded-full`} />
-        <h3 className="font-semibold text-sm">{columnId}</h3>
-        <span className="ml-auto text-xs font-medium opacity-70">{tasks.length}</span>
+        <h3
+          className="font-semibold"
+          style={{ fontSize: 'var(--font-size-small)' }}
+        >
+          {columnId}
+        </h3>
+        <span
+          className="ml-auto font-medium opacity-70"
+          style={{ fontSize: 'var(--font-size-micro)' }}
+        >
+          {tasks.length}
+        </span>
       </div>
 
       <Droppable droppableId={columnId}>
@@ -24,9 +34,8 @@ export default function KanbanColumn({ columnId, tasks, onSyncCalendar, onDelete
           <div
             ref={provided.innerRef}
             {...provided.droppableProps}
-            className={`flex-1 p-2.5 transition-colors ${
-              snapshot.isDraggingOver ? 'bg-blue-50/50' : ''
-            }`}
+            className={`flex-1 p-2.5 transition-colors ${snapshot.isDraggingOver ? 'bg-blue-50/50' : ''
+              }`}
           >
             <AnimatePresence>
               {tasks.map((task, index) => (

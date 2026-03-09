@@ -4,10 +4,10 @@ import { getSchoolColors, getSchoolShortName } from '../utils/schoolColors';
 
 export default function ProfileSummary({ profile, completionPercent, onReorderSchools, onEditSchools }) {
   const stats = [
-    { label: 'GPA', value: profile?.gpa?.toFixed(2) || '--' },
-    { label: 'SAT', value: profile?.sat || '--' },
-    { label: 'Major', value: profile?.proposedMajor || '--' },
-    { label: 'Progress', value: `${completionPercent}%` },
+    { label: 'GPA', value: profile?.gpa?.toFixed(2) || '--', accent: false },
+    { label: 'SAT', value: profile?.sat || '--', accent: false },
+    { label: 'Major', value: profile?.proposedMajor || '--', small: true },
+    { label: 'Progress', value: `${completionPercent}%`, accent: true },
   ];
 
   const schools = (profile?.schools || []).filter(s => s?.name && s.name.trim() !== '');
@@ -30,15 +30,39 @@ export default function ProfileSummary({ profile, completionPercent, onReorderSc
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.1 }}
-      className="flex items-start justify-between gap-6 mb-6 w-full"
+      className="flex items-start justify-between gap-6 mb-8 w-full"
     >
-      {/* Stats on the left */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 flex-1">
-        {stats.map(s => (
-          <div key={s.label} className="bg-card rounded-xl p-4 shadow-sm border border-gray-100">
-            <div className="text-xs text-text-muted font-medium uppercase tracking-wide">{s.label}</div>
-            <div className="text-xl font-bold mt-1" style={{ color: 'var(--color-primary)' }}>{s.value}</div>
-          </div>
+      {/* Stats on the left — vertical metric layout */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 flex-1">
+        {stats.map((s, i) => (
+          <motion.div
+            key={s.label}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 + i * 0.06 }}
+            className="card-elevated px-5 py-5 flex flex-col gap-1"
+          >
+            <span
+              className="uppercase tracking-wider font-medium"
+              style={{
+                fontSize: 'var(--font-size-micro)',
+                color: 'var(--color-text-muted)',
+                letterSpacing: '0.08em',
+              }}
+            >
+              {s.label}
+            </span>
+            <span
+              className="font-bold leading-none"
+              style={{
+                fontSize: s.small ? 'var(--font-size-section-header)' : 'var(--font-size-card-metric)',
+                color: s.accent ? 'var(--color-success)' : 'var(--color-primary)',
+                lineHeight: 'var(--line-height-tight)',
+              }}
+            >
+              {s.value}
+            </span>
+          </motion.div>
         ))}
       </div>
 
@@ -59,7 +83,8 @@ export default function ProfileSummary({ profile, completionPercent, onReorderSc
             </Reorder.Group>
             <button
               onClick={onEditSchools}
-              className="text-[10px] text-text-muted hover:text-text transition-colors"
+              className="text-text-muted hover:text-text transition-colors"
+              style={{ fontSize: 'var(--font-size-micro)' }}
             >
               edit schools
             </button>
@@ -72,7 +97,12 @@ export default function ProfileSummary({ profile, completionPercent, onReorderSc
             <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
             </svg>
-            <span className="text-xs font-medium text-text-muted">Add Schools</span>
+            <span
+              className="font-medium text-text-muted"
+              style={{ fontSize: 'var(--font-size-micro)' }}
+            >
+              Add Schools
+            </span>
           </button>
         )}
       </div>
@@ -99,20 +129,29 @@ function SchoolIcon({ school, index }) {
         }}
         title={`${index === 0 ? '#1: ' : ''}${school.name}`}
       >
-        <span className="text-white text-[11px] font-bold leading-tight text-center select-none px-1">
+        <span
+          className="text-white font-bold leading-tight text-center select-none px-1"
+          style={{ fontSize: 'var(--font-size-micro)' }}
+        >
           {shortName}
         </span>
       </div>
       {index === 0 && (
         <div
-          className="absolute -top-1 -right-1 w-5 h-5 rounded-full text-white text-[9px] font-bold flex items-center justify-center shadow-md"
-          style={{ backgroundColor: colors?.accent || '#f5a623' }}
+          className="absolute -top-1 -right-1 w-5 h-5 rounded-full text-white font-bold flex items-center justify-center shadow-md"
+          style={{
+            backgroundColor: colors?.accent || '#f5a623',
+            fontSize: '9px',
+          }}
         >
           1
         </div>
       )}
       {/* Tooltip */}
-      <div className="absolute -bottom-9 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-2 py-1 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+      <div
+        className="absolute -bottom-9 left-1/2 -translate-x-1/2 bg-gray-800 text-white px-2 py-1 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10"
+        style={{ fontSize: 'var(--font-size-micro)' }}
+      >
         {index === 0 ? 'Top choice' : `#${index + 1}`}: {school.name}
       </div>
     </Reorder.Item>

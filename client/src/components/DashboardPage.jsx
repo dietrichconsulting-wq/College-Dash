@@ -46,7 +46,7 @@ export default function DashboardPage({ userId, profile, onUpdateProfile }) {
     document.documentElement.style.setProperty('--color-accent', colors.accent);
     document.documentElement.style.setProperty('--color-navy', colors.primary);
     document.documentElement.style.setProperty('--color-navy-light', colors.accent);
-    document.documentElement.style.setProperty('--color-gold', colors.secondary === '#FFFFFF' ? '#f5a623' : colors.secondary);
+    document.documentElement.style.setProperty('--color-gold', colors.secondary === '#FFFFFF' ? '#F59E0B' : colors.secondary);
 
     return () => {
       document.documentElement.style.removeProperty('--color-primary');
@@ -84,7 +84,7 @@ export default function DashboardPage({ userId, profile, onUpdateProfile }) {
     <div className="min-h-screen bg-bg">
       <Header profile={effectiveProfile} onToggleChat={() => setChatOpen(!chatOpen)} />
 
-      <main className="max-w-5xl mx-auto px-4 py-6">
+      <main className="max-w-5xl mx-auto px-4 py-8">
         {/* Row 1: Stats + School Icons */}
         <ProfileSummary
           profile={effectiveProfile}
@@ -97,7 +97,7 @@ export default function DashboardPage({ userId, profile, onUpdateProfile }) {
         <Timeline milestones={milestones} />
 
         {/* Row 3: Task List */}
-        <div className="mt-6">
+        <div className="mt-10">
           <TaskList
             columns={columns}
             onMoveTask={handleMoveTask}

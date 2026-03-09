@@ -131,7 +131,7 @@ export function getSchoolShortName(schoolName) {
 
 // Default theme if no school colors found
 export const DEFAULT_THEME = {
-  primary: '#1e3a5f',
-  secondary: '#f5a623',
-  accent: '#2a4d7a',
+  primary: '#2563EB',
+  secondary: '#F59E0B',
+  accent: '#3B82F6',
 };
