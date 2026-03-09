@@ -64,5 +64,11 @@ export function useTasks(userId) {
     await fetchTasks();
   };
 
-  return { columns, loading, moveTask, createTask, updateTask, deleteTask, refetch: fetchTasks };
+  const acceptRoadmapTasks = async (tasks) => {
+    const { data } = await api.post('/generate/roadmap/accept', { userId, tasks });
+    await fetchTasks();
+    return data;
+  };
+
+  return { columns, loading, moveTask, createTask, updateTask, deleteTask, acceptRoadmapTasks, refetch: fetchTasks };
 }

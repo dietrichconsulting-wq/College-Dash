@@ -3,13 +3,14 @@
 ## Architecture
 - **Frontend**: React 18+ with Vite, Tailwind CSS v4, Framer Motion
 - **Backend**: Express on Node.js (ES modules), port 3001, binds to 0.0.0.0
-- **Database**: Notion API (3 databases: Profiles, Tasks, Progress)
+- **Database**: Notion API (4 databases: Profiles, Tasks, Progress, Scholarships)
 - **External APIs**: College Scorecard, Google Calendar, Anthropic AI
 
 ## Data Schema
 - **Profiles**: UserID, DisplayName, GPA, SAT, ProposedMajor, School1-4 (name + Scorecard ID)
 - **Tasks**: TaskID, UserID, Title, Description, Status (To Do/In Progress/Done), Category (7 types), DueDate, CalendarEventID, SortOrder, CompletedAt
 - **Progress**: EntryID, UserID, MilestoneKey (10 milestones), ReachedAt, Notes
+- **Scholarships**: ScholarshipID, UserID, Name, Amount, Deadline, EssayRequired, Difficulty (Easy/Medium/Hard), Stage (Researching/Applying/Submitted/Won), URL, Notes
 
 ## Behavioral Rules
 - Kanban and timeline update reactively on task changes

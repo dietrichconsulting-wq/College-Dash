@@ -286,6 +286,7 @@ export default function TaskList({
   onDeleteTask,
   onTaskCompleted,
   openAddTaskTrigger,
+  onOpenRoadmap,
 }) {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
@@ -346,6 +347,12 @@ export default function TaskList({
         <h2 className="task-list__title">Your Tasks</h2>
         <div className="task-list__header-right">
           <span className="task-list__count">{activeTasks.length} remaining</span>
+          {onOpenRoadmap && (
+            <button className="roadmap-cta" onClick={onOpenRoadmap}>
+              <span className="roadmap-cta__sparkle">✨</span>
+              AI Roadmap
+            </button>
+          )}
           <button
             onClick={() => {
               setEditingTask(null);

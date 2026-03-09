@@ -13,6 +13,7 @@ const NOTION_VERSION = '2022-06-28';
 const PROFILES_DB = process.env.NOTION_PROFILES_DB_ID;
 const TASKS_DB = process.env.NOTION_TASKS_DB_ID;
 const PROGRESS_DB = process.env.NOTION_PROGRESS_DB_ID;
+const SCHOLARSHIPS_DB = process.env.NOTION_SCHOLARSHIPS_DB_ID;
 
 // SDK v5 removed databases.query — use REST API directly
 async function queryDatabase(databaseId, { filter, sorts, start_cursor } = {}) {
@@ -252,4 +253,112 @@ export async function getProgress(userId) {
       notes: p.Notes?.rich_text?.[0]?.plain_text || '',
     };
   });
+}
+
+// ─── Scholarships ─────────────────────────────────────────
+
+export async function createScholarship({ scholarshipId, userId, name, amount, deadline, essayRequired, difficulty, stage, url, notes }) {
+  if (!SCHOLARSHIPS_DB) throw new Error('NOTION_SCHOLARSHIPS_DB_ID not configured');
+  return parseScholarship(await notion.pages.create({
+    parent: { database_id: SCHOLARSHIPS_DB },
+    properties: {
+      ScholarshipID: { title: [{ text: { content: scholarshipId } }] },
+      UserID:        { rich_text: [{ text: { content: userId } }] },
+      Name:          { rich_text: [{ text: { content: name || '' } }] },
+      Amount:        { number: amount || null },
+      Deadline:      deadline ? { date: { start: deadline } } : { date: null },
+      EssayRequired: { select: { name: essayRequired ? 'Yes' : 'No' } },
+      Difficulty:    { select: { name: difficulty || 'Medium' } },
+      Stage:         { select: { name: stage || 'Researching' } },
+      URL:           { rich_text: [{ text: { content: url || '' } }] },
+      Notes:         { rich_text: [{ text: { content: notes || '' } }] },
+    }
+  }));
+}
+
+export async function getScholarships(userId) {
+  if (!SCHOLARSHIPS_DB) return { Researching: [], Applying: [], Submitted: [], Won: [] };
+  const all = [];
+  let cursor;
+  do {
+    const res = await queryDatabase(SCHOLARSHIPS_DB, {
+      filter: { property: 'UserID', rich_text: { equals: userId } },
+      sorts: [{ property: 'Deadline', direction: 'ascending' }],
+      start_cursor: cursor,
+    });
+    all.push(...res.results.map(parseScholarship));
+    cursor = res.has_more ? res.next_cursor : undefined;
+  } while (cursor);
+
+  return {
+    Researching: all.filter(s => s.stage === 'Researching'),
+    Applying:    all.filter(s => s.stage === 'Applying'),
+    Submitted:   all.filter(s => s.stage === 'Submitted'),
+    Won:         all.filter(s => s.stage === 'Won'),
+  };
+}
+
+export async function updateScholarship(scholarshipId, updates) {
+  const page = await findScholarshipPage(scholarshipId);
+  if (!page) return null;
+
+  const properties = {};
+  if (updates.name !== undefined)
+    properties.Name = { rich_text: [{ text: { content: updates.name } }] };
+  if (updates.amount !== undefined)
+    properties.Amount = { number: updates.amount };
+  if (updates.deadline !== undefined)
+    properties.Deadline = updates.deadline ? { date: { start: updates.deadline } } : { date: null };
+  if (updates.essayRequired !== undefined)
+    properties.EssayRequired = { select: { name: updates.essayRequired ? 'Yes' : 'No' } };
+  if (updates.difficulty !== undefined)
+    properties.Difficulty = { select: { name: updates.difficulty } };
+  if (updates.stage !== undefined)
+    properties.Stage = { select: { name: updates.stage } };
+  if (updates.url !== undefined)
+    properties.URL = { rich_text: [{ text: { content: updates.url } }] };
+  if (updates.notes !== undefined)
+    properties.Notes = { rich_text: [{ text: { content: updates.notes } }] };
+
+  return parseScholarship(await notion.pages.update({ page_id: page.id, properties }));
+}
+
+export async function moveScholarship(scholarshipId, newStage) {
+  const page = await findScholarshipPage(scholarshipId);
+  if (!page) return null;
+  return parseScholarship(await notion.pages.update({
+    page_id: page.id,
+    properties: { Stage: { select: { name: newStage } } },
+  }));
+}
+
+export async function deleteScholarship(scholarshipId) {
+  const page = await findScholarshipPage(scholarshipId);
+  if (!page) return null;
+  return notion.pages.update({ page_id: page.id, archived: true });
+}
+
+async function findScholarshipPage(scholarshipId) {
+  if (!SCHOLARSHIPS_DB) return null;
+  const res = await queryDatabase(SCHOLARSHIPS_DB, {
+    filter: { property: 'ScholarshipID', title: { equals: scholarshipId } }
+  });
+  return res.results[0] || null;
+}
+
+function parseScholarship(page) {
+  const p = page.properties;
+  return {
+    id: page.id,
+    scholarshipId: p.ScholarshipID?.title?.[0]?.plain_text || '',
+    userId: p.UserID?.rich_text?.[0]?.plain_text || '',
+    name: p.Name?.rich_text?.[0]?.plain_text || '',
+    amount: p.Amount?.number || null,
+    deadline: p.Deadline?.date?.start || null,
+    essayRequired: p.EssayRequired?.select?.name === 'Yes',
+    difficulty: p.Difficulty?.select?.name || 'Medium',
+    stage: p.Stage?.select?.name || 'Researching',
+    url: p.URL?.rich_text?.[0]?.plain_text || '',
+    notes: p.Notes?.rich_text?.[0]?.plain_text || '',
+  };
 }

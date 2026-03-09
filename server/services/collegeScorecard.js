@@ -40,7 +40,19 @@ export async function getCollege(id) {
   const params = new URLSearchParams({
     'api_key': API_KEY,
     'id': id,
-    'fields': 'id,school.name,school.city,school.state,school.school_url,latest.admissions.admission_rate.overall,latest.admissions.sat_scores.average.overall,latest.admissions.sat_scores.25th_percentile.critical_reading,latest.admissions.sat_scores.75th_percentile.critical_reading,latest.cost.tuition.in_state,latest.cost.tuition.out_of_state,latest.student.size',
+    'fields': [
+      'id', 'school.name', 'school.city', 'school.state', 'school.school_url',
+      'latest.admissions.admission_rate.overall',
+      'latest.admissions.sat_scores.average.overall',
+      'latest.admissions.sat_scores.25th_percentile.critical_reading',
+      'latest.admissions.sat_scores.75th_percentile.critical_reading',
+      'latest.admissions.sat_scores.midpoint.critical_reading',
+      'latest.admissions.sat_scores.25th_percentile.math',
+      'latest.admissions.sat_scores.75th_percentile.math',
+      'latest.admissions.sat_scores.midpoint.math',
+      'latest.cost.tuition.in_state', 'latest.cost.tuition.out_of_state',
+      'latest.student.size',
+    ].join(','),
   });
 
   const res = await fetch(`${BASE_URL}?${params}`);
@@ -50,6 +62,12 @@ export async function getCollege(id) {
   const r = data.results?.[0];
   if (!r) return null;
 
+  // Compute composite SAT 25th/75th from reading + math sections
+  const cr25 = r['latest.admissions.sat_scores.25th_percentile.critical_reading'];
+  const cr75 = r['latest.admissions.sat_scores.75th_percentile.critical_reading'];
+  const m25 = r['latest.admissions.sat_scores.25th_percentile.math'];
+  const m75 = r['latest.admissions.sat_scores.75th_percentile.math'];
+
   return {
     id: String(r.id),
     name: r['school.name'],
@@ -58,6 +76,8 @@ export async function getCollege(id) {
     url: r['school.school_url'],
     admissionRate: r['latest.admissions.admission_rate.overall'],
     avgSAT: r['latest.admissions.sat_scores.average.overall'],
+    sat25: (cr25 && m25) ? cr25 + m25 : null,
+    sat75: (cr75 && m75) ? cr75 + m75 : null,
     tuitionInState: r['latest.cost.tuition.in_state'],
     tuitionOutOfState: r['latest.cost.tuition.out_of_state'],
     studentSize: r['latest.student.size'],

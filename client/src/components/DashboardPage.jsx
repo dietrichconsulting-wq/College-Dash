@@ -7,6 +7,10 @@ import AIChatPanel from './AIChatPanel';
 import EditSchoolsModal from './EditSchoolsModal';
 import CommandBar from './CommandBar';
 import ActivityFeed from './ActivityFeed';
+import AIRoadmapModal from './AIRoadmapModal';
+import DeadlineRadar from './DeadlineRadar';
+import AdmissionChances from './AdmissionChances';
+import ScholarshipPipeline from './ScholarshipPipeline';
 import { useTasks } from '../hooks/useTasks';
 import { useProgress } from '../hooks/useProgress';
 import { useConfetti } from '../hooks/useConfetti';
@@ -21,11 +25,12 @@ function slugify(name) {
 export default function DashboardPage({ userId, profile, onUpdateProfile }) {
   const [chatOpen, setChatOpen] = useState(false);
   const [schoolsModalOpen, setSchoolsModalOpen] = useState(false);
+  const [roadmapOpen, setRoadmapOpen] = useState(false);
   const [schoolOrder, setSchoolOrder] = useState(null);
   const [cmdBarOpen, setCmdBarOpen] = useState(false);
   const [addTaskTrigger, setAddTaskTrigger] = useState(0);
   const taskSectionRef = useRef(null);
-  const { columns, moveTask, createTask, updateTask, deleteTask } = useTasks(userId);
+  const { columns, moveTask, createTask, updateTask, deleteTask, acceptRoadmapTasks } = useTasks(userId);
   const { milestones, completionPercent } = useProgress(userId);
   const { messages, loading: chatLoading, sendMessage } = useAIChat(userId);
 
@@ -127,13 +132,22 @@ export default function DashboardPage({ userId, profile, onUpdateProfile }) {
           onEditSchools={() => setSchoolsModalOpen(true)}
         />
 
-        {/* Row 2: Journey Timeline */}
+        {/* Row 2: Admission Chances */}
+        <AdmissionChances userId={userId} />
+
+        {/* Row 3: Journey Timeline */}
         <Timeline milestones={milestones} />
 
-        {/* Row 3: Activity Feed */}
+        {/* Row 4: Deadline Radar */}
+        <DeadlineRadar columns={columns} />
+
+        {/* Row 4: Activity Feed */}
         <ActivityFeed milestones={milestones} columns={columns} />
 
-        {/* Row 4: Task List */}
+        {/* Row 5: Scholarship Pipeline */}
+        <ScholarshipPipeline userId={userId} />
+
+        {/* Row 6: Task List */}
         <div className="mt-10" ref={taskSectionRef}>
           <TaskList
             columns={columns}
@@ -143,6 +157,7 @@ export default function DashboardPage({ userId, profile, onUpdateProfile }) {
             onDeleteTask={deleteTask}
             onTaskCompleted={celebrate}
             openAddTaskTrigger={addTaskTrigger}
+            onOpenRoadmap={() => setRoadmapOpen(true)}
           />
         </div>
       </main>
@@ -153,6 +168,13 @@ export default function DashboardPage({ userId, profile, onUpdateProfile }) {
         messages={messages}
         loading={chatLoading}
         onSend={sendMessage}
+      />
+
+      <AIRoadmapModal
+        open={roadmapOpen}
+        onClose={() => setRoadmapOpen(false)}
+        userId={userId}
+        onTasksAccepted={acceptRoadmapTasks}
       />
 
       <EditSchoolsModal
