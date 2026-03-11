@@ -1,4 +1,4 @@
-import Anthropic from '@anthropic-ai/sdk';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import dotenv from 'dotenv';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -6,17 +6,18 @@ import { fileURLToPath } from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: resolve(__dirname, '../../.env') });
 
-let client = null;
+let model = null;
 
 export function isConfigured() {
-  return !!process.env.ANTHROPIC_API_KEY;
+  return !!process.env.GEMINI_API_KEY;
 }
 
-function getClient() {
-  if (!client) {
-    client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+function getModel() {
+  if (!model) {
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
   }
-  return client;
+  return model;
 }
 
 function buildSystemPrompt(profile) {
@@ -38,17 +39,21 @@ Guidelines:
 }
 
 export async function chat(profile, messages) {
-  const anthropic = getClient();
+  const gemini = getModel();
 
-  const response = await anthropic.messages.create({
-    model: 'claude-sonnet-4-20250514',
-    max_tokens: 1024,
-    system: buildSystemPrompt(profile),
-    messages: messages.map(m => ({
-      role: m.role,
-      content: m.content,
+  // Build Gemini-format conversation history
+  const systemInstruction = buildSystemPrompt(profile);
+
+  const chatSession = gemini.startChat({
+    history: messages.slice(0, -1).map(m => ({
+      role: m.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: m.content }],
     })),
+    systemInstruction: { parts: [{ text: systemInstruction }] },
   });
 
-  return response.content[0].text;
+  const lastMessage = messages[messages.length - 1];
+  const result = await chatSession.sendMessage(lastMessage.content);
+
+  return result.response.text();
 }

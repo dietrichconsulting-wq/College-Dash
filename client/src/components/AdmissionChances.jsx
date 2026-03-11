@@ -89,8 +89,17 @@ function SchoolChanceCard({ data, index }) {
             )}
           </div>
 
-          {/* Improvement tip */}
-          {data.improvement && (
+          {/* AI Tip or Math tip */}
+          {data.aiTip ? (
+            <div className="chance-card__tip">
+              <svg className="chance-card__tip-icon" style={{ color: '#8b5cf6' }} width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              <span>
+                <strong>AI Insight:</strong> {data.aiTip}
+              </span>
+            </div>
+          ) : data.improvement ? (
             <div className="chance-card__tip">
               <svg className="chance-card__tip-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
@@ -100,7 +109,7 @@ function SchoolChanceCard({ data, index }) {
                 <span className="chance-card__tip-delta"> (+{data.improvement.delta})</span>
               </span>
             </div>
-          )}
+          ) : null}
         </div>
       </div>
     </motion.div>
@@ -137,8 +146,13 @@ export default function AdmissionChances({ userId }) {
   return (
     <div className="admission-chances">
       <div className="admission-chances__header">
-        <h2 className="admission-chances__title">Admission Chances</h2>
-        <span className="admission-chances__badge">Estimated</span>
+        <h2 className="admission-chances__title">Likelihood of Acceptance</h2>
+        <span className="admission-chances__badge" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+          AI Predicted
+        </span>
       </div>
 
       <div className="admission-chances__grid">

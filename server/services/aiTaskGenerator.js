@@ -1,4 +1,4 @@
-import Anthropic from '@anthropic-ai/sdk';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import dotenv from 'dotenv';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -6,13 +6,14 @@ import { fileURLToPath } from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: resolve(__dirname, '../../.env') });
 
-let client = null;
+let model = null;
 
-function getClient() {
-  if (!client) {
-    client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+function getModel() {
+  if (!model) {
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
   }
-  return client;
+  return model;
 }
 
 function buildPrompt(profile, existingTasks) {
@@ -59,20 +60,10 @@ Respond with ONLY a JSON array. No markdown, no explanation. Each object must ha
 }
 
 export async function generateRoadmap(profile, existingTasks = []) {
-  const anthropic = getClient();
+  const gemini = getModel();
 
-  const response = await anthropic.messages.create({
-    model: 'claude-sonnet-4-20250514',
-    max_tokens: 2048,
-    messages: [
-      {
-        role: 'user',
-        content: buildPrompt(profile, existingTasks),
-      },
-    ],
-  });
-
-  const text = response.content[0].text.trim();
+  const result = await gemini.generateContent(buildPrompt(profile, existingTasks));
+  const text = result.response.text().trim();
 
   // Parse JSON — handle possible markdown code fences
   let jsonStr = text;

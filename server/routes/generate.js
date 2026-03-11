@@ -10,7 +10,7 @@ const router = Router();
 router.post('/roadmap', async (req, res, next) => {
   try {
     if (!isConfigured()) {
-      return res.status(503).json({ error: 'AI not configured. Set ANTHROPIC_API_KEY in .env' });
+      return res.status(503).json({ error: 'AI not configured. Set GEMINI_API_KEY in .env' });
     }
 
     const { userId } = req.body;

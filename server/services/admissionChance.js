@@ -1,5 +1,21 @@
-import { getCollege } from './collegeScorecard.js';
+import { getCollege, searchColleges } from './collegeScorecard.js';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import dotenv from 'dotenv';
+import { resolve, dirname } from 'path';
+import { fileURLToPath } from 'url';
 
+const __dirname = dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: resolve(__dirname, '../../.env') });
+
+let model = null;
+
+function getModel() {
+  if (!model && process.env.GEMINI_API_KEY) {
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+  }
+  return model;
+}
 /**
  * Estimate admission probability using a logistic model based on:
  * 1. SAT score relative to school's 25th-75th percentile range
@@ -104,12 +120,22 @@ function calculateImprovement(currentSAT, studentGPA, school) {
  * Main entry: compute chances for all of a student's target schools.
  */
 export async function computeChances(profile) {
-  const schools = (profile.schools || []).filter(s => s?.id && s.id.trim() !== '');
+  const schools = (profile.schools || []).filter(s => s?.name && s.name.trim() !== '');
 
   const results = await Promise.all(
     schools.map(async (s) => {
       try {
-        const college = await getCollege(s.id);
+        let collegeId = s.id;
+        if (!collegeId || collegeId.trim() === '') {
+          const searchResults = await searchColleges(s.name);
+          if (searchResults && searchResults.length > 0) {
+            collegeId = searchResults[0].id;
+          } else {
+            return null; // Could not resolve ID
+          }
+        }
+
+        const college = await getCollege(collegeId);
         if (!college) return null;
 
         const chance = calculateChance(profile.sat, profile.gpa, college);
@@ -133,5 +159,53 @@ export async function computeChances(profile) {
     })
   );
 
-  return results.filter(Boolean);
+  const validResults = results.filter(Boolean);
+
+  // If we have AI configured, enhance the chances with AI prediction and personalized tip
+  const gemini = getModel();
+  if (gemini && validResults.length > 0) {
+    try {
+      const prompt = `You are an expert college admissions AI. Evaluate this student's chances of admission to their target schools.
+STUDENT PROFILE:
+- GPA: ${profile.gpa || 'Not provided'}
+- SAT: ${profile.sat || 'Not provided'}
+- Intended Major: ${profile.proposedMajor || 'Not provided'}
+
+TARGET SCHOOLS (with baseline mathematical heuristic):
+${validResults.map(r =>
+        `ID: ${r.schoolId} | Name: ${r.schoolName} | Admission Rate: ${Math.round(r.admissionRate * 100)}% | Avg SAT: ${r.avgSAT || 'N/A'} | Baseline Heuristic Chance: ${r.chance}%`
+      ).join('\n')}
+
+INSTRUCTIONS:
+Refine the baseline heuristic chance into an AI-predicted percentage (0-100) based on the student's major competitiveness and profile. Also, provide a short 1-sentence personalized tip on how to improve their application for that SPECIFIC school and major.
+
+Respond with ONLY a JSON array of objects. No markdown formatting.
+[
+  {
+    "schoolId": "string",
+    "aiChance": int (0-100),
+    "aiTip": "string"
+  }
+]`;
+
+      const aiResult = await gemini.generateContent(prompt);
+      let text = aiResult.response.text().trim();
+      if (text.startsWith('\`\`\`')) {
+        text = text.replace(/^\`\`\`(?:json)?\s*/, '').replace(/\s*\`\`\`$/, '');
+      }
+      const parsed = JSON.parse(text);
+
+      validResults.forEach(res => {
+        const aiData = parsed.find(p => p.schoolId === res.schoolId);
+        if (aiData) {
+          res.chance = aiData.aiChance; // Replace heuristic with AI chance
+          res.aiTip = aiData.aiTip;
+        }
+      });
+    } catch (err) {
+      console.error('Failed to augment admission chances with AI:', err);
+    }
+  }
+
+  return validResults;
 }
