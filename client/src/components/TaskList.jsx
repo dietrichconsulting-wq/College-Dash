@@ -1,6 +1,28 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AddTaskModal from './AddTaskModal';
+import { SkeletonLine } from './Skeleton';
+
+function TaskListSkeleton() {
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+        <div className="skeleton" style={{ width: 90, height: 20, borderRadius: 6 }} />
+        <div className="skeleton" style={{ width: 120, height: 32, borderRadius: 8 }} />
+      </div>
+      {Array.from({ length: 6 }).map((_, i) => (
+        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', marginBottom: 6, borderRadius: 10, background: 'var(--color-column)' }}>
+          <div className="skeleton" style={{ width: 20, height: 20, borderRadius: '50%', flexShrink: 0 }} />
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <SkeletonLine width={`${55 + (i % 3) * 15}%`} height={13} />
+            <SkeletonLine width="28%" height={9} />
+          </div>
+          <SkeletonLine width={60} height={22} />
+        </div>
+      ))}
+    </div>
+  );
+}
 
 // ── Category palette ──
 const CATEGORY_STYLES = {
@@ -280,6 +302,7 @@ function TaskRow({ task, index, onDone, onEdit, onDelete, onSnooze }) {
 // ── Main TaskList ──
 export default function TaskList({
   columns,
+  loading = false,
   onMoveTask,
   onCreateTask,
   onUpdateTask,
@@ -288,6 +311,7 @@ export default function TaskList({
   openAddTaskTrigger,
   onOpenRoadmap,
 }) {
+  if (loading) return <TaskListSkeleton />;
   const [modalOpen, setModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
   const [showDone, setShowDone] = useState(false);

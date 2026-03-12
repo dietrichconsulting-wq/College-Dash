@@ -1,5 +1,34 @@
 import { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { SkeletonLine, SkeletonCircle } from './Skeleton';
+
+function DeadlineRadarSkeleton() {
+  return (
+    <div className="deadline-radar" style={{ marginTop: '2.5rem' }}>
+      <div className="skeleton" style={{ width: 130, height: 20, borderRadius: 6, marginBottom: 16 }} />
+      {Array.from({ length: 5 }).map((_, i) => (
+        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', marginBottom: 8, borderRadius: 10, background: 'var(--color-column)' }}>
+          <SkeletonCircle size={32} />
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <SkeletonLine width="60%" height={12} />
+            <SkeletonLine width="35%" height={9} />
+          </div>
+          <SkeletonLine width={50} height={20} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// How full the urgency bar appears: overdue/urgent = nearly full, later = small
+function urgencyFill(daysLeft) {
+  if (daysLeft < 0)  return 1.0;
+  if (daysLeft <= 3) return 0.92;
+  if (daysLeft <= 7) return 0.78;
+  if (daysLeft <= 14) return 0.58;
+  if (daysLeft <= 30) return 0.35;
+  return 0.14;
+}
 
 const CATEGORY_ICONS = {
   Testing: '📝',
@@ -34,7 +63,8 @@ function formatRelative(daysLeft) {
   return `${daysLeft}d left`;
 }
 
-export default function DeadlineRadar({ columns }) {
+export default function DeadlineRadar({ columns, loading }) {
+  if (loading) return <DeadlineRadarSkeleton />;
   const upcomingTasks = useMemo(() => {
     const now = new Date();
     now.setHours(0, 0, 0, 0);
@@ -113,6 +143,8 @@ export default function DeadlineRadar({ columns }) {
                 style={{
                   borderLeftColor: task.urgency.color,
                   backgroundColor: task.urgency.bg,
+                  overflow: 'hidden',
+                  position: 'relative',
                 }}
               >
                 <div className="deadline-radar__card-top">
@@ -128,6 +160,20 @@ export default function DeadlineRadar({ columns }) {
                     {CATEGORY_ICONS[task.category] || '📌'}
                   </span>
                   <span className="deadline-radar__task-title">{task.title}</span>
+                </div>
+                {/* Animated urgency fill bar at bottom */}
+                <div style={{ height: 3, background: 'rgba(0,0,0,0.06)', borderRadius: 999, marginTop: 6, overflow: 'hidden' }}>
+                  <motion.div
+                    style={{
+                      height: '100%',
+                      borderRadius: 999,
+                      background: task.urgency.color,
+                      transformOrigin: 'left',
+                    }}
+                    initial={{ scaleX: 0 }}
+                    animate={{ scaleX: urgencyFill(task.daysLeft) }}
+                    transition={{ delay: i * 0.06 + 0.4, duration: 0.9, ease: [0.4, 0, 0.2, 1] }}
+                  />
                 </div>
               </div>
             </motion.div>

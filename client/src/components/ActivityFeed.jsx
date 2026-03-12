@@ -1,5 +1,28 @@
 import { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { SkeletonLine, SkeletonCircle } from './Skeleton';
+
+function ActivityFeedSkeleton() {
+  return (
+    <div className="activity-feed">
+      <div className="activity-feed__header">
+        <div className="skeleton" style={{ width: 120, height: 18, borderRadius: 6 }} />
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 12 }}>
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0' }}>
+            <SkeletonCircle size={30} />
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 5 }}>
+              <SkeletonLine width="55%" height={12} />
+              <SkeletonLine width="30%" height={9} />
+            </div>
+            <SkeletonLine width={40} height={9} />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 // ── Icons ──
 const icons = {
@@ -105,7 +128,8 @@ const typeLabels = {
     task_created: 'New Task',
 };
 
-export default function ActivityFeed({ milestones = [], columns = {} }) {
+export default function ActivityFeed({ milestones = [], columns = {}, loading = false }) {
+  if (loading) return <ActivityFeedSkeleton />;
     const doneTasks = columns['Done'] || [];
     const allTasks = [
         ...(columns['To Do'] || []),

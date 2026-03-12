@@ -1,0 +1,273 @@
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import api from '../utils/api';
+
+const CLIMATE_OPTIONS = [
+  '', 'Mountains', 'Beach / Coastal', 'Sunny / Southwest',
+  'Midwest', 'Pacific Northwest', 'Northeast', 'Southeast', 'No Preference',
+];
+
+const TIER_CONFIG = {
+  reach:  { label: 'Reach',  emoji: '🚀', color: '#EF4444', bg: 'rgba(239,68,68,0.07)',  border: 'rgba(239,68,68,0.2)'  },
+  target: { label: 'Target', emoji: '🎯', color: '#F59E0B', bg: 'rgba(245,158,11,0.07)', border: 'rgba(245,158,11,0.2)' },
+  safety: { label: 'Safety', emoji: '✅', color: '#22C55E', bg: 'rgba(34,197,94,0.07)',  border: 'rgba(34,197,94,0.2)'  },
+};
+
+function SchoolCard({ school, tier, index }) {
+  const cfg = TIER_CONFIG[tier];
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.07 + 0.1 }}
+      style={{
+        background: cfg.bg,
+        border: `1px solid ${cfg.border}`,
+        borderRadius: 12,
+        padding: '14px 16px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 6,
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
+        <div>
+          <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--color-text)', lineHeight: 1.2 }}>
+            {school.name}
+          </div>
+          <div style={{ fontSize: 12, color: 'var(--color-text-muted)', marginTop: 2 }}>
+            {school.city}, {school.state}
+          </div>
+        </div>
+        <span style={{
+          fontSize: 11,
+          fontWeight: 700,
+          padding: '3px 8px',
+          borderRadius: 20,
+          background: cfg.color,
+          color: '#fff',
+          whiteSpace: 'nowrap',
+          flexShrink: 0,
+        }}>
+          {school.programStrength}
+        </span>
+      </div>
+
+      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 2 }}>
+        <Stat label="Your Chance" value={`${school.yourChance ?? '—'}%`} color={cfg.color} />
+        <Stat label="Admit Rate" value={`${school.admitRate ?? '—'}%`} />
+        <Stat label="Net Cost/yr" value={school.netCost ? `$${(school.netCost / 1000).toFixed(0)}k` : '—'} />
+      </div>
+
+      {school.whyFit && (
+        <div style={{ fontSize: 12, color: 'var(--color-text-muted)', fontStyle: 'italic', marginTop: 2, lineHeight: 1.4 }}>
+          "{school.whyFit}"
+        </div>
+      )}
+    </motion.div>
+  );
+}
+
+function Stat({ label, value, color }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: 60 }}>
+      <span style={{ fontSize: 13, fontWeight: 700, color: color || 'var(--color-text)' }}>{value}</span>
+      <span style={{ fontSize: 10, color: 'var(--color-text-muted)', marginTop: 1 }}>{label}</span>
+    </div>
+  );
+}
+
+function TierSection({ tier, schools }) {
+  const cfg = TIER_CONFIG[tier];
+  if (!schools?.length) return null;
+  return (
+    <div style={{ marginBottom: 24 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+        <span style={{ fontSize: 20 }}>{cfg.emoji}</span>
+        <h3 style={{ fontWeight: 700, fontSize: 16, color: cfg.color, margin: 0 }}>{cfg.label}</h3>
+        <span style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>{schools.length} schools</span>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {schools.map((s, i) => (
+          <SchoolCard key={s.name} school={s} tier={tier} index={i} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export default function CollegeStrategy({ profile }) {
+  const [form, setForm] = useState({
+    gpa:     profile?.gpa     || '',
+    sat:     profile?.sat     || '',
+    major:   profile?.proposedMajor || '',
+    budget:  '',
+    climate: '',
+  });
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState(null);
+
+  const handleChange = (field, value) => setForm(f => ({ ...f, [field]: value }));
+
+  const handleGenerate = async () => {
+    if (!form.gpa || !form.sat || !form.major) {
+      setError('GPA, SAT, and major are required.');
+      return;
+    }
+    setError(null);
+    setLoading(true);
+    setResult(null);
+    try {
+      const data = await api.post('/strategy/generate', form);
+      setResult(data);
+    } catch (err) {
+      setError('Failed to generate strategy. Check your API key and try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35 }}
+      className="card-elevated"
+      style={{ padding: '28px 28px 32px', marginTop: 24 }}
+    >
+      {/* Header */}
+      <div style={{ marginBottom: 24 }}>
+        <h2 style={{ fontSize: 'var(--font-size-section-header)', fontWeight: 800, color: 'var(--color-primary)', margin: 0 }}>
+          College Strategy Generator
+        </h2>
+        <p style={{ fontSize: 13, color: 'var(--color-text-muted)', marginTop: 4 }}>
+          AI-powered reach / target / safety list tailored to your profile
+        </p>
+      </div>
+
+      {/* Input form */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12, marginBottom: 20 }}>
+        <Field label="GPA" type="number" step="0.01" min="0" max="4.0" placeholder="3.9"
+          value={form.gpa} onChange={v => handleChange('gpa', v)} />
+        <Field label="SAT Score" type="number" min="400" max="1600" placeholder="1400"
+          value={form.sat} onChange={v => handleChange('sat', v)} />
+        <Field label="Intended Major" placeholder="Environmental Design"
+          value={form.major} onChange={v => handleChange('major', v)} style={{ gridColumn: 'span 2' }} />
+        <Field label="Annual Budget ($)" type="number" min="0" placeholder="30000"
+          hint="Max out-of-pocket after aid"
+          value={form.budget} onChange={v => handleChange('budget', v)} />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            Climate <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(optional)</span>
+          </label>
+          <select
+            value={form.climate}
+            onChange={e => handleChange('climate', e.target.value)}
+            style={{
+              padding: '9px 12px',
+              borderRadius: 8,
+              border: '1.5px solid var(--color-border)',
+              background: 'var(--color-column)',
+              color: 'var(--color-text)',
+              fontSize: 13,
+              outline: 'none',
+            }}
+          >
+            {CLIMATE_OPTIONS.map(opt => (
+              <option key={opt} value={opt}>{opt || 'Any climate'}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {error && (
+        <div style={{ color: '#EF4444', fontSize: 13, marginBottom: 12 }}>{error}</div>
+      )}
+
+      <button
+        onClick={handleGenerate}
+        disabled={loading}
+        style={{
+          background: loading ? 'var(--color-text-muted)' : 'var(--color-primary)',
+          color: '#fff',
+          border: 'none',
+          borderRadius: 10,
+          padding: '11px 28px',
+          fontWeight: 700,
+          fontSize: 14,
+          cursor: loading ? 'not-allowed' : 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          transition: 'background 0.2s',
+        }}
+      >
+        {loading ? (
+          <>
+            <span className="strategy-spinner" />
+            Generating…
+          </>
+        ) : (
+          <>✨ Generate Strategy</>
+        )}
+      </button>
+
+      {/* Results */}
+      <AnimatePresence>
+        {result && (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            style={{ marginTop: 32 }}
+          >
+            {result.rationale && (
+              <div style={{
+                background: 'color-mix(in srgb, var(--color-primary) 8%, transparent)',
+                border: '1px solid color-mix(in srgb, var(--color-primary) 18%, transparent)',
+                borderRadius: 10,
+                padding: '12px 16px',
+                fontSize: 13,
+                color: 'var(--color-text)',
+                lineHeight: 1.6,
+                marginBottom: 24,
+              }}>
+                <strong style={{ color: 'var(--color-primary)' }}>Strategy: </strong>
+                {result.rationale}
+              </div>
+            )}
+
+            <TierSection tier="reach"  schools={result.reach}  />
+            <TierSection tier="target" schools={result.target} />
+            <TierSection tier="safety" schools={result.safety} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
+}
+
+function Field({ label, hint, style, onChange, ...inputProps }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 4, ...style }}>
+      <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+        {label}
+      </label>
+      <input
+        {...inputProps}
+        onChange={e => onChange(e.target.value)}
+        style={{
+          padding: '9px 12px',
+          borderRadius: 8,
+          border: '1.5px solid var(--color-border)',
+          background: 'var(--color-column)',
+          color: 'var(--color-text)',
+          fontSize: 13,
+          outline: 'none',
+        }}
+      />
+      {hint && <span style={{ fontSize: 10, color: 'var(--color-text-muted)' }}>{hint}</span>}
+    </div>
+  );
+}

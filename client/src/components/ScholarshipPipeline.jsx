@@ -1,6 +1,25 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useScholarships } from '../hooks/useScholarships';
+import { SkeletonCard } from './Skeleton';
+
+function ScholarshipPipelineSkeleton() {
+  return (
+    <div className="scholarship-pipeline">
+      <div className="skeleton" style={{ width: 160, height: 20, borderRadius: 6, marginBottom: 20 }} />
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
+        {Array.from({ length: 4 }).map((_, col) => (
+          <div key={col} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div className="skeleton" style={{ width: '60%', height: 14, borderRadius: 6 }} />
+            {Array.from({ length: 2 + (col % 2) }).map((__, i) => (
+              <SkeletonCard key={i} lines={3} height={90} />
+            ))}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 const STAGES = [
   { key: 'Researching', label: 'Researching', icon: '🔍', color: '#8B5CF6' },
@@ -353,7 +372,7 @@ export default function ScholarshipPipeline({ userId }) {
     }
   };
 
-  if (loading) return null;
+  if (loading) return <ScholarshipPipelineSkeleton />;
 
   return (
     <div className="scholarship-pipeline">

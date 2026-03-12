@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import Header from './Header';
+import Sidebar from './Sidebar';
 import ProfileSummary from './ProfileSummary';
 import TaskList from './TaskList';
 import Timeline from './Timeline';
@@ -9,8 +10,10 @@ import CommandBar from './CommandBar';
 import ActivityFeed from './ActivityFeed';
 import AIRoadmapModal from './AIRoadmapModal';
 import DeadlineRadar from './DeadlineRadar';
-import AdmissionChances from './AdmissionChances';
 import ScholarshipPipeline from './ScholarshipPipeline';
+import CollegeComparison from './CollegeComparison';
+import PortfolioGuide from './PortfolioGuide';
+import CollegeStrategy from './CollegeStrategy';
 import { useTasks } from '../hooks/useTasks';
 import { useProgress } from '../hooks/useProgress';
 import { useConfetti } from '../hooks/useConfetti';
@@ -23,6 +26,7 @@ function slugify(name) {
 }
 
 export default function DashboardPage({ userId, profile, updateProfile, dark, onToggleDark }) {
+  const [activePage, setActivePage] = useState('dashboard');
   const [chatOpen, setChatOpen] = useState(false);
   const [schoolsModalOpen, setSchoolsModalOpen] = useState(false);
   const [roadmapOpen, setRoadmapOpen] = useState(false);
@@ -30,8 +34,8 @@ export default function DashboardPage({ userId, profile, updateProfile, dark, on
   const [cmdBarOpen, setCmdBarOpen] = useState(false);
   const [addTaskTrigger, setAddTaskTrigger] = useState(0);
   const taskSectionRef = useRef(null);
-  const { columns, moveTask, createTask, updateTask, deleteTask, acceptRoadmapTasks } = useTasks(userId);
-  const { milestones, completionPercent } = useProgress(userId);
+  const { columns, loading: tasksLoading, moveTask, createTask, updateTask, deleteTask, acceptRoadmapTasks } = useTasks(userId);
+  const { milestones, completionPercent, loading: progressLoading } = useProgress(userId);
   const { messages, loading: chatLoading, sendMessage } = useAIChat(userId);
 
   // Derive the effective top school from reordered schools or profile
@@ -128,49 +132,104 @@ export default function DashboardPage({ userId, profile, updateProfile, dark, on
   }, []);
 
   return (
-    <div className="min-h-screen bg-bg">
+    <div className="sidebar-layout bg-bg">
+      <Sidebar activePage={activePage} onNavigate={setActivePage} profile={effectiveProfile} dark={dark} />
+
+      <div className="sidebar-layout__content">
       <Header profile={effectiveProfile} onToggleChat={() => setChatOpen(!chatOpen)} dark={dark} onToggleDark={onToggleDark} />
 
       <main className="max-w-5xl mx-auto px-4 py-8">
-        {/* Row 1: Stats + School Icons */}
-        <ProfileSummary
-          profile={effectiveProfile}
-          completionPercent={completionPercent}
-          onReorderSchools={handleReorderSchools}
-          onEditSchools={() => setSchoolsModalOpen(true)}
-          onUpdateStat={handleUpdateStat}
-          dark={dark}
-        />
 
-        {/* Row 2: Admission Chances */}
-        <AdmissionChances userId={userId} profile={effectiveProfile} />
+        {/* ── Dashboard page ── */}
+        {activePage === 'dashboard' && (
+          <>
+            <ProfileSummary
+              profile={effectiveProfile}
+              completionPercent={completionPercent}
+              onReorderSchools={handleReorderSchools}
+              onEditSchools={() => setSchoolsModalOpen(true)}
+              onUpdateStat={handleUpdateStat}
+              dark={dark}
+            />
+            <Timeline milestones={milestones} loading={progressLoading} />
+            <DeadlineRadar columns={columns} loading={tasksLoading} />
+            <ActivityFeed milestones={milestones} columns={columns} loading={tasksLoading || progressLoading} />
+            <div className="task-section-card mt-10" ref={taskSectionRef}>
+              <TaskList
+                columns={columns}
+                loading={tasksLoading}
+                onMoveTask={handleMoveTask}
+                onCreateTask={createTask}
+                onUpdateTask={updateTask}
+                onDeleteTask={deleteTask}
+                onTaskCompleted={celebrate}
+                openAddTaskTrigger={addTaskTrigger}
+                onOpenRoadmap={() => setRoadmapOpen(true)}
+              />
+            </div>
+          </>
+        )}
 
-        {/* Row 3: Journey Timeline */}
-        <Timeline milestones={milestones} />
+        {/* ── College Explorer placeholder ── */}
+        {activePage === 'explorer' && (
+          <div className="explorer-placeholder">
+            <div className="explorer-placeholder__icon">🔭</div>
+            <div className="explorer-placeholder__title">College Explorer</div>
+            <div className="explorer-placeholder__sub">Search and discover colleges — coming soon.</div>
+          </div>
+        )}
 
-        {/* Row 4: Deadline Radar */}
-        <DeadlineRadar columns={columns} />
+        {/* ── Compare page ── */}
+        {activePage === 'compare' && (
+          <CollegeComparison profile={effectiveProfile} />
+        )}
 
-        {/* Row 4: Activity Feed */}
-        <ActivityFeed milestones={milestones} columns={columns} />
+        {/* ── Portfolio guide page ── */}
+        {activePage === 'portfolio' && (
+          <PortfolioGuide profile={effectiveProfile} />
+        )}
 
-        {/* Row 5: Scholarship Pipeline */}
-        <ScholarshipPipeline userId={userId} />
+        {/* ── Scholarships page ── */}
+        {activePage === 'scholarships' && (
+          <ScholarshipPipeline userId={userId} />
+        )}
 
-        {/* Row 6: Task List */}
-        <div className="mt-10" ref={taskSectionRef}>
-          <TaskList
-            columns={columns}
-            onMoveTask={handleMoveTask}
-            onCreateTask={createTask}
-            onUpdateTask={updateTask}
-            onDeleteTask={deleteTask}
-            onTaskCompleted={celebrate}
-            openAddTaskTrigger={addTaskTrigger}
-            onOpenRoadmap={() => setRoadmapOpen(true)}
+        {/* ── Application Tracker page ── */}
+        {activePage === 'tracker' && (
+          <div className="task-section-card" ref={taskSectionRef}>
+            <TaskList
+              columns={columns}
+              loading={tasksLoading}
+              onMoveTask={handleMoveTask}
+              onCreateTask={createTask}
+              onUpdateTask={updateTask}
+              onDeleteTask={deleteTask}
+              onTaskCompleted={celebrate}
+              openAddTaskTrigger={addTaskTrigger}
+              onOpenRoadmap={() => setRoadmapOpen(true)}
+            />
+          </div>
+        )}
+
+        {/* ── Strategy page ── */}
+        {activePage === 'strategy' && (
+          <CollegeStrategy profile={effectiveProfile} />
+        )}
+
+        {/* ── Profile page ── */}
+        {activePage === 'profile' && (
+          <ProfileSummary
+            profile={effectiveProfile}
+            completionPercent={completionPercent}
+            onReorderSchools={handleReorderSchools}
+            onEditSchools={() => setSchoolsModalOpen(true)}
+            onUpdateStat={handleUpdateStat}
+            dark={dark}
           />
-        </div>
+        )}
+
       </main>
+      </div>
 
       <AIChatPanel
         open={chatOpen}

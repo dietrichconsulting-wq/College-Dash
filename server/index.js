@@ -13,6 +13,8 @@ import calendarRoutes from './routes/calendar.js';
 import chatRoutes from './routes/chat.js';
 import generateRoutes from './routes/generate.js';
 import scholarshipRoutes from './routes/scholarships.js';
+import portfolioRoutes from './routes/portfolio.js';
+import strategyRoutes from './routes/strategy.js';
 import errorHandler from './middleware/errorHandler.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -34,6 +36,8 @@ app.use('/api/calendar', calendarRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/generate', generateRoutes);
 app.use('/api/scholarships', scholarshipRoutes);
+app.use('/api/portfolio', portfolioRoutes);
+app.use('/api/strategy', strategyRoutes);
 
 // Serve static frontend in production
 app.use(express.static(resolve(__dirname, 'public')));

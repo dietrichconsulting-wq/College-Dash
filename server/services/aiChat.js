@@ -55,5 +55,9 @@ export async function chat(profile, messages) {
   const lastMessage = messages[messages.length - 1];
   const result = await chatSession.sendMessage(lastMessage.content);
 
-  return result.response.text();
+  const text = result.response.text();
+  if (!text || !text.trim()) {
+    return "I wasn't able to generate a response. Please try rephrasing your question.";
+  }
+  return text;
 }

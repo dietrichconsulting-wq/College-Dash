@@ -1,0 +1,268 @@
+/* ══════════════════════════════════════════════════════════════
+   Glassmorphism — ambient background + frosted card surfaces
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── 1. Page background: rich ambient gradient using school colors ── */
+
+body {
+  background-color: #E8EEF8;       /* warm light base — visible through glass */
+}
+
+body::before {
+  background:
+    radial-gradient(ellipse 75% 55% at 8% 3%,
+      color-mix(in srgb, var(--color-primary, #2563EB) 22%, transparent) 0%,
+      transparent 65%),
+    radial-gradient(ellipse 55% 45% at 92% 8%,
+      color-mix(in srgb, var(--color-accent, #60A5FA) 16%, transparent) 0%,
+      transparent 58%),
+    radial-gradient(ellipse 45% 55% at 60% 90%,
+      color-mix(in srgb, var(--color-gold, #F59E0B) 12%, transparent) 0%,
+      transparent 55%),
+    radial-gradient(ellipse 50% 40% at 20% 75%,
+      color-mix(in srgb, var(--color-secondary, #818CF8) 10%, transparent) 0%,
+      transparent 52%);
+}
+
+/* ── 2. Glass card mixin ── */
+
+:root {
+  --glass-bg:          rgba(255, 255, 255, 0.68);
+  --glass-border:      1px solid rgba(255, 255, 255, 0.60);
+  --glass-shadow:
+    0 4px 24px rgba(31, 38, 135, 0.09),
+    0 1px 4px  rgba(0, 0, 0, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  --glass-blur:        blur(18px) saturate(180%);
+  --glass-inner-bg:    rgba(248, 250, 252, 0.60);
+}
+
+/* ── 3. Dark mode glass overrides ── */
+
+[data-theme="dark"] {
+  --glass-bg:          rgba(10, 17, 32, 0.65);
+  --glass-border:      1px solid rgba(255, 255, 255, 0.09);
+  --glass-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.45),
+    0 1px 4px  rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  --glass-blur:        blur(20px) saturate(160%);
+  --glass-inner-bg:    rgba(20, 30, 50, 0.60);
+}
+
+[data-theme="dark"] body {
+  background-color: #070C18;
+}
+
+[data-theme="dark"] body::before {
+  background:
+    radial-gradient(ellipse 75% 55% at 8% 3%,
+      color-mix(in srgb, var(--color-primary, #2563EB) 20%, transparent) 0%,
+      transparent 65%),
+    radial-gradient(ellipse 55% 45% at 92% 8%,
+      color-mix(in srgb, var(--color-accent, #60A5FA) 14%, transparent) 0%,
+      transparent 58%),
+    radial-gradient(ellipse 45% 55% at 60% 90%,
+      color-mix(in srgb, var(--color-gold, #F59E0B) 11%, transparent) 0%,
+      transparent 55%),
+    radial-gradient(ellipse 50% 40% at 20% 75%,
+      color-mix(in srgb, var(--color-secondary, #818CF8) 10%, transparent) 0%,
+      transparent 52%);
+}
+
+/* ── 4. Glassmorphism helper class ── */
+
+.glass {
+  background:         var(--glass-bg) !important;
+  backdrop-filter:    var(--glass-blur) !important;
+  -webkit-backdrop-filter: var(--glass-blur) !important;
+  border:             var(--glass-border) !important;
+  box-shadow:         var(--glass-shadow) !important;
+}
+
+/* ── 5. Apply glass to all major section cards ── */
+
+.card-elevated,
+.college-comparison,
+.portfolio-guide,
+.scholarship-pipeline,
+.activity-feed,
+.deadline-radar {
+  background:         var(--glass-bg);
+  backdrop-filter:    var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border:             var(--glass-border);
+  box-shadow:         var(--glass-shadow);
+}
+
+/* ── 6. Inner surfaces — tinted but no extra blur (avoid double-blur) ── */
+
+.pipeline-column,
+.pg-hero,
+.pg-format-box,
+.pg-portfolio-item,
+.pg-school-tip,
+.comp-add-form,
+.pg-tips-list,
+.comp-tr--even {
+  background: var(--glass-inner-bg) !important;
+  backdrop-filter: none !important;
+}
+
+/* Stat cards (ProfileSummary) */
+[class*="card-elevated"][class*="px-5"] {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+/* ── 7. Glassmorphism header ── */
+
+.header-bar {
+  background: rgba(10, 15, 30, 0.72) !important;
+  backdrop-filter: blur(24px) saturate(200%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(200%) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.18),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Keep the header accent glow line */
+.header-bar::after {
+  opacity: 0.9;
+}
+
+/* ── 8. Task list glass container ── */
+
+.task-section-card {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  border-radius: var(--radius-card);
+  padding: 1.5rem;
+}
+
+/* ── 9. Modals — deeper glass ── */
+
+.cmd-bar,
+.roadmap-modal,
+.scholarship-modal,
+.ai-roadmap-modal {
+  background: rgba(8, 14, 26, 0.82) !important;
+  backdrop-filter: blur(28px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.10) !important;
+}
+
+[data-theme="light"] .cmd-bar,
+[data-theme="light"] .scholarship-modal {
+  background: rgba(248, 250, 252, 0.88) !important;
+  border: 1px solid rgba(255, 255, 255, 0.70) !important;
+}
+
+/* ── 10. Refined hover lift with glass shadow ── */
+
+.card-elevated:hover {
+  box-shadow:
+    0 12px 40px rgba(31, 38, 135, 0.14),
+    0 4px 12px rgba(0, 0, 0, 0.07),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+  transform: translateY(-1px);
+}
+
+[data-theme="dark"] .card-elevated:hover {
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.55),
+    0 4px 12px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+}
+
+/* ── 11. Text contrast boost over glass ── */
+
+/* Light mode — slightly deepen muted text so it reads on frosted white */
+:root {
+  --color-text-muted: #475569;
+}
+
+/* Dark mode — keep existing muted color */
+[data-theme="dark"] {
+  --color-text-muted: #A8B5C4;
+}
+
+/* ── 12. Admission chances cards glass ── */
+
+.chance-card {
+  background: var(--glass-bg) !important;
+  backdrop-filter: var(--glass-blur) !important;
+  -webkit-backdrop-filter: var(--glass-blur) !important;
+  border: var(--glass-border) !important;
+}
+
+/* ── 13. Scholarship cards ── */
+
+.scholarship-card {
+  background: var(--glass-inner-bg) !important;
+  backdrop-filter: none !important;
+  border: var(--glass-border) !important;
+}
+
+/* ── 14. AIChatPanel glass ── */
+
+.fixed.right-0.top-0.bottom-0 {
+  background: rgba(248, 250, 252, 0.88) !important;
+  backdrop-filter: blur(24px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+}
+
+[data-theme="dark"] .fixed.right-0.top-0.bottom-0 {
+  background: rgba(8, 14, 26, 0.88) !important;
+}
+
+/* ── 15. Progress ring card ── */
+
+.progress-ring-card {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+/* ── 16. CommandBar & hints ── */
+
+.cmd-hint-badge {
+  background: rgba(255, 255, 255, 0.70) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border-color: rgba(255,255,255,0.5) !important;
+}
+
+[data-theme="dark"] .cmd-hint-badge {
+  background: rgba(15, 23, 42, 0.72) !important;
+  border-color: rgba(255,255,255,0.10) !important;
+}
+
+/* ── 17. Scrollbar polish ── */
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.4);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.6);
+}
