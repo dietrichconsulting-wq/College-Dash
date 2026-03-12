@@ -45,6 +45,11 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
+  // Allow authenticated users to access onboarding
+  if (user && pathname === '/onboarding') {
+    return supabaseResponse
+  }
+
   return supabaseResponse
 }
 

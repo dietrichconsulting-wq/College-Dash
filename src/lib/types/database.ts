@@ -12,6 +12,7 @@ export interface Profile {
   display_name: string | null
   gpa: number | null
   sat: number | null
+  act_score: number | null
   proposed_major: string | null
   school1_name: string | null
   school1_id: string | null
@@ -22,6 +23,14 @@ export interface Profile {
   school4_name: string | null
   school4_id: string | null
   home_state: string | null
+  grad_year: number | null
+  desired_climate: string | null
+  school_size_pref: string | null
+  school_type_pref: string | null
+  distance_pref: string | null
+  extracurriculars: string | null
+  career_interests: string | null
+  onboarding_complete: boolean
   created_at: string
   updated_at: string
 }

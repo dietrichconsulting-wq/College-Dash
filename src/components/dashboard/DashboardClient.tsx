@@ -4,6 +4,7 @@ import { useProfile } from '@/hooks/useProfile'
 import { useTasks } from '@/hooks/useTasks'
 import { useScholarships } from '@/hooks/useScholarships'
 import { ProfileStats } from './ProfileStats'
+import { AdmissionSnapshot } from './AdmissionSnapshot'
 import { TaskList } from './TaskList'
 import { DeadlineRadar } from './DeadlineRadar'
 import { ScholarshipPipeline } from './ScholarshipPipeline'
@@ -34,6 +35,9 @@ export function DashboardClient({ userId }: DashboardClientProps) {
 
       {/* Profile Stats */}
       <ProfileStats profile={profile} loading={profileLoading} progress={progress} tasks={tasks} />
+
+      {/* Admission Snapshot */}
+      <AdmissionSnapshot profile={profile} loading={profileLoading} />
 
       {/* Two-column layout for radar + scholarships */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginTop: 20 }}>

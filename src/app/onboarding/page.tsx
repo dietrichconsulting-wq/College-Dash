@@ -1,10 +1,10 @@
-export const dynamic = "force-dynamic"
+export const dynamic = 'force-dynamic'
 
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { DashboardClient } from '@/components/dashboard/DashboardClient'
+import { OnboardingClient } from '@/components/onboarding/OnboardingClient'
 
-export default async function DashboardPage() {
+export default async function OnboardingPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
@@ -15,7 +15,7 @@ export default async function DashboardPage() {
     .eq('id', user.id)
     .single()
 
-  if (!profile?.onboarding_complete) redirect('/onboarding')
+  if (profile?.onboarding_complete) redirect('/dashboard')
 
-  return <DashboardClient userId={user.id} />
+  return <OnboardingClient userId={user.id} />
 }
