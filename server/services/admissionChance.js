@@ -127,12 +127,19 @@ export async function computeChances(profile) {
       try {
         let collegeId = s.id;
         if (!collegeId || collegeId.trim() === '') {
-          const searchResults = await searchColleges(s.name);
-          if (searchResults && searchResults.length > 0) {
-            collegeId = searchResults[0].id;
-          } else {
-            return null; // Could not resolve ID
+          // Try name as-is, then with "University of" prefix
+          const queries = [s.name, `University of ${s.name}`];
+          let resolved = null;
+          for (const q of queries) {
+            const results = await searchColleges(q);
+            if (results && results.length > 0) {
+              // Prefer a result that has admission rate data
+              resolved = results.find(r => r.admissionRate != null) || results[0];
+              break;
+            }
           }
+          if (!resolved) return null;
+          collegeId = resolved.id;
         }
 
         const college = await getCollege(collegeId);
@@ -144,7 +151,7 @@ export async function computeChances(profile) {
         const improvement = calculateImprovement(profile.sat, profile.gpa, college);
 
         return {
-          schoolName: college.name,
+          schoolName: s.name,
           schoolId: college.id,
           chance,
           admissionRate: college.admissionRate,

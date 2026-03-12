@@ -1,5 +1,5 @@
 import { motion, Reorder } from 'framer-motion';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { getSchoolColors, getSchoolShortName } from '../utils/schoolColors';
 
 // ── Radial Progress Ring ──
@@ -74,12 +74,83 @@ function ProgressRing({ percent = 0 }) {
   );
 }
 
-export default function ProfileSummary({ profile, completionPercent, onReorderSchools, onEditSchools }) {
-  const stats = [
-    { label: 'GPA', value: profile?.gpa?.toFixed(2) || '--', accent: false },
-    { label: 'SAT', value: profile?.sat || '--', accent: false },
-    { label: 'Major', value: profile?.proposedMajor || '--', small: true },
-  ];
+function StatCard({ label, field, value, small, onSave, inputType = 'text', step }) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(String(value ?? ''));
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    if (editing) inputRef.current?.select();
+  }, [editing]);
+
+  const commit = () => {
+    const trimmed = draft.trim();
+    if (trimmed && trimmed !== String(value)) onSave(field, trimmed);
+    setEditing(false);
+  };
+
+  const handleKey = (e) => {
+    if (e.key === 'Enter') commit();
+    if (e.key === 'Escape') { setDraft(String(value ?? '')); setEditing(false); }
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="card-elevated px-5 py-5 flex flex-col gap-1 cursor-pointer group relative"
+      onClick={() => { if (!editing) { setDraft(String(value ?? '')); setEditing(true); } }}
+      title={`Click to edit ${label}`}
+    >
+      <span
+        className="uppercase tracking-wider font-medium"
+        style={{ fontSize: 'var(--font-size-micro)', color: 'var(--color-text-muted)', letterSpacing: '0.08em' }}
+      >
+        {label}
+      </span>
+      {editing ? (
+        <input
+          ref={inputRef}
+          type={inputType}
+          step={step}
+          value={draft}
+          onChange={e => setDraft(e.target.value)}
+          onBlur={commit}
+          onKeyDown={handleKey}
+          onClick={e => e.stopPropagation()}
+          className="font-bold leading-none bg-transparent outline-none border-b-2 w-full"
+          style={{
+            fontSize: small ? 'var(--font-size-section-header)' : 'var(--font-size-card-metric)',
+            color: 'var(--color-primary)',
+            borderColor: 'var(--color-primary)',
+            lineHeight: 'var(--line-height-tight)',
+          }}
+        />
+      ) : (
+        <span
+          className="font-bold leading-none"
+          style={{
+            fontSize: small ? 'var(--font-size-section-header)' : 'var(--font-size-card-metric)',
+            color: 'var(--color-primary)',
+            lineHeight: 'var(--line-height-tight)',
+          }}
+        >
+          {value || '--'}
+        </span>
+      )}
+      {!editing && (
+        <svg
+          className="absolute top-2 right-2 opacity-0 group-hover:opacity-40 transition-opacity"
+          width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+        </svg>
+      )}
+    </motion.div>
+  );
+}
+
+export default function ProfileSummary({ profile, completionPercent, onReorderSchools, onEditSchools, onUpdateStat, dark }) {
 
   const schools = (profile?.schools || []).filter(s => s?.name && s.name.trim() !== '');
   const [orderedSchools, setOrderedSchools] = useState(schools);
@@ -105,42 +176,15 @@ export default function ProfileSummary({ profile, completionPercent, onReorderSc
     >
       {/* Stats + Progress ring on the left */}
       <div className="profile-stats-row">
-        {stats.map((s, i) => (
-          <motion.div
-            key={s.label}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 + i * 0.06 }}
-            className="card-elevated px-5 py-5 flex flex-col gap-1"
-          >
-            <span
-              className="uppercase tracking-wider font-medium"
-              style={{
-                fontSize: 'var(--font-size-micro)',
-                color: 'var(--color-text-muted)',
-                letterSpacing: '0.08em',
-              }}
-            >
-              {s.label}
-            </span>
-            <span
-              className="font-bold leading-none"
-              style={{
-                fontSize: s.small ? 'var(--font-size-section-header)' : 'var(--font-size-card-metric)',
-                color: s.accent ? 'var(--color-success)' : 'var(--color-primary)',
-                lineHeight: 'var(--line-height-tight)',
-              }}
-            >
-              {s.value}
-            </span>
-          </motion.div>
-        ))}
+        <StatCard label="GPA" field="gpa" value={profile?.gpa?.toFixed(2)} inputType="number" step="0.01" onSave={onUpdateStat} />
+        <StatCard label="SAT" field="sat" value={profile?.sat} inputType="number" onSave={onUpdateStat} />
+        <StatCard label="Major" field="major" value={profile?.proposedMajor} small onSave={onUpdateStat} />
 
         {/* Progress Ring Card */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 + stats.length * 0.06 }}
+          transition={{ delay: 0.28 }}
           className="card-elevated progress-ring-card"
         >
           <span className="progress-ring-card__label">PROGRESS</span>
@@ -161,7 +205,7 @@ export default function ProfileSummary({ profile, completionPercent, onReorderSc
               as="div"
             >
               {orderedSchools.map((school, i) => (
-                <SchoolChip key={school.name} school={school} index={i} isTop={i === 0} />
+                <SchoolChip key={school.name} school={school} index={i} isTop={i === 0} dark={dark} />
               ))}
             </Reorder.Group>
             <button
@@ -190,7 +234,7 @@ export default function ProfileSummary({ profile, completionPercent, onReorderSc
   );
 }
 
-function SchoolChip({ school, index, isTop }) {
+function SchoolChip({ school, index, isTop, dark }) {
   const colors = getSchoolColors(school.name);
   const shortName = getSchoolShortName(school.name);
   const primaryColor = colors?.primary || '#2563EB';
@@ -211,6 +255,12 @@ function SchoolChip({ school, index, isTop }) {
               color: '#fff',
               borderColor: primaryColor,
               boxShadow: `0 2px 10px ${primaryColor}30`,
+            }
+            : dark
+            ? {
+              background: `${primaryColor}28`,
+              color: primaryColor,
+              borderColor: 'rgba(255, 255, 255, 0.60)',
             }
             : {
               background: `${primaryColor}0A`,

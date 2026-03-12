@@ -116,50 +116,80 @@ function SchoolChanceCard({ data, index }) {
   );
 }
 
-export default function AdmissionChances({ userId }) {
+export default function AdmissionChances({ userId, profile }) {
   const [chances, setChances] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  // Build a stable key from the profile fields that affect chances
+  const profileKey = [
+    profile?.gpa,
+    profile?.sat,
+    profile?.proposedMajor,
+    ...(profile?.schools || []).map(s => s?.name),
+  ].join('|');
 
   useEffect(() => {
     if (!userId) return;
     let cancelled = false;
+    setLoading(true);
 
-    async function fetch() {
-      try {
-        const { data } = await api.get(`/colleges/chances/${userId}`);
-        if (!cancelled) setChances(data.chances || []);
-      } catch {
-        if (!cancelled) setError(true);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
+    api.get(`/colleges/chances/${userId}`)
+      .then(({ data }) => { if (!cancelled) setChances(data.chances || []); })
+      .catch(() => { if (!cancelled) setChances([]); })
+      .finally(() => { if (!cancelled) setLoading(false); });
 
-    fetch();
     return () => { cancelled = true; };
-  }, [userId]);
+  }, [userId, profileKey, refreshKey]); // re-fetch when profile changes or manual refresh
 
-  // Don't render if no data or error
-  if (loading || error || chances.length === 0) return null;
+  if (!loading && chances.length === 0) return null;
 
   return (
     <div className="admission-chances">
       <div className="admission-chances__header">
         <h2 className="admission-chances__title">Likelihood of Acceptance</h2>
-        <span className="admission-chances__badge" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-          </svg>
-          AI Predicted
-        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span className="admission-chances__badge" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            AI Predicted
+          </span>
+          <button
+            onClick={() => setRefreshKey(k => k + 1)}
+            disabled={loading}
+            title="Recalculate admission chances"
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: '4px',
+              fontSize: '11px', fontWeight: 500, padding: '3px 8px',
+              borderRadius: '6px', border: '1px solid var(--color-border)',
+              background: 'transparent', color: 'var(--color-text-muted)',
+              cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.5 : 1,
+              transition: 'opacity 0.15s',
+            }}
+          >
+            <svg
+              width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}
+              style={{ animation: loading ? 'roadmap-spin 0.8s linear infinite' : 'none' }}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            {loading ? 'Calculating…' : 'Refresh'}
+          </button>
+        </div>
       </div>
 
-      <div className="admission-chances__grid">
-        {chances.map((c, i) => (
-          <SchoolChanceCard key={c.schoolId} data={c} index={i} />
-        ))}
-      </div>
+      {loading ? (
+        <div style={{ textAlign: 'center', padding: '24px', color: 'var(--color-text-muted)', fontSize: '13px' }}>
+          Calculating your chances…
+        </div>
+      ) : (
+        <div className="admission-chances__grid">
+          {chances.map((c, i) => (
+            <SchoolChanceCard key={c.schoolId} data={c} index={i} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

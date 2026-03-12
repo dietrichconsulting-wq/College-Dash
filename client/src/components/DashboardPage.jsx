@@ -22,7 +22,7 @@ function slugify(name) {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 }
 
-export default function DashboardPage({ userId, profile, onUpdateProfile }) {
+export default function DashboardPage({ userId, profile, updateProfile, dark, onToggleDark }) {
   const [chatOpen, setChatOpen] = useState(false);
   const [schoolsModalOpen, setSchoolsModalOpen] = useState(false);
   const [roadmapOpen, setRoadmapOpen] = useState(false);
@@ -80,6 +80,14 @@ export default function DashboardPage({ userId, profile, onUpdateProfile }) {
     return () => window.removeEventListener('keydown', handler);
   }, []);
 
+  const handleUpdateStat = async (field, rawValue) => {
+    const keyMap = { gpa: 'gpa', sat: 'sat', major: 'proposedMajor' };
+    const value = field === 'gpa' ? parseFloat(rawValue)
+      : field === 'sat' ? parseInt(rawValue, 10)
+      : rawValue;
+    await updateProfile({ [keyMap[field]]: value });
+  };
+
   const saveSchools = (schools) => {
     const padded = [...schools];
     while (padded.length < 4) padded.push({ name: '', id: '' });
@@ -121,7 +129,7 @@ export default function DashboardPage({ userId, profile, onUpdateProfile }) {
 
   return (
     <div className="min-h-screen bg-bg">
-      <Header profile={effectiveProfile} onToggleChat={() => setChatOpen(!chatOpen)} />
+      <Header profile={effectiveProfile} onToggleChat={() => setChatOpen(!chatOpen)} dark={dark} onToggleDark={onToggleDark} />
 
       <main className="max-w-5xl mx-auto px-4 py-8">
         {/* Row 1: Stats + School Icons */}
@@ -130,10 +138,12 @@ export default function DashboardPage({ userId, profile, onUpdateProfile }) {
           completionPercent={completionPercent}
           onReorderSchools={handleReorderSchools}
           onEditSchools={() => setSchoolsModalOpen(true)}
+          onUpdateStat={handleUpdateStat}
+          dark={dark}
         />
 
         {/* Row 2: Admission Chances */}
-        <AdmissionChances userId={userId} />
+        <AdmissionChances userId={userId} profile={effectiveProfile} />
 
         {/* Row 3: Journey Timeline */}
         <Timeline milestones={milestones} />

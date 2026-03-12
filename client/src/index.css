@@ -49,6 +49,182 @@
   --radius-card: 16px;
 }
 
+/* ══════════════════════════════════════════════════════════════
+   Dark Mode – overrides CSS custom properties
+   ══════════════════════════════════════════════════════════════ */
+
+[data-theme="dark"] {
+  --color-bg: #0D1117;
+  --color-card: #1A2133;
+  --color-column: #212D40;
+  --color-text: #F0F4F8;
+  --color-text-muted: #A8B5C4;
+  --color-border: rgba(255, 255, 255, 0.11);
+  --shadow-card: 0 4px 16px rgba(0, 0, 0, 0.45), 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-card-hover: 0 8px 28px rgba(0, 0, 0, 0.55);
+  --border-card: 1px solid rgba(255, 255, 255, 0.10);
+}
+
+[data-theme="dark"] body {
+  background-color: #0D1117;
+  color: var(--color-text);
+}
+
+[data-theme="dark"] body::before {
+  background:
+    radial-gradient(ellipse 80% 50% at 20% 10%, rgba(37, 99, 235, 0.10) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 5%, rgba(139, 92, 246, 0.09) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 50% at 50% 60%, rgba(34, 197, 94, 0.05) 0%, transparent 50%),
+    radial-gradient(ellipse 70% 30% at 70% 90%, rgba(245, 158, 11, 0.05) 0%, transparent 50%);
+}
+
+/* Make Tailwind bg-white components respect dark mode */
+[data-theme="dark"] .bg-white {
+  background-color: var(--color-card) !important;
+}
+
+[data-theme="dark"] .border-gray-300,
+[data-theme="dark"] .border-gray-200 {
+  border-color: var(--color-border) !important;
+}
+
+[data-theme="dark"] input,
+[data-theme="dark"] textarea,
+[data-theme="dark"] select {
+  background-color: var(--color-column);
+  color: var(--color-text);
+  border-color: var(--color-border);
+}
+
+[data-theme="dark"] input::placeholder,
+[data-theme="dark"] textarea::placeholder {
+  color: var(--color-text-muted);
+}
+
+[data-theme="dark"] .text-gray-900,
+[data-theme="dark"] .text-gray-800,
+[data-theme="dark"] .text-gray-700 {
+  color: var(--color-text) !important;
+}
+
+[data-theme="dark"] .text-gray-500,
+[data-theme="dark"] .text-gray-400 {
+  color: var(--color-text-muted) !important;
+}
+
+[data-theme="dark"] .hover\:bg-gray-50:hover,
+[data-theme="dark"] .hover\:bg-blue-50:hover {
+  background-color: var(--color-column) !important;
+}
+
+/* ── Task rows ── */
+[data-theme="dark"] .task-row:not(:first-child) { border-top-color: rgba(255,255,255,0.05); }
+[data-theme="dark"] .task-done-row--bordered { border-top-color: rgba(255,255,255,0.05); }
+[data-theme="dark"] .task-row:hover { background-color: rgba(255,255,255,0.025); }
+[data-theme="dark"] .task-row__check { border-color: rgba(255,255,255,0.22); }
+[data-theme="dark"] .task-row__check-icon { color: rgba(255,255,255,0.22); }
+[data-theme="dark"] .task-row__expand-btn { color: rgba(255,255,255,0.28); }
+[data-theme="dark"] .task-row__expand-btn:hover { background: rgba(255,255,255,0.06); }
+[data-theme="dark"] .task-row__action-btn:hover { background: rgba(255,255,255,0.05); }
+[data-theme="dark"] .task-row__action-divider { background: rgba(255,255,255,0.07); }
+[data-theme="dark"] .task-row__detail-btn {
+  border-color: rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.03);
+}
+[data-theme="dark"] .task-row__detail-btn:hover {
+  background: rgba(255,255,255,0.07);
+  border-color: rgba(255,255,255,0.15);
+  color: var(--color-text);
+}
+[data-theme="dark"] .task-row__due--none { color: rgba(255,255,255,0.25); }
+
+/* ── Activity feed ── */
+[data-theme="dark"] .activity-feed__count { background: rgba(255,255,255,0.06); }
+[data-theme="dark"] .activity-item__line { background: rgba(255,255,255,0.08); }
+[data-theme="dark"] .activity-item__dot { box-shadow: 0 0 0 3px var(--color-card), 0 0 0 4px rgba(255,255,255,0.07); }
+
+/* ── Deadline radar ── */
+[data-theme="dark"] .deadline-radar__window { background: rgba(255,255,255,0.06); }
+[data-theme="dark"] .deadline-radar__line { background: rgba(255,255,255,0.08); }
+
+/* ── Admission chances ── */
+[data-theme="dark"] .admission-chances__badge {
+  background: rgba(255,255,255,0.06);
+  border-color: rgba(255,255,255,0.09);
+}
+[data-theme="dark"] .chance-card__tip {
+  background: rgba(74, 222, 128, 0.12);
+  border-color: rgba(74, 222, 128, 0.22);
+  color: #4ADE80;
+}
+[data-theme="dark"] .chance-card__tip-icon { color: #4ADE80; }
+
+/* ── Scholarship pipeline ── */
+[data-theme="dark"] .scholarship-pipeline__badge { background: rgba(255,255,255,0.06); }
+
+/* ── Command bar ── */
+[data-theme="dark"] .cmd-panel {
+  background: rgba(22, 27, 34, 0.98);
+  box-shadow: 0 25px 60px -15px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.06);
+}
+[data-theme="dark"] .cmd-input-wrap { border-bottom-color: rgba(255,255,255,0.06); }
+[data-theme="dark"] .cmd-kbd,
+[data-theme="dark"] .cmd-item-enter,
+[data-theme="dark"] .cmd-footer kbd {
+  background: rgba(255,255,255,0.06);
+  border-color: rgba(255,255,255,0.1);
+}
+[data-theme="dark"] .cmd-item-icon { background: rgba(255,255,255,0.04); }
+[data-theme="dark"] .cmd-item:hover,
+[data-theme="dark"] .cmd-item--active { background: rgba(255,255,255,0.04); }
+[data-theme="dark"] .cmd-footer { border-top-color: rgba(255,255,255,0.06); }
+[data-theme="dark"] .cmd-hint-badge {
+  background: rgba(22, 27, 34, 0.88);
+  border-color: rgba(255,255,255,0.1);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.35);
+}
+[data-theme="dark"] .cmd-hint-badge:hover {
+  background: rgba(22, 27, 34, 0.97);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.45);
+}
+
+/* ── Roadmap modal ── */
+[data-theme="dark"] .roadmap-header { border-bottom-color: rgba(255,255,255,0.06); }
+[data-theme="dark"] .roadmap-close { background: rgba(255,255,255,0.05); }
+[data-theme="dark"] .roadmap-close:hover { background: rgba(255,255,255,0.09); }
+[data-theme="dark"] .roadmap-task {
+  border-color: rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.01);
+}
+[data-theme="dark"] .roadmap-task:hover {
+  border-color: rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.03);
+}
+[data-theme="dark"] .roadmap-toolbar { border-bottom-color: rgba(255,255,255,0.06); }
+[data-theme="dark"] .roadmap-footer {
+  border-top-color: rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.015);
+}
+[data-theme="dark"] .roadmap-footer__regenerate { border-color: rgba(255,255,255,0.1); }
+[data-theme="dark"] .roadmap-footer__regenerate:hover { border-color: rgba(255,255,255,0.22); }
+
+/* ── School chips ── */
+[data-theme="dark"] .school-chips-section__add {
+  border-color: rgba(255,255,255,0.2);
+}
+
+/* ── Labels with opacity that need a boost ── */
+[data-theme="dark"] .school-chips-section__label,
+[data-theme="dark"] .progress-ring-card__label {
+  opacity: 1;
+}
+
+/* ── Stronger card border so tiles lift off background ── */
+[data-theme="dark"] .card-elevated {
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: #1A2133;
+}
+
 /* Reusable soft card surface */
 .card-elevated {
   background: var(--color-card);
@@ -65,7 +241,7 @@
 body {
   margin: 0;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  background-color: #F8FAFC;
+  background-color: var(--color-bg);
   color: var(--color-text);
   font-size: var(--font-size-body);
   line-height: var(--line-height-normal);

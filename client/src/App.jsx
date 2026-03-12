@@ -1,9 +1,11 @@
 import { useProfile } from './hooks/useProfile';
+import { useDarkMode } from './hooks/useDarkMode';
 import OnboardingPage from './components/OnboardingPage';
 import DashboardPage from './components/DashboardPage';
 
 function App() {
-  const { userId, profile, loading, createProfile } = useProfile();
+  const { userId, profile, loading, createProfile, updateProfile } = useProfile();
+  const [dark, setDark] = useDarkMode();
 
   if (loading) {
     return (
@@ -20,7 +22,7 @@ function App() {
     return <OnboardingPage onComplete={createProfile} />;
   }
 
-  return <DashboardPage userId={userId} profile={profile} />;
+  return <DashboardPage userId={userId} profile={profile} updateProfile={updateProfile} dark={dark} onToggleDark={() => setDark(d => !d)} />;
 }
 
 export default App;
