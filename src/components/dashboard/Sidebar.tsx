@@ -1,0 +1,99 @@
+'use client'
+
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import { motion } from 'framer-motion'
+import type { Profile, Subscription } from '@/lib/types/database'
+import type { User } from '@supabase/supabase-js'
+import { createClient } from '@/lib/supabase/client'
+import { useRouter } from 'next/navigation'
+
+const NAV_ITEMS = [
+  { href: '/dashboard',     icon: '⊞',  label: 'Dashboard' },
+  { href: '/journey',       icon: '🗺️',  label: 'Your Journey' },
+  { href: '/compare',       icon: '⚖️',  label: 'Compare' },
+  { href: '/strategy',      icon: '⚡',  label: 'Strategy' },
+  { href: '/scholarships',  icon: '🏆',  label: 'Scholarships' },
+  { href: '/profile',       icon: '👤',  label: 'Profile' },
+]
+
+interface SidebarProps {
+  user: User
+  profile: Profile | null
+  subscription: Pick<Subscription, 'tier' | 'status'> | null
+}
+
+export function Sidebar({ user, profile, subscription }: SidebarProps) {
+  const pathname = usePathname()
+  const router = useRouter()
+  const supabase = createClient()
+
+  async function handleSignOut() {
+    await supabase.auth.signOut()
+    router.push('/login')
+    router.refresh()
+  }
+
+  const isPro = subscription?.tier === 'pro' &&
+    (subscription?.status === 'active' || subscription?.status === 'trialing')
+
+  return (
+    <nav className="sidebar">
+      <div className="sidebar__brand">
+        <span style={{ fontSize: 18 }}>🎓</span>
+        {' '}College Dashboard
+      </div>
+
+      <div className="sidebar__nav">
+        {NAV_ITEMS.map(item => {
+          const active = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href))
+          return (
+            <Link key={item.href} href={item.href} className={`sidebar__nav-item ${active ? 'sidebar__nav-item--active' : ''}`}>
+              {active && (
+                <motion.div
+                  layoutId="sidebar-active-bg"
+                  className="sidebar__nav-item-bg"
+                  transition={{ type: 'spring', stiffness: 400, damping: 35 }}
+                />
+              )}
+              <span style={{ fontSize: 15, position: 'relative' }}>{item.icon}</span>
+              <span style={{ position: 'relative' }}>{item.label}</span>
+            </Link>
+          )
+        })}
+      </div>
+
+      {/* Footer */}
+      <div style={{ padding: '16px 20px', borderTop: '1px solid var(--color-border)' }}>
+        {/* Pro badge or upgrade */}
+        {isPro ? (
+          <div style={{ fontSize: 11, fontWeight: 700, color: '#7c3aed', background: 'rgba(124,58,237,0.1)', borderRadius: 8, padding: '4px 10px', textAlign: 'center', marginBottom: 12 }}>
+            ✨ Pro Plan
+          </div>
+        ) : (
+          <Link href="/upgrade" style={{ display: 'block', textAlign: 'center', fontSize: 12, fontWeight: 700, color: '#fff', background: 'var(--color-primary)', borderRadius: 8, padding: '6px 10px', marginBottom: 12, textDecoration: 'none' }}>
+            Upgrade to Pro
+          </Link>
+        )}
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'space-between' }}>
+          <div style={{ overflow: 'hidden' }}>
+            <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {profile?.display_name || user.email?.split('@')[0]}
+            </div>
+            <div style={{ fontSize: 10, color: 'var(--color-text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {user.email}
+            </div>
+          </div>
+          <button
+            onClick={handleSignOut}
+            title="Sign out"
+            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: 'var(--color-text-muted)', padding: '4px', borderRadius: 6, flexShrink: 0 }}
+          >
+            ↩
+          </button>
+        </div>
+      </div>
+    </nav>
+  )
+}

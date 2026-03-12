@@ -1,0 +1,95 @@
+export type TaskStatus = 'To Do' | 'In Progress' | 'Done'
+export type TaskCategory =
+  | 'Testing' | 'Applications' | 'Essays' | 'Financial Aid'
+  | 'Recommendations' | 'Visits' | 'Scholarships' | 'Research' | 'Other'
+export type ScholarshipDifficulty = 'Easy' | 'Medium' | 'Hard'
+export type ScholarshipStage = 'Researching' | 'Applying' | 'Submitted' | 'Won'
+export type SubscriptionTier = 'free' | 'pro'
+export type SubscriptionStatus = 'active' | 'trialing' | 'past_due' | 'canceled' | 'paused'
+
+export interface Profile {
+  id: string
+  display_name: string | null
+  gpa: number | null
+  sat: number | null
+  proposed_major: string | null
+  school1_name: string | null
+  school1_id: string | null
+  school2_name: string | null
+  school2_id: string | null
+  school3_name: string | null
+  school3_id: string | null
+  school4_name: string | null
+  school4_id: string | null
+  home_state: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface Task {
+  id: string
+  user_id: string
+  title: string
+  description: string | null
+  status: TaskStatus
+  category: TaskCategory
+  due_date: string | null
+  calendar_event_id: string | null
+  sort_order: number
+  completed_at: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface Milestone {
+  id: string
+  user_id: string
+  milestone_key: string
+  reached_at: string
+  notes: string | null
+}
+
+export interface Scholarship {
+  id: string
+  user_id: string
+  name: string
+  amount: number | null
+  deadline: string | null
+  essay_required: boolean
+  difficulty: ScholarshipDifficulty
+  stage: ScholarshipStage
+  url: string | null
+  notes: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface Subscription {
+  id: string
+  user_id: string
+  stripe_customer_id: string | null
+  stripe_subscription_id: string | null
+  tier: SubscriptionTier
+  status: SubscriptionStatus | null
+  current_period_end: string | null
+  cancel_at_period_end: boolean
+  trial_end: string | null
+  created_at: string
+  updated_at: string
+}
+
+// Required for Supabase typed client — minimal inline version
+export type Database = {
+  public: {
+    Tables: {
+      profiles: { Row: Profile; Insert: Partial<Profile>; Update: Partial<Profile> }
+      tasks: { Row: Task; Insert: Partial<Task>; Update: Partial<Task> }
+      progress: { Row: Milestone; Insert: Partial<Milestone>; Update: Partial<Milestone> }
+      scholarships: { Row: Scholarship; Insert: Partial<Scholarship>; Update: Partial<Scholarship> }
+      subscriptions: { Row: Subscription; Insert: Partial<Subscription>; Update: Partial<Subscription> }
+    }
+    Views: Record<string, never>
+    Functions: Record<string, never>
+    Enums: Record<string, never>
+  }
+}
