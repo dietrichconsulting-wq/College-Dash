@@ -55,12 +55,22 @@ function SchoolCard({ school, tier, index }) {
 
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 2 }}>
         <Stat label="Your Chance" value={`${school.yourChance ?? '—'}%`} color={cfg.color} />
-        <Stat label="Admit Rate" value={`${school.admitRate ?? '—'}%`} />
-        <Stat label="Net Cost/yr" value={school.netCost ? `$${(school.netCost / 1000).toFixed(0)}k` : '—'} />
+        <Stat label="Admit Rate" value={school.admitRate != null ? `${school.admitRate}%` : '—'} real={school._dataSources?.scorecard} />
+        <Stat label="Net Cost/yr" value={school.netCost != null ? `$${(school.netCost / 1000).toFixed(0)}k` : '—'} real={school._dataSources?.scorecard} />
+        {school.gradRate != null && <Stat label="Grad Rate" value={`${school.gradRate}%`} real />}
+        {school.usNewsRankDisplay && <Stat label="US News" value={school.usNewsRankDisplay} real />}
+        {school.medianEarnings10yr != null && <Stat label="Earnings 10yr" value={`$${(school.medianEarnings10yr / 1000).toFixed(0)}k`} real />}
       </div>
 
+      {(school.sat25 && school.sat75) && (
+        <div style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: 4 }}>
+          <span style={{ fontWeight: 600 }}>SAT range:</span> {school.sat25}–{school.sat75}
+          <span className="strat-real-badge">live</span>
+        </div>
+      )}
+
       {school.whyFit && (
-        <div style={{ fontSize: 12, color: 'var(--color-text-muted)', fontStyle: 'italic', marginTop: 2, lineHeight: 1.4 }}>
+        <div style={{ fontSize: 12, color: 'var(--color-text-muted)', fontStyle: 'italic', marginTop: 4, lineHeight: 1.4 }}>
           "{school.whyFit}"
         </div>
       )}
@@ -68,10 +78,13 @@ function SchoolCard({ school, tier, index }) {
   );
 }
 
-function Stat({ label, value, color }) {
+function Stat({ label, value, color, real }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: 60 }}>
-      <span style={{ fontSize: 13, fontWeight: 700, color: color || 'var(--color-text)' }}>{value}</span>
+      <span style={{ fontSize: 13, fontWeight: 700, color: color || 'var(--color-text)', display: 'flex', alignItems: 'center', gap: 3 }}>
+        {value}
+        {real && <span className="strat-real-badge">live</span>}
+      </span>
       <span style={{ fontSize: 10, color: 'var(--color-text-muted)', marginTop: 1 }}>{label}</span>
     </div>
   );

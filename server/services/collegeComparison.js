@@ -1,13 +1,22 @@
+/**
+ * College Comparison Service
+ *
+ * Hybrid approach:
+ *   - Real data (College Scorecard + IPEDS + US News) for factual fields
+ *   - Gemini AI fills only fields that can't come from APIs:
+ *       yourChance, programRank, climate, climateEmoji
+ */
+
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import dotenv from 'dotenv';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { batchCollegeProfiles } from './collegeDataAggregator.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: resolve(__dirname, '../../.env') });
 
 let model = null;
-
 function getModel() {
   if (!model && process.env.GEMINI_API_KEY) {
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
@@ -17,21 +26,34 @@ function getModel() {
 }
 
 /**
- * Fetch comparison data for a list of school names using Gemini AI.
- * Falls back to College Scorecard if API key is set.
+ * Fetch comparison data combining real API data with AI-generated personalization.
  */
 export async function compareColleges(schoolNames, { major, gpa, sat, homeState } = {}) {
   if (!schoolNames || schoolNames.length === 0) return [];
 
-  const gemini = getModel();
-  if (!gemini) {
-    return schoolNames.map(name => ({ name }));
-  }
-
   const majorLabel = major || 'Undecided';
   const hasProfile = gpa || sat;
 
-  const prompt = `You are a college admissions data expert with knowledge of US universities.
+  // ── Step 1: Fetch real data for all schools in parallel ──────────────────
+  const realData = await batchCollegeProfiles(schoolNames, homeState);
+
+  // ── Step 2: Use Gemini only for AI-only fields ───────────────────────────
+  const gemini = getModel();
+  let aiData = {};
+
+  if (gemini) {
+    // Build a compact summary of real data to give Gemini context
+    const schoolSummaries = schoolNames.map((name, i) => {
+      const r = realData[i];
+      const parts = [`${name}:`];
+      if (r?.admitRate != null) parts.push(`admit_rate=${r.admitRate}%`);
+      if (r?.avgSAT != null) parts.push(`avg_SAT=${r.avgSAT}`);
+      if (r?.sat25 != null && r?.sat75 != null) parts.push(`SAT_range=${r.sat25}-${r.sat75}`);
+      if (r?.state) parts.push(`state=${r.state}`);
+      return parts.join(' ');
+    }).join('\n');
+
+    const prompt = `You are a college admissions advisor. Below is REAL verified data for each school. Your ONLY job is to fill in the 3 missing fields: yourChance, programRank, and climate.
 
 STUDENT PROFILE:
 - GPA: ${gpa ?? 'Not provided'}
@@ -39,47 +61,81 @@ STUDENT PROFILE:
 - Intended Major: ${majorLabel}
 - Home State: ${homeState || 'Not provided'}
 
-Universities to compare: ${schoolNames.join(', ')}
+REAL DATA (do NOT override these — only use them to inform yourChance):
+${schoolSummaries}
 
-For EACH university provide these fields (use null if unknown):
-- name: the university name exactly as given
-- admitRate: the school's OVERALL admission rate as a percentage integer (e.g. 83) — this is the school's published rate, not personalized
+For EACH school provide ONLY these 3 fields:
+- name: exactly as given above
 - yourChance: ${hasProfile
-    ? `this SPECIFIC student's estimated admission probability (0-100 integer) based on their GPA of ${gpa} and SAT of ${sat} compared to the school's typical admitted student profile for ${majorLabel}. Factor in major competitiveness. Be realistic.`
-    : 'null (no profile data provided)'}
-- avgSAT: average composite SAT of admitted students (integer), or null if test-optional
-- netCost: ${homeState
-    ? `estimated annual net cost after typical financial aid for a ${homeState} resident — if the school is in ${homeState} use in-state tuition as the base, otherwise use out-of-state tuition as the base (integer dollars)`
-    : 'estimated annual net cost after typical financial aid, using out-of-state tuition as base (integer dollars)'}
-- tuitionOutOfState: official out-of-state (non-resident) tuition in dollars (integer)
-- enrollment: total undergraduate enrollment integer (e.g. 22000)
-- city: city name string
-- state: 2-letter US state code string
-- climate: one word: Sunny, Mild, Rainy, Snowy, Hot, Humid, Dry, or Temperate
-- climateEmoji: single weather emoji matching the climate
-- programRank: ranking string for "${majorLabel}" programs (e.g. "#12", "Top 25", or null if unknown)
-- gradRate: 4-year graduation rate as an integer percentage (e.g. 72)
+    ? `this student's estimated admission probability (0-100 integer) based on their GPA ${gpa} and SAT ${sat} vs the school's real SAT range and admit rate above. Factor in ${majorLabel} competitiveness. Be realistic and honest.`
+    : 'null (no student profile provided)'}
+- programRank: ranking string for "${majorLabel}" programs at this school (e.g. "#5", "Top 15", "Regionally Strong", or null if truly unknown)
+- climate: one word describing campus weather: Sunny, Mild, Rainy, Snowy, Hot, Humid, Dry, or Temperate
+- climateEmoji: single emoji matching the climate
 
-Respond ONLY with a valid JSON array. No markdown fences, no extra text.
-Example: {"name":"University of Oregon","admitRate":83,"yourChance":71,"avgSAT":1130,"netCost":27000,"tuitionOutOfState":38000,"enrollment":22000,"city":"Eugene","state":"OR","climate":"Rainy","climateEmoji":"🌧️","programRank":"#18","gradRate":72}`;
+Respond ONLY with a valid JSON array. No markdown fences.
+Example: [{"name":"University of Oregon","yourChance":62,"programRank":"Top 20","climate":"Rainy","climateEmoji":"🌧️"}]`;
 
-  try {
-    const result = await gemini.generateContent(prompt);
-    let text = result.response.text().trim();
-    if (text.startsWith('```')) {
-      text = text.replace(/^```(?:json)?\s*/, '').replace(/\s*```$/, '');
+    try {
+      const result = await gemini.generateContent(prompt);
+      let text = result.response.text().trim();
+      if (text.startsWith('```')) {
+        text = text.replace(/^```(?:json)?\s*/, '').replace(/\s*```$/, '');
+      }
+      const parsed = JSON.parse(text);
+      // Index by name for fast lookup
+      for (const item of parsed) {
+        if (item.name) aiData[item.name.toLowerCase()] = item;
+      }
+    } catch (err) {
+      console.error('College comparison AI error:', err.message);
     }
-    const parsed = JSON.parse(text);
-    // Ensure all requested schools are represented even if AI skipped one
-    return schoolNames.map(name => {
-      const found = parsed.find(p =>
-        p.name?.toLowerCase().includes(name.toLowerCase()) ||
-        name.toLowerCase().includes(p.name?.toLowerCase())
-      );
-      return found ? { ...found, name } : { name };
-    });
-  } catch (err) {
-    console.error('College comparison AI error:', err);
-    return schoolNames.map(name => ({ name }));
   }
+
+  // ── Step 3: Merge real + AI data ─────────────────────────────────────────
+  return schoolNames.map((name, i) => {
+    const real = realData[i] || {};
+
+    // Find AI entry (fuzzy key match)
+    const aiKey = Object.keys(aiData).find(k =>
+      k.includes(name.toLowerCase()) || name.toLowerCase().includes(k)
+    );
+    const ai = aiKey ? aiData[aiKey] : {};
+
+    // Use real net cost if available, fall back to AI
+    const netCost = real.netCostForResident ?? real.avgNetPrice ?? null;
+
+    return {
+      name,
+      // ── Real data (authoritative) ──
+      admitRate: real.admitRate ?? null,
+      avgSAT: real.avgSAT ?? null,
+      sat25: real.sat25 ?? null,
+      sat75: real.sat75 ?? null,
+      tuitionOutOfState: real.tuitionOutOfState ?? null,
+      tuitionInState: real.tuitionInState ?? null,
+      netCost,
+      netPriceByIncome: real.netPriceByIncome ?? null,
+      enrollment: real.enrollment ?? null,
+      gradRate: real.gradRate ?? null,
+      retentionRate: real.retentionRate ?? null,
+      medianEarnings10yr: real.medianEarnings10yr ?? null,
+      city: real.city ?? null,
+      state: real.state ?? null,
+      url: real.url ?? null,
+      control: real.control ?? null,
+      locale: real.locale ?? null,
+      carnegieClass: real.carnegieClass ?? null,
+      isHBCU: real.isHBCU ?? false,
+      usNewsRank: real.usNewsRank ?? null,
+      usNewsRankDisplay: real.usNewsRankDisplay ?? null,
+      // ── AI-only fields ──
+      yourChance: ai.yourChance ?? null,
+      programRank: ai.programRank ?? null,
+      climate: ai.climate ?? null,
+      climateEmoji: ai.climateEmoji ?? null,
+      // ── Metadata ──
+      _dataSources: real._dataSources ?? { scorecard: false, ipeds: false, usNews: false },
+    };
+  });
 }

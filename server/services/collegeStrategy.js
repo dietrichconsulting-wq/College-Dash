@@ -1,7 +1,18 @@
+/**
+ * College Strategy Generator
+ *
+ * Flow:
+ *   1. Gemini AI recommends reach/target/safety schools based on student profile
+ *   2. Real data (College Scorecard + IPEDS + US News) enriches each suggestion
+ *   3. Merge: real admission rate, SAT, tuition, net cost override AI estimates
+ *      AI fields kept: yourChance, programStrength, whyFit, rationale
+ */
+
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import dotenv from 'dotenv';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { batchCollegeProfiles } from './collegeDataAggregator.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: resolve(__dirname, '../../.env') });
@@ -24,14 +35,15 @@ export async function generateStrategy({ gpa, sat, major, budget, climate }) {
   if (!gemini) throw new Error('Gemini API key not configured');
 
   const budgetNote = budget
-    ? `Annual budget cap of $${Number(budget).toLocaleString()} (this represents the student's maximum annual out-of-pocket cost after typical financial aid and scholarships — factor in net price, not sticker price).`
+    ? `Annual budget cap of $${Number(budget).toLocaleString()} (maximum out-of-pocket after aid — factor in net price, not sticker price).`
     : 'No specific budget constraint.';
 
   const climateNote = climate
-    ? `Preferred campus climate/region: ${climate}. Prioritize schools in that environment but do not exclude excellent options outside it.`
-    : 'No climate preference specified.';
+    ? `Preferred campus climate/region: ${climate}. Prioritize schools in that environment but include strong options elsewhere.`
+    : 'No climate preference.';
 
-  const prompt = `You are a college admissions strategist helping a US high school student build a balanced college list.
+  // ── Step 1: Get school recommendations from Gemini ─────────────────────
+  const recommendPrompt = `You are a college admissions strategist. Generate a balanced college list for this US high school student.
 
 STUDENT PROFILE:
 - GPA: ${gpa}
@@ -40,36 +52,90 @@ STUDENT PROFILE:
 - ${budgetNote}
 - ${climateNote}
 
-Generate a tiered college list with exactly:
-- 3 REACH schools (admission rate or selectivity makes acceptance <30% likely for this student, but the school is a great fit)
-- 4 TARGET schools (student is within or near the typical admitted range; ~40-65% chance)
-- 3 SAFETY schools (student is well above typical admitted profile; high confidence of admission)
+Return exactly:
+- 3 REACH schools (<30% admission chance for this student but great fit)
+- 4 TARGET schools (40-65% admission chance)
+- 3 SAFETY schools (high confidence admission)
 
-For each school include:
+For each school provide ONLY:
 - name: full official school name
-- city: city
-- state: 2-letter state code
-- admitRate: school's overall admit rate as integer percentage
-- yourChance: estimated admission probability for THIS student (0-100 integer)
-- netCost: estimated annual net cost after aid for this student's budget profile (integer dollars)
-- programStrength: 1-2 word descriptor of how strong the ${major} program is (e.g. "Top 10", "Strong", "Solid", "Emerging")
-- whyFit: one concise sentence (≤15 words) on why this school fits the student
+- tier: "reach" | "target" | "safety"
+- yourChance: estimated admission probability 0-100 integer for THIS student specifically
+- programStrength: 1-2 words for the ${major} program (e.g. "Top 10", "Strong", "Solid", "Emerging")
+- whyFit: one sentence ≤15 words explaining fit
 
-Also include a top-level "rationale" string: 2-3 sentences summarizing the overall strategy and why these tiers were chosen.
+Also include top-level "rationale": 2-3 sentences on the overall strategy.
 
-Respond ONLY with valid JSON. No markdown, no extra text.
-Format:
+Respond ONLY with valid JSON, no markdown:
 {
   "rationale": "...",
-  "reach": [...],
-  "target": [...],
-  "safety": [...]
+  "schools": [{ "name": "...", "tier": "reach|target|safety", "yourChance": 0, "programStrength": "...", "whyFit": "..." }]
 }`;
 
-  const result = await gemini.generateContent(prompt);
+  const result = await gemini.generateContent(recommendPrompt);
   let text = result.response.text().trim();
   if (text.startsWith('```')) {
     text = text.replace(/^```(?:json)?\s*/, '').replace(/\s*```$/, '');
   }
-  return JSON.parse(text);
+
+  const aiResult = JSON.parse(text);
+  const { rationale, schools: aiSchools = [] } = aiResult;
+
+  if (!aiSchools.length) return { rationale, reach: [], target: [], safety: [] };
+
+  // ── Step 2: Fetch real data for all recommended schools ─────────────────
+  const schoolNames = aiSchools.map(s => s.name);
+  const realProfiles = await batchCollegeProfiles(schoolNames);
+
+  // ── Step 3: Merge AI recommendations with real data ─────────────────────
+  const enriched = aiSchools.map((ai, i) => {
+    const real = realProfiles[i] || {};
+
+    // Net cost: use real data, adjusted for budget context
+    // If no real data available, leave null (AI didn't provide it — better than hallucinating)
+    const netCost = real.netCostForResident ?? real.avgNetPrice ?? null;
+
+    return {
+      name: ai.name,
+      city: real.city ?? null,
+      state: real.state ?? null,
+      // ── Real admissions data (override AI) ──
+      admitRate: real.admitRate ?? null,         // [REAL]
+      yourChance: ai.yourChance ?? null,          // [AI] personalized
+      avgSAT: real.avgSAT ?? null,               // [REAL]
+      sat25: real.sat25 ?? null,                 // [REAL]
+      sat75: real.sat75 ?? null,                 // [REAL]
+      // ── Real cost data ──
+      netCost,                                   // [REAL]
+      tuitionOutOfState: real.tuitionOutOfState ?? null, // [REAL]
+      tuitionInState: real.tuitionInState ?? null,       // [REAL]
+      netPriceByIncome: real.netPriceByIncome ?? null,   // [REAL]
+      // ── Real outcomes ──
+      gradRate: real.gradRate ?? null,           // [REAL]
+      enrollment: real.enrollment ?? null,       // [REAL]
+      medianEarnings10yr: real.medianEarnings10yr ?? null, // [REAL]
+      // ── Rankings ──
+      usNewsRank: real.usNewsRank ?? null,       // [STATIC]
+      usNewsRankDisplay: real.usNewsRankDisplay ?? null,
+      // ── Institution info ──
+      control: real.control ?? null,
+      locale: real.locale ?? null,
+      isHBCU: real.isHBCU ?? false,
+      // ── AI-only fields ──
+      programStrength: ai.programStrength ?? null,
+      whyFit: ai.whyFit ?? null,
+      // ── Metadata ──
+      _dataSources: real._dataSources ?? { scorecard: false, ipeds: false, usNews: false },
+    };
+  });
+
+  // Split back into tiers (preserve tier from AI)
+  const byTier = (tier) => enriched.filter((_, i) => aiSchools[i]?.tier === tier);
+
+  return {
+    rationale,
+    reach: byTier('reach'),
+    target: byTier('target'),
+    safety: byTier('safety'),
+  };
 }

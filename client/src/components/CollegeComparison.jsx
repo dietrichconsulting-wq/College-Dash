@@ -124,18 +124,74 @@ const METRICS = [
       if (isNaN(n)) return null;
       return n <= 10 ? '#22C55E' : n <= 25 ? '#F59E0B' : null;
     },
-    tooltip: 'National program ranking for your major',
+    tooltip: 'National program ranking for your major (AI-estimated)',
     static: true,
     format: v => v || '—',
+    aiOnly: true,
+  },
+  {
+    key: 'usNewsRankDisplay',
+    label: 'US News Rank',
+    icon: '🗞️',
+    colorFn: v => {
+      if (!v) return null;
+      const n = parseInt(String(v).replace(/\D/g, ''), 10);
+      if (isNaN(n)) return null;
+      return n <= 25 ? '#22C55E' : n <= 75 ? '#F59E0B' : null;
+    },
+    tooltip: 'US News National University ranking (~2024)',
+    static: true,
+    format: v => v || '—',
+    realData: true,
   },
   {
     key: 'gradRate',
-    label: 'Grad Rate',
+    label: 'Grad Rate (4yr)',
     icon: '📊',
     colorFn: v => v == null ? null : v >= 80 ? '#22C55E' : v >= 65 ? '#F59E0B' : '#EF4444',
-    tooltip: '4-year graduation rate',
+    tooltip: '4-year graduation rate (College Scorecard)',
     ring: true,
     suffix: '%',
+    realData: true,
+  },
+  {
+    key: 'retentionRate',
+    label: 'Retention Rate',
+    icon: '🔄',
+    colorFn: v => v == null ? null : v >= 90 ? '#22C55E' : v >= 80 ? '#F59E0B' : '#EF4444',
+    tooltip: 'First-year full-time retention rate (College Scorecard)',
+    ring: true,
+    suffix: '%',
+    realData: true,
+  },
+  {
+    key: 'medianEarnings10yr',
+    label: 'Median Earnings (10yr)',
+    icon: '💼',
+    colorFn: v => v == null ? null : v >= 60000 ? '#22C55E' : v >= 40000 ? '#F59E0B' : null,
+    tooltip: 'Median earnings 10 years after enrollment (College Scorecard)',
+    counterK: true,
+    realData: true,
+  },
+  {
+    key: 'sat25sat75',
+    label: 'SAT Range',
+    icon: '📐',
+    colorFn: () => null,
+    tooltip: 'SAT 25th–75th percentile range of admitted students (College Scorecard)',
+    static: true,
+    format: (_, school) => (school.sat25 && school.sat75) ? `${school.sat25}–${school.sat75}` : (school.avgSAT ? `~${school.avgSAT}` : '—'),
+    realData: true,
+  },
+  {
+    key: 'control',
+    label: 'Type',
+    icon: '🏛️',
+    colorFn: () => null,
+    tooltip: 'Public or private institution (IPEDS)',
+    static: true,
+    format: v => v || '—',
+    realData: true,
   },
 ];
 
@@ -274,7 +330,7 @@ export default function CollegeComparison({ profile }) {
         </div>
         <div className="college-comparison__subtitle-row">
           <p className="college-comparison__subtitle">
-            AI-powered data · up to {MAX_SCHOOLS} schools
+            Real data: College Scorecard · IPEDS · US News · AI fills gaps
             {majorLabel && <span className="college-comparison__major-tag">{majorLabel}</span>}
           </p>
           <label className="comp-state-label">
@@ -327,13 +383,20 @@ export default function CollegeComparison({ profile }) {
                         <span className="comp-school-name" style={{ color: colors.primary }}>
                           {name}
                         </span>
-                        <button
-                          className="comp-school-remove"
-                          onClick={() => removeSchool(name)}
-                          title={`Remove ${name}`}
-                        >
-                          ✕
-                        </button>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                          {schoolDataMap[name]?._dataSources?.scorecard && (
+                            <span className="comp-data-badge comp-data-badge--real" title="Real data from College Scorecard">
+                              ✓ Scorecard
+                            </span>
+                          )}
+                          <button
+                            className="comp-school-remove"
+                            onClick={() => removeSchool(name)}
+                            title={`Remove ${name}`}
+                          >
+                            ✕
+                          </button>
+                        </div>
                       </div>
                     </th>
                   );
@@ -359,6 +422,12 @@ export default function CollegeComparison({ profile }) {
                   <td className={`comp-td comp-td--metric ${metric.highlight ? 'comp-td--metric-highlight' : ''}`}>
                     <span className="comp-metric-icon">{metric.icon}</span>
                     <span className="comp-metric-label" title={metric.tooltip}>{metric.label}</span>
+                    {metric.realData && (
+                      <span className="comp-metric-source-badge" title="Real data from APIs">live</span>
+                    )}
+                    {metric.aiOnly && (
+                      <span className="comp-metric-source-badge comp-metric-source-badge--ai" title="AI-estimated">AI</span>
+                    )}
                   </td>
                   {schools.map((name, si) => {
                     const d = schoolDataMap[name];
@@ -421,7 +490,7 @@ export default function CollegeComparison({ profile }) {
       )}
 
       <p className="college-comparison__disclaimer">
-        AI-estimated figures for guidance only. Verify costs and stats on each school's official site.
+        Rows marked <span style={{ color: '#22C55E', fontWeight: 600 }}>✓ Scorecard</span> use live College Scorecard data. US News ranks are approximate (~2024). "Your Chance" and "Program Rank" are AI-estimated. Always verify on each school's official site.
       </p>
     </div>
   );

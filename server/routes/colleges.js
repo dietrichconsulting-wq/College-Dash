@@ -3,6 +3,7 @@ import { searchColleges, getCollege } from '../services/collegeScorecard.js';
 import { getProfile } from '../services/notion.js';
 import { computeChances } from '../services/admissionChance.js';
 import { compareColleges } from '../services/collegeComparison.js';
+import { getCollegeProfile } from '../services/collegeDataAggregator.js';
 
 const router = Router();
 
@@ -35,6 +36,18 @@ router.get('/chances/:userId', async (req, res, next) => {
     if (!profile) return res.status(404).json({ error: 'Profile not found' });
     const chances = await computeChances(profile);
     res.json({ chances });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Full enriched profile by name (Scorecard + IPEDS + US News)
+router.get('/profile', async (req, res, next) => {
+  try {
+    const { name, homeState } = req.query;
+    if (!name) return res.status(400).json({ error: 'name is required' });
+    const profile = await getCollegeProfile(name, homeState);
+    res.json(profile);
   } catch (err) {
     next(err);
   }
