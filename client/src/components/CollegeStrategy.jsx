@@ -132,7 +132,7 @@ export default function CollegeStrategy({ profile }) {
     setLoading(true);
     setResult(null);
     try {
-      const data = await api.post('/strategy/generate', form);
+      const { data } = await api.post('/strategy/generate', form);
       setResult(data);
     } catch (err) {
       setError('Failed to generate strategy. Check your API key and try again.');
