@@ -25,14 +25,8 @@ export async function proxy(request: NextRequest) {
 
   const { pathname } = request.nextUrl
 
-  // Public routes
-  const publicRoutes = ['/login', '/signup', '/api/auth/callback', '/api/stripe/webhook']
-  if (publicRoutes.some(r => pathname.startsWith(r))) {
-    return supabaseResponse
-  }
-
-  // Redirect unauthenticated users to login
-  if (!user && !pathname.startsWith('/login') && !pathname.startsWith('/signup')) {
+  // Protect dashboard routes only
+  if (!user && pathname.startsWith('/dashboard')) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)
@@ -43,11 +37,6 @@ export async function proxy(request: NextRequest) {
     const url = request.nextUrl.clone()
     url.pathname = '/dashboard'
     return NextResponse.redirect(url)
-  }
-
-  // Allow authenticated users to access onboarding
-  if (user && pathname === '/onboarding') {
-    return supabaseResponse
   }
 
   return supabaseResponse
