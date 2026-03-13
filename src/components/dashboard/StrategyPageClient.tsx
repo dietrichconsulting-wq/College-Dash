@@ -50,6 +50,8 @@ interface StrategyPageClientProps {
     school2_name: string | null
     school3_name: string | null
     school4_name: string | null
+    strategy_result?: StrategyResult | null
+    strategy_generated_at?: string | null
   } | null
   userId: string
 }
@@ -69,7 +71,7 @@ export function StrategyPageClient({ profile, userId }: StrategyPageClientProps)
     climate: '',
   })
   const [loading, setLoading] = useState(false)
-  const [result, setResult] = useState<StrategyResult | null>(null)
+  const [result, setResult] = useState<StrategyResult | null>(profile?.strategy_result ?? null)
   const [error, setError] = useState('')
 
   async function handleGenerate() {

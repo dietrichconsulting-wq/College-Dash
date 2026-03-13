@@ -10,6 +10,13 @@ export async function POST(req: Request) {
 
     const body = await req.json()
     const result = await generateStrategy(body)
+
+    // Persist so it survives logout/login
+    await supabase.from('profiles').update({
+      strategy_result: result,
+      strategy_generated_at: new Date().toISOString(),
+    }).eq('id', user.id)
+
     return NextResponse.json(result)
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown error'
