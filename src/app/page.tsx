@@ -3,12 +3,15 @@ import { redirect } from 'next/navigation'
 import { LandingPage } from '@/components/LandingPage'
 
 export default async function Home() {
+  let user = null
   try {
     const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (user) redirect('/dashboard')
+    const { data } = await supabase.auth.getUser()
+    user = data.user
   } catch {
-    // If auth check fails, just show landing page
+    // Supabase not configured or error — show landing page
   }
+
+  if (user) redirect('/dashboard')
   return <LandingPage />
 }
