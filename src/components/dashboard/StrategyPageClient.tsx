@@ -105,7 +105,7 @@ export function StrategyPageClient({ profile, userId }: StrategyPageClientProps)
 
       <div className="card-elevated" style={{ padding: '28px 28px 32px' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 14, marginBottom: 20 }}>
-          <Field label="GPA" type="number" step="0.01" min="0" max="4.0" placeholder="3.9" value={form.gpa} onChange={v => setForm(f => ({ ...f, gpa: v }))} />
+          <Field label="GPA" type="number" step="0.01" min="0" max="5.0" placeholder="3.9" value={form.gpa} onChange={v => setForm(f => ({ ...f, gpa: v }))} />
           <Field label="SAT Score" type="number" min="400" max="1600" placeholder="1400" value={form.sat} onChange={v => setForm(f => ({ ...f, sat: v }))} />
           <div style={{ gridColumn: 'span 2' }}>
             <Field label="Intended Major" placeholder="Environmental Design" value={form.major} onChange={v => setForm(f => ({ ...f, major: v }))} />
@@ -268,7 +268,7 @@ function SchoolCard({ school, tier, index, slots, onSave }: {
       </div>
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 2 }}>
         {school.yourChance != null && <Stat label="Your Chance" value={`${school.yourChance}%`} color={cfg.color} />}
-        {school.admitRate != null && <Stat label="Admit Rate" value={`${school.admitRate}%`} real={school._dataSources?.scorecard} />}
+        {school.admitRate != null && <Stat label="Admit Rate" value={`${school.admitRate}%`} />}
         {school.netCost != null && <Stat label="Net Cost/yr" value={`$${(school.netCost / 1000).toFixed(0)}k`} real={school._dataSources?.scorecard} />}
         {school.gradRate != null && <Stat label="Grad Rate" value={`${school.gradRate}%`} real />}
         {school.usNewsRankDisplay && <Stat label="US News" value={school.usNewsRankDisplay} real />}

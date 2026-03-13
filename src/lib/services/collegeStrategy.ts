@@ -57,6 +57,7 @@ For each school provide ONLY:
 - name: full official school name
 - tier: "reach" | "target" | "safety"
 - yourChance: estimated admission probability 0-100 integer for THIS student specifically
+- admitRate: the school's real overall admission rate 0-100 integer (must be internally consistent with yourChance — an above-average student like this one should have yourChance >= admitRate for target/safety schools)
 - programStrength: 1-2 words for the ${major} program (e.g. "Top 10", "Strong", "Solid", "Emerging")
 - whyFit: one sentence ≤15 words explaining fit
 
@@ -65,7 +66,7 @@ Also include top-level "rationale": 2-3 sentences on the overall strategy.
 Respond ONLY with valid JSON, no markdown:
 {
   "rationale": "...",
-  "schools": [{ "name": "...", "tier": "reach|target|safety", "yourChance": 0, "programStrength": "...", "whyFit": "..." }]
+  "schools": [{ "name": "...", "tier": "reach|target|safety", "yourChance": 0, "admitRate": 0, "programStrength": "...", "whyFit": "..." }]
 }`;
 
   const result = await gemini.generateContent(recommendPrompt);
@@ -95,8 +96,10 @@ Respond ONLY with valid JSON, no markdown:
       name: ai.name,
       city: real.city ?? null,
       state: real.state ?? null,
-      // ── Real admissions data (override AI) ──
-      admitRate: real.admitRate ?? null,         // [REAL]
+      // ── Admissions data ──
+      // Prefer AI admit rate: Scorecard name matching can find wrong campuses,
+      // producing rates inconsistent with yourChance. AI uses known school selectivity.
+      admitRate: ai.admitRate ?? real.admitRate ?? null,
       yourChance: ai.yourChance ?? null,          // [AI] personalized
       avgSAT: real.avgSAT ?? null,               // [REAL]
       sat25: real.sat25 ?? null,                 // [REAL]

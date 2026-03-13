@@ -1,19 +1,23 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import { useState, useRef } from 'react'
 import type { Profile, Task } from '@/lib/types/database'
 import Link from 'next/link'
+import { useUpdateProfile } from '@/hooks/useProfile'
 
 interface ProfileStatsProps {
   profile: Profile | null | undefined
   loading: boolean
   progress: number
   tasks: Task[]
+  userId: string
 }
 
 const SCHOOLS_ORDER = ['school1', 'school2', 'school3', 'school4'] as const
 
-export function ProfileStats({ profile, loading, progress, tasks }: ProfileStatsProps) {
+export function ProfileStats({ profile, loading, progress, tasks, userId }: ProfileStatsProps) {
+  const updateProfile = useUpdateProfile(userId)
   const schools = SCHOOLS_ORDER
     .map(k => ({ name: profile?.[`${k}_name` as keyof Profile] as string | null }))
     .filter(s => s.name)
@@ -33,11 +37,27 @@ export function ProfileStats({ profile, loading, progress, tasks }: ProfileStats
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 24, flexWrap: 'wrap' }}>
         {/* GPA */}
-        <StatPill label="GPA" value={loading ? '—' : profile?.gpa?.toString() ?? '—'} color="var(--color-primary)" />
+        <EditableStatPill
+          label="GPA" color="var(--color-primary)"
+          value={loading ? null : profile?.gpa ?? null}
+          display={loading ? '—' : profile?.gpa?.toString() ?? '—'}
+          type="gpa"
+          onSave={v => updateProfile.mutate({ gpa: v ? parseFloat(v) : null })}
+        />
         {/* SAT */}
-        <StatPill label="SAT" value={loading ? '—' : profile?.sat?.toString() ?? '—'} color="#7c3aed" />
+        <EditableStatPill
+          label="SAT" color="#7c3aed"
+          value={loading ? null : profile?.sat ?? null}
+          display={loading ? '—' : profile?.sat?.toString() ?? '—'}
+          type="sat"
+          onSave={v => updateProfile.mutate({ sat: v ? parseInt(v) : null })}
+        />
         {/* Major */}
-        <StatPill label="Major" value={loading ? '—' : profile?.proposed_major ?? 'Not set'} color="#059669" />
+        <EditableMajorPill
+          label="Major"
+          display={loading ? '—' : profile?.proposed_major ?? 'Not set'}
+          onSave={v => updateProfile.mutate({ proposed_major: v || null })}
+        />
 
         {/* Progress ring */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -83,6 +103,138 @@ export function ProfileStats({ profile, loading, progress, tasks }: ProfileStats
         )}
       </div>
     </motion.div>
+  )
+}
+
+function EditableStatPill({ label, color, display, onSave, type }: {
+  label: string; color: string; value: number | null
+  display: string; type: 'gpa' | 'sat'
+  onSave: (v: string) => void
+}) {
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState('')
+  const [saved, setSaved] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  function startEdit() {
+    setDraft(display === '—' ? '' : display)
+    setEditing(true)
+    setTimeout(() => inputRef.current?.select(), 30)
+  }
+
+  function commit() {
+    setEditing(false)
+    const val = draft.trim()
+    // Basic validation
+    if (type === 'gpa') {
+      const n = parseFloat(val)
+      if (!val || isNaN(n) || n < 0 || n > 5.0) { setSaved(false); return }
+    } else {
+      const n = parseInt(val)
+      if (!val || isNaN(n) || n < 400 || n > 1600) { setSaved(false); return }
+    }
+    onSave(val)
+    setSaved(true)
+    setTimeout(() => setSaved(false), 1800)
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', position: 'relative' }}>
+      <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>
+        {label}
+      </span>
+      {editing ? (
+        <input
+          ref={inputRef}
+          value={draft}
+          onChange={e => setDraft(e.target.value)}
+          onBlur={commit}
+          onKeyDown={e => { if (e.key === 'Enter') commit(); if (e.key === 'Escape') setEditing(false) }}
+          type="number"
+          step={type === 'gpa' ? '0.01' : '10'}
+          min={type === 'gpa' ? '0' : '400'}
+          max={type === 'gpa' ? '5.0' : '1600'}
+          style={{
+            fontSize: 20, fontWeight: 800, color, lineHeight: 1,
+            width: type === 'gpa' ? 56 : 72, border: 'none', borderBottom: `2px solid ${color}`,
+            background: 'transparent', outline: 'none', padding: '0 0 2px',
+          }}
+        />
+      ) : (
+        <button
+          onClick={startEdit}
+          title={`Click to edit ${label}`}
+          style={{
+            fontSize: 20, fontWeight: 800, color, lineHeight: 1,
+            background: 'none', border: 'none', padding: 0, cursor: 'text',
+            textAlign: 'left', display: 'flex', alignItems: 'center', gap: 4,
+          }}
+        >
+          {saved ? <span style={{ color: '#059669' }}>✓</span> : display}
+          {!saved && <span style={{ fontSize: 9, color: 'var(--color-text-muted)', opacity: 0.6, fontWeight: 400, marginTop: 2 }}>✎</span>}
+        </button>
+      )}
+    </div>
+  )
+}
+
+function EditableMajorPill({ label, display, onSave }: {
+  label: string; display: string; onSave: (v: string) => void
+}) {
+  const color = '#059669'
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState('')
+  const [saved, setSaved] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  function startEdit() {
+    setDraft(display === 'Not set' || display === '—' ? '' : display)
+    setEditing(true)
+    setTimeout(() => inputRef.current?.focus(), 30)
+  }
+
+  function commit() {
+    setEditing(false)
+    const val = draft.trim()
+    onSave(val)
+    if (val) { setSaved(true); setTimeout(() => setSaved(false), 1800) }
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', position: 'relative' }}>
+      <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>
+        {label}
+      </span>
+      {editing ? (
+        <input
+          ref={inputRef}
+          value={draft}
+          onChange={e => setDraft(e.target.value)}
+          onBlur={commit}
+          onKeyDown={e => { if (e.key === 'Enter') commit(); if (e.key === 'Escape') setEditing(false) }}
+          type="text"
+          placeholder="e.g. Computer Science"
+          style={{
+            fontSize: 16, fontWeight: 800, color, lineHeight: 1,
+            width: 180, border: 'none', borderBottom: `2px solid ${color}`,
+            background: 'transparent', outline: 'none', padding: '0 0 2px',
+          }}
+        />
+      ) : (
+        <button
+          onClick={startEdit}
+          title="Click to edit Major"
+          style={{
+            fontSize: 16, fontWeight: 800, color, lineHeight: 1,
+            background: 'none', border: 'none', padding: 0, cursor: 'text',
+            textAlign: 'left', display: 'flex', alignItems: 'center', gap: 4,
+          }}
+        >
+          {saved ? <span style={{ color: '#059669' }}>✓</span> : display}
+          {!saved && <span style={{ fontSize: 9, color: 'var(--color-text-muted)', opacity: 0.6, fontWeight: 400, marginTop: 2 }}>✎</span>}
+        </button>
+      )}
+    </div>
   )
 }
 

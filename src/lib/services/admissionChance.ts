@@ -181,7 +181,7 @@ export async function computeChances(profile) {
   const gemini = getModel();
   if (gemini && validResults.length > 0) {
     try {
-      const prompt = `You are an expert college admissions counselor. Evaluate this student's realistic admission chances.
+      const prompt = `You are an expert college admissions counselor. Evaluate this student's realistic admission chances and provide detailed admissions intelligence for each school.
 
 STUDENT PROFILE:
 - GPA: ${profile.gpa || 'Not provided'}
@@ -194,16 +194,32 @@ ${validResults.map(r =>
       ).join('\n')}
 
 INSTRUCTIONS:
-Use your knowledge of each school's actual selectivity and admissions standards to estimate this student's realistic chance of admission (0-100). Do NOT rely on any admission rate numbers I might have provided — use your own training data about each school's selectivity. A 3.9 GPA and 1400 SAT is competitive but not elite; schools like UT Austin (~29% admit rate) should NOT be near 90%+. Calibrate carefully.
-
-Also provide a short 1-sentence personalized tip for that specific school and major.
+For each school, use your training knowledge (not numbers I provide) to return:
+1. aiChance: realistic personal admission chance 0-100 for THIS student. Calibrate carefully — do not inflate. UT Austin (~29% overall) should not be 90%+ for anyone.
+2. aiTip: 1-sentence personalized advice for this student's specific major at this school.
+3. portfolioRequired: true if a portfolio/audition/creative supplement is typically required or strongly recommended for ${profile.proposedMajor || 'this major'} at this school, false otherwise.
+4. topFactors: array of exactly 3 strings — the most important admission factors at this school in priority order (e.g. "GPA & class rank", "Essays", "Test scores", "Extracurriculars", "Portfolio", "Demonstrated interest", "Letters of recommendation", "Major-specific talent").
+5. keyRequirements: array of 2-3 short strings listing notable application requirements or considerations specific to this school (e.g. "Holistic review", "No test score minimum", "Requires portfolio for design programs", "In-state applicants preferred", "Rolling admissions").
+6. satSuperscore: true if this school superscores the SAT (takes highest section scores across test dates), false if they take the highest single sitting, null if test-optional with no clear policy.
+7. testPolicy: one of "Required", "Test-Optional", "Test-Free", or "Recommended" — the school's current standardized test policy.
+8. satNotes: array of 0-2 short strings with any notable SAT-specific policies (e.g. "CSS Profile required", "No score choice — must send all scores", "Score Choice accepted", "Self-reported scores accepted", "Requires SAT Essay"). Leave empty array if nothing notable.
+9. satPlusFiftyChance: the student's estimated admission chance if their SAT were ${profile.sat ? profile.sat + 50 : 'N/A'} (50 points higher). Use the same calibration as aiChance. If student has no SAT or is already at 1600, return null.
+10. gpaPlusTwoChance: the student's estimated admission chance if their GPA were ${profile.gpa ? Math.min(Number(profile.gpa) + 0.2, 5.0).toFixed(1) : 'N/A'} (0.2 higher). Use the same calibration as aiChance. If GPA is already 4.0+ or not provided, return null.
 
 Respond with ONLY a valid JSON array. No markdown, no explanation.
 [
   {
     "schoolId": "string",
-    "aiChance": integer between 0 and 100,
-    "aiTip": "string"
+    "aiChance": integer 0-100,
+    "aiTip": "string",
+    "portfolioRequired": boolean,
+    "topFactors": ["string", "string", "string"],
+    "keyRequirements": ["string", "string"],
+    "satSuperscore": boolean or null,
+    "testPolicy": "Required" | "Test-Optional" | "Test-Free" | "Recommended",
+    "satNotes": ["string"],
+    "satPlusFiftyChance": integer 0-100 or null,
+    "gpaPlusTwoChance": integer 0-100 or null
   }
 ]`;
 
@@ -217,8 +233,16 @@ Respond with ONLY a valid JSON array. No markdown, no explanation.
       validResults.forEach(res => {
         const aiData = parsed.find(p => p.schoolId === res.schoolId);
         if (aiData) {
-          res.chance = aiData.aiChance; // Replace heuristic with AI chance
+          res.chance = aiData.aiChance;
           res.aiTip = aiData.aiTip;
+          res.portfolioRequired = aiData.portfolioRequired ?? false;
+          res.topFactors = aiData.topFactors ?? [];
+          res.keyRequirements = aiData.keyRequirements ?? [];
+          res.satSuperscore = aiData.satSuperscore ?? null;
+          res.testPolicy = aiData.testPolicy ?? null;
+          res.satNotes = aiData.satNotes ?? [];
+          res.satPlusFiftyChance = aiData.satPlusFiftyChance ?? null;
+          res.gpaPlusTwoChance = aiData.gpaPlusTwoChance ?? null;
         }
       });
     } catch (err) {

@@ -34,7 +34,7 @@ export function DashboardClient({ userId }: DashboardClientProps) {
       </div>
 
       {/* Profile Stats */}
-      <ProfileStats profile={profile} loading={profileLoading} progress={progress} tasks={tasks} />
+      <ProfileStats profile={profile} loading={profileLoading} progress={progress} tasks={tasks} userId={userId} />
 
       {/* Admission Snapshot */}
       <AdmissionSnapshot profile={profile} loading={profileLoading} />

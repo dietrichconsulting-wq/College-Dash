@@ -57,13 +57,15 @@ STUDENT PROFILE:
 - Intended Major: ${majorLabel}
 - Home State: ${homeState || 'Not provided'}
 
-REAL DATA (do NOT override these — only use them to inform yourChance):
+SCORECARD DATA (use only as a hint — name matching can occasionally return wrong campuses):
 ${schoolSummaries}
+
+IMPORTANT: If any school's Scorecard admit rate looks wrong for that institution (e.g., University of Texas at Austin should be ~29%, not 89%), ignore that Scorecard value and use your own training knowledge instead. Always sanity-check against what you know about each school's selectivity.
 
 For EACH school provide ONLY these 3 fields:
 - name: exactly as given above
 - yourChance: ${hasProfile
-    ? `this student's estimated admission probability (0-100 integer) based on their GPA ${gpa} and SAT ${sat} vs the school's real SAT range and admit rate above. Factor in ${majorLabel} competitiveness. Be realistic and honest.`
+    ? `this student's realistic admission probability (0-100 integer) for GPA ${gpa} and SAT ${sat}. Use your own knowledge of each school's true selectivity — do NOT trust Scorecard admit rates that seem anomalously high for selective flagships. Be accurate and calibrated.`
     : 'null (no student profile provided)'}
 - programRank: ranking string for "${majorLabel}" programs at this school (e.g. "#5", "Top 15", "Regionally Strong", or null if truly unknown)
 - climate: one word describing campus weather: Sunny, Mild, Rainy, Snowy, Hot, Humid, Dry, or Temperate

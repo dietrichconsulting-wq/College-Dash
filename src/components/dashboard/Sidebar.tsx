@@ -15,6 +15,7 @@ const NAV_ITEMS = [
   { href: '/strategy',      icon: '⚡',  label: 'Strategy' },
   { href: '/essays',        icon: '✍️',  label: 'Essays' },
   { href: '/scholarships',  icon: '🏆',  label: 'Scholarships' },
+  { href: '/finance',       icon: '💵',  label: 'Finance Plan' },
   { href: '/profile',       icon: '👤',  label: 'Profile' },
 ]
 
@@ -42,7 +43,7 @@ export function Sidebar({ user, profile, subscription }: SidebarProps) {
     <nav className="sidebar">
       <div className="sidebar__brand">
         <span style={{ fontSize: 18 }}>🎓</span>
-        {' '}College Dashboard
+        {' '}Stairway U
       </div>
 
       <div className="sidebar__nav">

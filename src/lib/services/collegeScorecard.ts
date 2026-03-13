@@ -168,12 +168,92 @@ export async function getCollege(id) {
  * Look up a school by name — returns best match with full rich profile.
  * Returns null if not found or no API key.
  */
+// Common short names / nicknames → canonical full names used by College Scorecard
+const NAME_EXPANSIONS: Record<string, string> = {
+  'texas':            'University of Texas at Austin',
+  'ut austin':        'University of Texas at Austin',
+  'ut':               'University of Texas at Austin',
+  'a&m':              'Texas A&M University',
+  'texas a&m':        'Texas A&M University',
+  'tamu':             'Texas A&M University',
+  'oregon':           'University of Oregon',
+  'u of o':           'University of Oregon',
+  'washington':       'University of Washington-Seattle Campus',
+  'uw':               'University of Washington-Seattle Campus',
+  'u of washington':  'University of Washington-Seattle Campus',
+  'michigan':         'University of Michigan-Ann Arbor',
+  'u of m':           'University of Michigan-Ann Arbor',
+  'florida':          'University of Florida',
+  'uf':               'University of Florida',
+  'georgia':          'University of Georgia',
+  'uga':              'University of Georgia',
+  'virginia':         'University of Virginia-Main Campus',
+  'uva':              'University of Virginia-Main Campus',
+  'north carolina':   'University of North Carolina at Chapel Hill',
+  'unc':              'University of North Carolina at Chapel Hill',
+  'ohio state':       'Ohio State University-Main Campus',
+  'osu':              'Ohio State University-Main Campus',
+  'penn state':       'Pennsylvania State University-Main Campus',
+  'psu':              'Pennsylvania State University-Main Campus',
+  'colorado':         'University of Colorado Boulder',
+  'cu boulder':       'University of Colorado Boulder',
+  'boulder':          'University of Colorado Boulder',
+  'arizona':          'University of Arizona',
+  'u of a':           'University of Arizona',
+  'arizona state':    'Arizona State University-Tempe',
+  'asu':              'Arizona State University-Tempe',
+  'purdue':           'Purdue University-Main Campus',
+  'indiana':          'Indiana University-Bloomington',
+  'iu':               'Indiana University-Bloomington',
+  'alabama':          'University of Alabama',
+  'bama':             'University of Alabama',
+  'notre dame':       'University of Notre Dame',
+  'vanderbilt':       'Vanderbilt University',
+  'emory':            'Emory University',
+  'tulane':           'Tulane University of Louisiana',
+  'penn':             'University of Pennsylvania',
+  'upenn':            'University of Pennsylvania',
+  'ucla':             'University of California-Los Angeles',
+  'usc':              'University of Southern California',
+  'uci':              'University of California-Irvine',
+  'uc irvine':        'University of California-Irvine',
+  'ucsd':             'University of California-San Diego',
+  'uc san diego':     'University of California-San Diego',
+  'ucd':              'University of California-Davis',
+  'uc davis':         'University of California-Davis',
+  'uc berkeley':      'University of California-Berkeley',
+  'berkeley':         'University of California-Berkeley',
+  'cal':              'University of California-Berkeley',
+  'ucsb':             'University of California-Santa Barbara',
+  'uc santa barbara': 'University of California-Santa Barbara',
+  'miami':            'University of Miami',
+  'bu':               'Boston University',
+  'bc':               'Boston College',
+  'northeastern':     'Northeastern University',
+  'drexel':           'Drexel University',
+  'georgetown':       'Georgetown University',
+  'american':         'American University',
+  'gw':               'George Washington University',
+  'george washington':'George Washington University',
+  'rice':             'Rice University',
+  'tcu':              'Texas Christian University',
+  'smu':              'Southern Methodist University',
+  'baylor':           'Baylor University',
+  'tech':             'Texas Tech University',
+  'texas tech':       'Texas Tech University',
+  'ttu':              'Texas Tech University',
+};
+
 export async function lookupByName(schoolName) {
   if (!API_KEY || !schoolName) return null;
 
+  // Expand common short names to full Scorecard names before querying
+  const expanded = NAME_EXPANSIONS[schoolName.trim().toLowerCase()] || schoolName;
+
+
   const params = new URLSearchParams({
     api_key: API_KEY,
-    'school.name': schoolName,
+    'school.name': expanded,
     fields: RICH_FIELDS,
     per_page: '5',
     'school.degrees_awarded.predominant__range': '3..4', // bachelor's and graduate
@@ -189,14 +269,23 @@ export async function lookupByName(schoolName) {
     const results = data.results || [];
     if (!results.length) return null;
 
-    // Pick best match: exact name match first, otherwise first result
-    const q = schoolName.toLowerCase().replace(/[^a-z0-9\s]/g, '');
-    const exact = results.find(r => {
+    // Score each result to pick the best match.
+    // Exact name match wins outright; otherwise prefer flagship-sized schools
+    // (highest enrollment) since short names like "Texas" → UT Austin, not a random
+    // community college that happens to have "Texas" in its name.
+    const q = expanded.toLowerCase().replace(/[^a-z0-9\s]/g, '');
+    const scored = results.map(r => {
       const n = (r['school.name'] || '').toLowerCase().replace(/[^a-z0-9\s]/g, '');
-      return n === q || n.includes(q) || q.includes(n);
+      const enrollment = r['latest.student.size'] || 0;
+      let score = enrollment; // base score: bigger = more likely to be the intended school
+      if (n === q) score += 1_000_000;          // exact match
+      else if (n.startsWith(q) || q.startsWith(n)) score += 500_000; // prefix match
+      else if (n.includes(q) || q.includes(n))  score += 100_000;    // substring match
+      return { r, score };
     });
+    scored.sort((a, b) => b.score - a.score);
 
-    return mapRichResult(exact || results[0]);
+    return mapRichResult(scored[0].r);
   } catch {
     return null;
   }

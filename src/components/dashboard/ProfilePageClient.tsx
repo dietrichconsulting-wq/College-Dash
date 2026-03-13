@@ -79,7 +79,7 @@ export function ProfilePageClient({ userId }: { userId: string }) {
               {US_STATES.map(s => <option key={s} value={s}>{s}</option>)}
             </select>
           </div>
-          <Field label="GPA" type="number" step="0.01" min="0" max="4.0" value={form.gpa} onChange={v => setForm(f => ({ ...f, gpa: v }))} placeholder="3.9" />
+          <Field label="GPA" type="number" step="0.01" min="0" max="5.0" value={form.gpa} onChange={v => setForm(f => ({ ...f, gpa: v }))} placeholder="3.9" />
           <Field label="SAT Score" type="number" min="400" max="1600" value={form.sat} onChange={v => setForm(f => ({ ...f, sat: v }))} placeholder="1400" />
           <div style={{ gridColumn: 'span 2' }}>
             <Field label="Intended Major" value={form.proposed_major} onChange={v => setForm(f => ({ ...f, proposed_major: v }))} placeholder="e.g. Computer Science" />

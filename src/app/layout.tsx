@@ -6,8 +6,8 @@ import { Providers } from './providers'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'College Dashboard',
-  description: 'Your AI-powered college application command center',
+  title: 'Stairway U',
+  description: 'Your Stairway to College',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

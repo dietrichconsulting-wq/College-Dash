@@ -10,8 +10,18 @@ interface SchoolResult {
   chance: number
   admissionRate: number | null
   avgSAT: number | null
+  sat25: number | null
+  sat75: number | null
   aiTip: string | null
+  portfolioRequired: boolean
+  topFactors: string[]
+  keyRequirements: string[]
+  satSuperscore: boolean | null
+  testPolicy: string | null
+  satNotes: string[]
   improvement: { improvedSAT: number; currentChance: number; improvedChance: number; delta: number } | null
+  satPlusFiftyChance: number | null
+  gpaPlusTwoChance: number | null
 }
 
 interface AdmissionSnapshotProps {
@@ -25,11 +35,9 @@ function chanceLabel(pct: number): { label: string; color: string } {
   return { label: 'Reach', color: '#dc2626' }
 }
 
-export function AdmissionSnapshot({ profile, loading }: AdmissionSnapshotProps) {
-  const [results, setResults] = useState<SchoolResult[]>([])
-  const [fetching, setFetching] = useState(false)
-  const [fetched, setFetched] = useState(false)
+const SNAPSHOT_KEY = 'admission_snapshot_v1'
 
+export function AdmissionSnapshot({ profile, loading }: AdmissionSnapshotProps) {
   const schools = profile
     ? [
         { name: profile.school1_name, id: profile.school1_id },
@@ -39,8 +47,37 @@ export function AdmissionSnapshot({ profile, loading }: AdmissionSnapshotProps) 
       ].filter(s => s.name)
     : []
 
+  // Re-fetch whenever GPA, SAT, major, or schools change
+  const fetchKey = profile
+    ? `${profile.gpa}|${profile.sat}|${profile.proposed_major}|${schools.map(s => s.name).join(',')}`
+    : null
+
+  // Restore cached results from sessionStorage on mount
+  const [results, setResults] = useState<SchoolResult[]>(() => {
+    try {
+      const saved = sessionStorage.getItem(SNAPSHOT_KEY)
+      if (saved) {
+        const { key, data } = JSON.parse(saved)
+        // Only restore if profile hasn't changed since last fetch
+        if (key && data) return data
+      }
+    } catch { /* ignore */ }
+    return []
+  })
+  const [fetching, setFetching] = useState(false)
+  const [lastFetchKey, setLastFetchKey] = useState<string | null>(() => {
+    try {
+      const saved = sessionStorage.getItem(SNAPSHOT_KEY)
+      if (saved) {
+        const { key } = JSON.parse(saved)
+        return key ?? null
+      }
+    } catch { /* ignore */ }
+    return null
+  })
+
   useEffect(() => {
-    if (!profile || loading || fetched || schools.length === 0) return
+    if (!profile || loading || !fetchKey || fetchKey === lastFetchKey || schools.length === 0) return
     setFetching(true)
     fetch('/api/colleges/chances', {
       method: 'POST',
@@ -54,12 +91,14 @@ export function AdmissionSnapshot({ profile, loading }: AdmissionSnapshotProps) 
     })
       .then(r => r.json())
       .then(data => {
-        setResults(data.results || [])
-        setFetched(true)
+        const freshResults = data.results || []
+        setResults(freshResults)
+        setLastFetchKey(fetchKey)
+        try { sessionStorage.setItem(SNAPSHOT_KEY, JSON.stringify({ key: fetchKey, data: freshResults })) } catch { /* ignore */ }
       })
-      .catch(() => setFetched(true))
+      .catch(() => setLastFetchKey(fetchKey))
       .finally(() => setFetching(false))
-  }, [profile, loading]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [fetchKey, loading]) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (loading || schools.length === 0) return null
 
@@ -84,14 +123,14 @@ export function AdmissionSnapshot({ profile, loading }: AdmissionSnapshotProps) 
       </div>
 
       {fetching && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 14 }}>
           {schools.map((_, i) => (
-            <div key={i} className="skeleton" style={{ height: 88, borderRadius: 12 }} />
+            <div key={i} className="skeleton" style={{ height: 220, borderRadius: 12 }} />
           ))}
         </div>
       )}
 
-      {!fetching && results.length === 0 && fetched && (
+      {!fetching && results.length === 0 && lastFetchKey !== null && (
         <div style={{ fontSize: 13, color: 'var(--color-text-muted)', padding: '12px 0' }}>
           Couldn&apos;t load school data. Add your SAT score and try refreshing.{' '}
           <Link href="/profile" style={{ color: 'var(--color-primary)', fontWeight: 600 }}>Update profile →</Link>
@@ -99,10 +138,10 @@ export function AdmissionSnapshot({ profile, loading }: AdmissionSnapshotProps) 
       )}
 
       {!fetching && results.length > 0 && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 14 }}>
           {results.map((r, i) => {
             const { label, color } = chanceLabel(r.chance)
-            const schoolAdmitRate = r.admissionRate != null ? `${r.admissionRate}% admit rate` : null
+            const schoolAdmitRate = r.admissionRate != null ? `${r.admissionRate}% overall admit rate` : null
             return (
               <motion.div
                 key={i}
@@ -114,24 +153,38 @@ export function AdmissionSnapshot({ profile, loading }: AdmissionSnapshotProps) 
                   borderRadius: 12,
                   padding: '14px 16px',
                   border: '1.5px solid var(--color-border)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 10,
                 }}
               >
-                {/* School name + label */}
-                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 10 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-text)', lineHeight: 1.3, maxWidth: 130 }}>
+                {/* School name + tier label */}
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-text)', lineHeight: 1.3, maxWidth: 160 }}>
                     {r.schoolName}
                   </div>
-                  <span style={{
-                    fontSize: 10, fontWeight: 800, padding: '3px 8px', borderRadius: 20,
-                    background: `${color}18`, color, border: `1px solid ${color}40`,
-                    whiteSpace: 'nowrap',
-                  }}>
-                    {label}
-                  </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0 }}>
+                    {r.portfolioRequired && (
+                      <span title="Portfolio required" style={{
+                        fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 20,
+                        background: 'rgba(124,58,237,0.1)', color: '#7c3aed',
+                        border: '1px solid rgba(124,58,237,0.25)', whiteSpace: 'nowrap',
+                      }}>
+                        📁 Portfolio
+                      </span>
+                    )}
+                    <span style={{
+                      fontSize: 10, fontWeight: 800, padding: '3px 8px', borderRadius: 20,
+                      background: `${color}18`, color, border: `1px solid ${color}40`,
+                      whiteSpace: 'nowrap',
+                    }}>
+                      {label}
+                    </span>
+                  </div>
                 </div>
 
                 {/* Chance bar */}
-                <div style={{ marginBottom: 8 }}>
+                <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
                     <span style={{ fontSize: 11, color: 'var(--color-text-muted)', fontWeight: 600 }}>Your chance</span>
                     <span style={{ fontSize: 14, fontWeight: 800, color }}>{r.chance}%</span>
@@ -149,25 +202,141 @@ export function AdmissionSnapshot({ profile, loading }: AdmissionSnapshotProps) 
                   )}
                 </div>
 
+                {/* Top factors */}
+                {r.topFactors?.length > 0 && (
+                  <div style={{ borderTop: '1px solid var(--color-border)', paddingTop: 8 }}>
+                    <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 5 }}>
+                      What they value most
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                      {r.topFactors.map((f, fi) => (
+                        <div key={fi} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <span style={{
+                            fontSize: 9, fontWeight: 900, color: fi === 0 ? color : 'var(--color-text-muted)',
+                            minWidth: 14, textAlign: 'center',
+                          }}>
+                            {fi === 0 ? '①' : fi === 1 ? '②' : '③'}
+                          </span>
+                          <span style={{ fontSize: 11, color: fi === 0 ? 'var(--color-text)' : 'var(--color-text-muted)', fontWeight: fi === 0 ? 600 : 400 }}>
+                            {f}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Key requirements */}
+                {r.keyRequirements?.length > 0 && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                    {r.keyRequirements.map((req, ri) => (
+                      <span key={ri} style={{
+                        fontSize: 10, padding: '2px 8px', borderRadius: 20,
+                        background: 'var(--color-border)', color: 'var(--color-text-muted)',
+                        fontWeight: 500,
+                      }}>
+                        {req}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {/* SAT policy */}
+                {(r.testPolicy || r.satSuperscore != null || r.satNotes?.length > 0) && (
+                  <div style={{ borderTop: '1px solid var(--color-border)', paddingTop: 8 }}>
+                    <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>
+                      SAT Policy
+                    </div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: r.satNotes?.length > 0 ? 6 : 0 }}>
+                      {r.testPolicy && (
+                        <span style={{
+                          fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20,
+                          background: r.testPolicy === 'Required' ? 'rgba(239,68,68,0.08)' : r.testPolicy === 'Test-Optional' ? 'rgba(5,150,105,0.08)' : 'rgba(245,158,11,0.08)',
+                          color: r.testPolicy === 'Required' ? '#dc2626' : r.testPolicy === 'Test-Optional' ? '#059669' : '#d97706',
+                          border: `1px solid ${r.testPolicy === 'Required' ? 'rgba(239,68,68,0.2)' : r.testPolicy === 'Test-Optional' ? 'rgba(5,150,105,0.2)' : 'rgba(245,158,11,0.2)'}`,
+                        }}>
+                          {r.testPolicy}
+                        </span>
+                      )}
+                      {r.satSuperscore === true && (
+                        <span style={{
+                          fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20,
+                          background: 'rgba(37,99,235,0.08)', color: '#2563eb',
+                          border: '1px solid rgba(37,99,235,0.2)',
+                        }}>
+                          ✓ Superscores
+                        </span>
+                      )}
+                      {r.satSuperscore === false && (
+                        <span style={{
+                          fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20,
+                          background: 'var(--color-border)', color: 'var(--color-text-muted)',
+                          border: '1px solid var(--color-border)',
+                        }}>
+                          Single sitting only
+                        </span>
+                      )}
+                    </div>
+                    {r.satNotes?.length > 0 && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        {r.satNotes.map((note, ni) => (
+                          <div key={ni} style={{ fontSize: 10, color: 'var(--color-text-muted)', display: 'flex', gap: 4 }}>
+                            <span style={{ color: 'var(--color-primary)', flexShrink: 0 }}>·</span>
+                            {note}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* AI tip */}
                 {r.aiTip && (
                   <div style={{
                     fontSize: 11, color: 'var(--color-text-muted)', lineHeight: 1.4,
-                    borderTop: '1px solid var(--color-border)', paddingTop: 8, marginTop: 4,
+                    borderTop: '1px solid var(--color-border)', paddingTop: 8,
                   }}>
                     <span style={{ fontWeight: 700, color: 'var(--color-primary)' }}>Focus: </span>
                     {r.aiTip}
                   </div>
                 )}
 
-                {/* SAT improvement nudge */}
-                {!r.aiTip && r.improvement && (
-                  <div style={{
-                    fontSize: 11, color: 'var(--color-text-muted)', lineHeight: 1.4,
-                    borderTop: '1px solid var(--color-border)', paddingTop: 8, marginTop: 4,
-                  }}>
-                    <span style={{ fontWeight: 700, color: '#d97706' }}>Boost: </span>
-                    SAT {r.improvement.improvedSAT} → +{r.improvement.delta}% chance
+                {/* What-if projections */}
+                {(r.satPlusFiftyChance != null || r.gpaPlusTwoChance != null) && (
+                  <div style={{ borderTop: '1px solid var(--color-border)', paddingTop: 8 }}>
+                    <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>
+                      What if?
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      {r.satPlusFiftyChance != null && (() => {
+                        const delta = r.satPlusFiftyChance - r.chance
+                        const deltaColor = delta > 0 ? '#059669' : delta < 0 ? '#dc2626' : 'var(--color-text-muted)'
+                        return (
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>
+                              SAT +50 pts ({profile?.sat ? profile.sat + 50 : '—'})
+                            </span>
+                            <span style={{ fontSize: 11, fontWeight: 700, color: deltaColor }}>
+                              {delta > 0 ? '+' : ''}{delta}% → {r.satPlusFiftyChance}%
+                            </span>
+                          </div>
+                        )
+                      })()}
+                      {r.gpaPlusTwoChance != null && (() => {
+                        const delta = r.gpaPlusTwoChance - r.chance
+                        const deltaColor = delta > 0 ? '#059669' : delta < 0 ? '#dc2626' : 'var(--color-text-muted)'
+                        return (
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>
+                              GPA +0.2 ({profile?.gpa ? Math.min(Number(profile.gpa) + 0.2, 5.0).toFixed(1) : '—'})
+                            </span>
+                            <span style={{ fontSize: 11, fontWeight: 700, color: deltaColor }}>
+                              {delta > 0 ? '+' : ''}{delta}% → {r.gpaPlusTwoChance}%
+                            </span>
+                          </div>
+                        )
+                      })()}
+                    </div>
                   </div>
                 )}
               </motion.div>

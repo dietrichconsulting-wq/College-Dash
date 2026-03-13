@@ -47,11 +47,11 @@ export default function LoginPage() {
     }}>
       <div className="card-elevated" style={{ width: '100%', maxWidth: 400, padding: '40px 36px' }}>
         <div style={{ marginBottom: 32, textAlign: 'center' }}>
-          <div style={{ fontSize: 28, fontWeight: 800, color: 'var(--color-primary)', marginBottom: 6 }}>
-            College Dashboard
+          <div style={{ fontSize: 28, fontWeight: 800, color: 'var(--color-primary)', marginBottom: 4 }}>
+            🎓 Stairway U
           </div>
-          <div style={{ fontSize: 14, color: 'var(--color-text-muted)' }}>
-            Sign in to your command center
+          <div style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>
+            Your Stairway to College
           </div>
         </div>
 

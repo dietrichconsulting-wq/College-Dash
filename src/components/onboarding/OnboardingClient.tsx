@@ -142,7 +142,7 @@ export function OnboardingClient({ userId }: { userId: string }) {
       {/* Header */}
       <div style={{ textAlign: 'center', marginBottom: 36 }}>
         <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-primary)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 6 }}>
-          College Dashboard
+          Stairway U
         </div>
         <h1 style={{ fontSize: 28, fontWeight: 800, marginBottom: 8 }}>
           {step === 0 && "Let's get to know you"}
