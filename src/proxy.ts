@@ -32,6 +32,11 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
+  // Allow password reset flow for anyone (link arrives unauthenticated)
+  if (pathname === '/reset-password' || pathname === '/forgot-password') {
+    return supabaseResponse
+  }
+
   // Redirect authenticated users away from auth pages
   if (user && (pathname === '/login' || pathname === '/signup')) {
     const url = request.nextUrl.clone()
