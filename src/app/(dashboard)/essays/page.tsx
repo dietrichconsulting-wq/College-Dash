@@ -1,10 +1,10 @@
-export const dynamic = "force-dynamic"
+export const dynamic = 'force-dynamic'
 
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { StrategyPageClient } from '@/components/dashboard/StrategyPageClient'
+import { EssayStudio } from '@/components/dashboard/EssayStudio'
 
-export default async function StrategyPage() {
+export default async function EssaysPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
@@ -15,5 +15,5 @@ export default async function StrategyPage() {
     .eq('id', user.id)
     .single()
 
-  return <StrategyPageClient profile={profile} userId={user.id} />
+  return <EssayStudio profile={profile} />
 }

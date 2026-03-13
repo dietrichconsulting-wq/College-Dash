@@ -68,8 +68,8 @@ export function DeadlineRadar({ tasks, loading }: DeadlineRadarProps) {
                   borderRadius: 10,
                 }}
               >
-                <span style={{ fontSize: 11, fontWeight: 800, color, minWidth: 32, textAlign: 'center' }}>
-                  {task.daysUntil < 0 ? 'LATE' : task.daysUntil === 0 ? 'TODAY' : `${task.daysUntil}d`}
+                <span style={{ fontSize: 11, fontWeight: 800, color, minWidth: 52, textAlign: 'center', whiteSpace: 'nowrap' }}>
+                  {task.daysUntil < 0 ? 'LATE' : task.daysUntil === 0 ? 'TODAY' : new Date(task.due_date! + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                 </span>
                 <span style={{ fontSize: 12, color: 'var(--color-text)', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {task.title}

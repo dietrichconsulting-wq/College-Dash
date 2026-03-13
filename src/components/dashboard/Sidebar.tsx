@@ -13,6 +13,7 @@ const NAV_ITEMS = [
   { href: '/journey',       icon: '🗺️',  label: 'Your Journey' },
   { href: '/compare',       icon: '⚖️',  label: 'Compare' },
   { href: '/strategy',      icon: '⚡',  label: 'Strategy' },
+  { href: '/essays',        icon: '✍️',  label: 'Essays' },
   { href: '/scholarships',  icon: '🏆',  label: 'Scholarships' },
   { href: '/profile',       icon: '👤',  label: 'Profile' },
 ]

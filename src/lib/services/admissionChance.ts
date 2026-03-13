@@ -35,7 +35,7 @@ function calculateChance(studentSAT, studentGPA, school) {
   // If no admission data at all, return null
   if (admissionRate == null) return null;
 
-  const baseRate = admissionRate * 100; // Convert 0.xx to percentage
+  const baseRate = admissionRate; // Already a percentage (0–100) from collegeScorecard
 
   // ── SAT Factor ──
   // Position student within 25th-75th range
@@ -123,14 +123,27 @@ export async function computeChances(profile) {
       try {
         let collegeId = s.id;
         if (!collegeId || collegeId.trim() === '') {
-          // Try name as-is, then with "University of" prefix
-          const queries = [s.name, `University of ${s.name}`];
+          // Try multiple query strategies to find the right school
+          const name = s.name.trim();
+          const queries = [
+            name,
+            `University of ${name}`,
+            `${name} University`,
+            `${name} State University`,
+          ];
           let resolved = null;
           for (const q of queries) {
-            const results = await searchColleges(q);
-            if (results && results.length > 0) {
-              // Prefer a result that has admission rate data
-              resolved = results.find(r => r.admissionRate != null) || results[0];
+            const hits = await searchColleges(q);
+            if (hits && hits.length > 0) {
+              // Prefer exact or near-exact name match with admission data
+              const normQ = q.toLowerCase().replace(/[^a-z0-9\s]/g, '');
+              const exact = hits.find(h => {
+                const n = (h.name || '').toLowerCase().replace(/[^a-z0-9\s]/g, '');
+                return n === normQ || n.includes(normQ) || normQ.includes(n);
+              });
+              resolved = (exact && exact.admissionRate != null)
+                ? exact
+                : (hits.find(h => h.admissionRate != null) || hits[0]);
               break;
             }
           }
@@ -168,25 +181,28 @@ export async function computeChances(profile) {
   const gemini = getModel();
   if (gemini && validResults.length > 0) {
     try {
-      const prompt = `You are an expert college admissions AI. Evaluate this student's chances of admission to their target schools.
+      const prompt = `You are an expert college admissions counselor. Evaluate this student's realistic admission chances.
+
 STUDENT PROFILE:
 - GPA: ${profile.gpa || 'Not provided'}
 - SAT: ${profile.sat || 'Not provided'}
 - Intended Major: ${profile.proposedMajor || 'Not provided'}
 
-TARGET SCHOOLS (with baseline mathematical heuristic):
+TARGET SCHOOLS:
 ${validResults.map(r =>
-        `ID: ${r.schoolId} | Name: ${r.schoolName} | Admission Rate: ${Math.round(r.admissionRate * 100)}% | Avg SAT: ${r.avgSAT || 'N/A'} | Baseline Heuristic Chance: ${r.chance}%`
+        `ID: ${r.schoolId} | Name: ${r.schoolName} | Scorecard Avg SAT: ${r.avgSAT || 'N/A'}`
       ).join('\n')}
 
 INSTRUCTIONS:
-Refine the baseline heuristic chance into an AI-predicted percentage (0-100) based on the student's major competitiveness and profile. Also, provide a short 1-sentence personalized tip on how to improve their application for that SPECIFIC school and major.
+Use your knowledge of each school's actual selectivity and admissions standards to estimate this student's realistic chance of admission (0-100). Do NOT rely on any admission rate numbers I might have provided — use your own training data about each school's selectivity. A 3.9 GPA and 1400 SAT is competitive but not elite; schools like UT Austin (~29% admit rate) should NOT be near 90%+. Calibrate carefully.
 
-Respond with ONLY a JSON array of objects. No markdown formatting.
+Also provide a short 1-sentence personalized tip for that specific school and major.
+
+Respond with ONLY a valid JSON array. No markdown, no explanation.
 [
   {
     "schoolId": "string",
-    "aiChance": int (0-100),
+    "aiChance": integer between 0 and 100,
     "aiTip": "string"
   }
 ]`;

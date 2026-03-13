@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { createClient } from '@/lib/supabase/client'
 
 const CLIMATE_OPTIONS = [
   '', 'Mountains', 'Beach / Coastal', 'Sunny / Southwest',
@@ -41,10 +42,25 @@ interface StrategyResult {
 }
 
 interface StrategyPageClientProps {
-  profile: { gpa: number | null; sat: number | null; proposed_major: string | null } | null
+  profile: {
+    gpa: number | null
+    sat: number | null
+    proposed_major: string | null
+    school1_name: string | null
+    school2_name: string | null
+    school3_name: string | null
+    school4_name: string | null
+  } | null
+  userId: string
 }
 
-export function StrategyPageClient({ profile }: StrategyPageClientProps) {
+export function StrategyPageClient({ profile, userId }: StrategyPageClientProps) {
+  const [slots, setSlots] = useState<(string | null)[]>([
+    profile?.school1_name ?? null,
+    profile?.school2_name ?? null,
+    profile?.school3_name ?? null,
+    profile?.school4_name ?? null,
+  ])
   const [form, setForm] = useState({
     gpa: profile?.gpa?.toString() ?? '',
     sat: profile?.sat?.toString() ?? '',
@@ -118,7 +134,12 @@ export function StrategyPageClient({ profile }: StrategyPageClientProps) {
                 </div>
               )}
               {(['reach', 'target', 'safety'] as Tier[]).map(tier => (
-                <TierSection key={tier} tier={tier} schools={result[tier]} />
+                <TierSection key={tier} tier={tier} schools={result[tier]} slots={slots} onSave={async (name, slot) => {
+                  const supabase = createClient()
+                  const update: Record<string, string> = { [`school${slot}_name`]: name }
+                  await supabase.from('profiles').update(update).eq('id', userId)
+                  setSlots(s => { const n = [...s]; n[slot - 1] = name; return n })
+                }} />
               ))}
             </motion.div>
           )}
@@ -128,7 +149,12 @@ export function StrategyPageClient({ profile }: StrategyPageClientProps) {
   )
 }
 
-function TierSection({ tier, schools }: { tier: Tier; schools: School[] }) {
+function TierSection({ tier, schools, slots, onSave }: {
+  tier: Tier
+  schools: School[]
+  slots: (string | null)[]
+  onSave: (name: string, slot: number) => Promise<void>
+}) {
   const cfg = TIER_CONFIG[tier]
   if (!schools?.length) return null
   return (
@@ -140,15 +166,36 @@ function TierSection({ tier, schools }: { tier: Tier; schools: School[] }) {
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {schools.map((school, i) => (
-          <SchoolCard key={school.name} school={school} tier={tier} index={i} />
+          <SchoolCard key={school.name} school={school} tier={tier} index={i} slots={slots} onSave={onSave} />
         ))}
       </div>
     </div>
   )
 }
 
-function SchoolCard({ school, tier, index }: { school: School; tier: Tier; index: number }) {
+function SchoolCard({ school, tier, index, slots, onSave }: {
+  school: School
+  tier: Tier
+  index: number
+  slots: (string | null)[]
+  onSave: (name: string, slot: number) => Promise<void>
+}) {
   const cfg = TIER_CONFIG[tier]
+  const [picking, setPicking] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
+
+  const alreadyAdded = slots.includes(school.name)
+
+  async function handlePick(slot: number) {
+    setSaving(true)
+    await onSave(school.name, slot)
+    setSaving(false)
+    setPicking(false)
+    setSaved(true)
+    setTimeout(() => setSaved(false), 2500)
+  }
+
   return (
     <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.07 + 0.1 }}
       style={{ background: cfg.bg, border: `1px solid ${cfg.border}`, borderRadius: 12, padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 6 }}
@@ -158,11 +205,66 @@ function SchoolCard({ school, tier, index }: { school: School; tier: Tier; index
           <div style={{ fontWeight: 700, fontSize: 14 }}>{school.name}</div>
           {(school.city || school.state) && <div style={{ fontSize: 12, color: 'var(--color-text-muted)', marginTop: 2 }}>{[school.city, school.state].filter(Boolean).join(', ')}</div>}
         </div>
-        {school.programStrength && (
-          <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 20, background: cfg.color, color: '#fff', whiteSpace: 'nowrap', flexShrink: 0 }}>
-            {school.programStrength}
-          </span>
-        )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+          {school.programStrength && (
+            <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 20, background: cfg.color, color: '#fff', whiteSpace: 'nowrap' }}>
+              {school.programStrength}
+            </span>
+          )}
+          {/* Add to Dashboard button */}
+          {saved ? (
+            <span style={{ fontSize: 11, fontWeight: 700, color: '#059669', whiteSpace: 'nowrap' }}>✓ Added!</span>
+          ) : alreadyAdded ? (
+            <span style={{ fontSize: 11, color: 'var(--color-text-muted)', whiteSpace: 'nowrap' }}>On dashboard</span>
+          ) : (
+            <div style={{ position: 'relative' }}>
+              <button
+                onClick={() => setPicking(p => !p)}
+                style={{ fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 8, border: '1.5px solid var(--color-border)', background: 'var(--color-column)', color: 'var(--color-text)', cursor: 'pointer', whiteSpace: 'nowrap' }}
+              >
+                + Add to Dashboard
+              </button>
+              <AnimatePresence>
+                {picking && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -4, scale: 0.97 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -4, scale: 0.97 }}
+                    transition={{ duration: 0.12 }}
+                    style={{
+                      position: 'absolute', right: 0, top: '110%', zIndex: 50,
+                      background: 'var(--color-card)', border: '1.5px solid var(--color-border)',
+                      borderRadius: 10, padding: 8, minWidth: 180,
+                      boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                    }}
+                  >
+                    <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6, paddingLeft: 4 }}>
+                      Replace which slot?
+                    </div>
+                    {([1, 2, 3, 4] as const).map(slot => (
+                      <button
+                        key={slot}
+                        disabled={saving}
+                        onClick={() => handlePick(slot)}
+                        style={{
+                          display: 'block', width: '100%', textAlign: 'left',
+                          padding: '7px 10px', borderRadius: 7, border: 'none',
+                          background: 'transparent', cursor: 'pointer', fontSize: 13,
+                          color: 'var(--color-text)', fontWeight: 500,
+                        }}
+                        onMouseEnter={e => (e.currentTarget.style.background = 'var(--color-column)')}
+                        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                      >
+                        <span style={{ fontWeight: 700, color: 'var(--color-primary)', marginRight: 6 }}>#{slot}</span>
+                        {slots[slot - 1] ? <span style={{ color: 'var(--color-text-muted)' }}>{slots[slot - 1]}</span> : <span style={{ color: 'var(--color-text-muted)', fontStyle: 'italic' }}>Empty</span>}
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          )}
+        </div>
       </div>
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 2 }}>
         {school.yourChance != null && <Stat label="Your Chance" value={`${school.yourChance}%`} color={cfg.color} />}

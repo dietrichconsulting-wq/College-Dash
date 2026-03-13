@@ -102,7 +102,7 @@ export function AdmissionSnapshot({ profile, loading }: AdmissionSnapshotProps) 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12 }}>
           {results.map((r, i) => {
             const { label, color } = chanceLabel(r.chance)
-            const schoolAdmitRate = r.admissionRate != null ? `${Math.round(r.admissionRate * 100)}% admit rate` : null
+            const schoolAdmitRate = r.admissionRate != null ? `${r.admissionRate}% admit rate` : null
             return (
               <motion.div
                 key={i}
