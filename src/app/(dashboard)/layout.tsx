@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic"
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { Sidebar } from '@/components/dashboard/Sidebar'
+import { TrialBanner } from '@/components/dashboard/TrialBanner'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -18,7 +19,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   const { data: subscription } = await supabase
     .from('subscriptions')
-    .select('tier, status')
+    .select('tier, status, trial_end')
     .eq('user_id', user.id)
     .single()
 
@@ -30,6 +31,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         subscription={subscription}
       />
       <main className="sidebar-layout__content">
+                <TrialBanner status={subscription?.status ?? null} trialEnd={subscription?.trial_end ?? null} tier={subscription?.tier ?? null} />
         {children}
       </main>
     </div>
