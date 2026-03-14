@@ -17,6 +17,10 @@ const PRO_FEATURES = [
 
 export default function UpgradePage() {
   const [loading, setLoading] = useState(false)
+  const [code, setCode] = useState('')
+  const [codeLoading, setCodeLoading] = useState(false)
+  const [codeError, setCodeError] = useState('')
+  const [codeSuccess, setCodeSuccess] = useState(false)
 
   async function handleUpgrade() {
     setLoading(true)
@@ -26,6 +30,29 @@ export default function UpgradePage() {
       if (url) window.location.href = url
     } catch {
       setLoading(false)
+    }
+  }
+
+  async function handleRedeem() {
+    setCodeError('')
+    setCodeLoading(true)
+    try {
+      const res = await fetch('/api/redeem', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setCodeError(data.error || 'Invalid code')
+      } else {
+        setCodeSuccess(true)
+        setTimeout(() => { window.location.href = '/dashboard?upgraded=true' }, 1500)
+      }
+    } catch {
+      setCodeError('Something went wrong')
+    } finally {
+      setCodeLoading(false)
     }
   }
 
@@ -64,7 +91,34 @@ export default function UpgradePage() {
           </button>
 
           <div style={{ fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 20 }}>
-            No credit card required to start trial. Cancel anytime.
+            Cancel anytime.
+          </div>
+
+          <div style={{ borderTop: '1px solid var(--color-border, #e5e7eb)', paddingTop: 20, marginBottom: 20 }}>
+            <p style={{ fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 10 }}>Have a promo code?</p>
+            {codeSuccess ? (
+              <div style={{ fontSize: 14, fontWeight: 700, color: '#16a34a' }}>
+                Pro activated! Redirecting...
+              </div>
+            ) : (
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input
+                  type="text"
+                  value={code}
+                  onChange={e => { setCode(e.target.value); setCodeError('') }}
+                  placeholder="Enter code"
+                  style={{ flex: 1, padding: '10px 14px', borderRadius: 8, border: '1px solid var(--color-border, #d1d5db)', fontSize: 14, background: 'var(--color-bg)', color: 'var(--color-text)' }}
+                />
+                <button
+                  onClick={handleRedeem}
+                  disabled={codeLoading || !code.trim()}
+                  style={{ padding: '10px 18px', borderRadius: 8, border: 'none', background: 'var(--color-primary)', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer', opacity: codeLoading || !code.trim() ? 0.5 : 1 }}
+                >
+                  {codeLoading ? '...' : 'Redeem'}
+                </button>
+              </div>
+            )}
+            {codeError && <p style={{ fontSize: 12, color: '#ef4444', marginTop: 6 }}>{codeError}</p>}
           </div>
 
           <Link href="/dashboard" style={{ fontSize: 13, color: 'var(--color-text-muted)', textDecoration: 'none' }}>
