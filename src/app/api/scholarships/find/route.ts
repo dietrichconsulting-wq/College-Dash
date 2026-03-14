@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { requirePro } from '@/lib/subscription'
 import { findScholarships } from '@/lib/services/scholarshipFinder'
 
 export async function POST(req: Request) {
@@ -7,6 +8,16 @@ export async function POST(req: Request) {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+        // Pro feature gate
+        const { allowed, subscription } = await requirePro(user.id)
+        if (!allowed) {
+                return NextResponse.json({
+                          error: 'Pro subscription required',
+                          subscription,
+                          upgrade_url: '/upgrade',
+                }, { status: 403 })
+        }
 
     const body = await req.json()
     const results = await findScholarships(body)
