@@ -1,4 +1,6 @@
-import { NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
+  import { requirePro } from '@/lib/subscription'
+    import { NextResponse } from 'next/server'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
@@ -6,6 +8,20 @@ const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
 
 export async function POST(req: Request) {
   try {
+        const supabase = await createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+        // Pro feature gate
+        const { allowed, subscription } = await requirePro(user.id)
+        if (!allowed) {
+                return NextResponse.json({
+                          error: 'Pro subscription required',
+                          subscription,
+                          upgrade_url: '/upgrade',
+                }, { status: 403 })
+        }
+    
     const { school, essayType, major, gpa, sat, draft } = await req.json()
 
     if (!draft || draft.trim().length < 50) {
