@@ -138,7 +138,7 @@ export function FinancialPlanner() {
     <div style={{ maxWidth: 960 }}>
       <h1 style={{ fontSize: 26, fontWeight: 800, marginBottom: 6 }}>Finance Plan 💵</h1>
       <p style={{ fontSize: 14, color: 'var(--color-text-muted)', marginBottom: 32 }}>
-        Project college costs, 529 growth, and loan exposure — with what-if scenarios.
+        See what college will really cost and how savings, aid, and loans cover the gap.
       </p>
 
       <div style={{ display: 'grid', gridTemplateColumns: '340px 1fr', gap: 24, alignItems: 'flex-start' }}>

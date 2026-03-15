@@ -155,7 +155,7 @@ export function ScholarshipsPageClient({ userId, profile }: Props) {
         <div>
           <h1 style={{ fontSize: 26, fontWeight: 800, margin: 0 }}>Scholarships 🏆</h1>
           <p style={{ fontSize: 14, color: 'var(--color-text-muted)', marginTop: 4 }}>
-            {totalWon > 0 ? `$${totalWon.toLocaleString()} won · ` : ''}{totalApplied} in pipeline · {scholarships.length} total
+            Track every scholarship from research to award so nothing slips through the cracks. · {totalApplied} in pipeline{totalWon > 0 ? ` · $${totalWon.toLocaleString()} won` : ''}
           </p>
         </div>
         {tab === 'pipeline' && (

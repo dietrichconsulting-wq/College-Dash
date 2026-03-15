@@ -70,7 +70,7 @@ export function EssayStudio({ profile }: EssayStudioProps) {
     <div style={{ maxWidth: 860 }}>
       <h1 style={{ fontSize: 26, fontWeight: 800, marginBottom: 4 }}>Essay Studio ✍️</h1>
       <p style={{ fontSize: 14, color: 'var(--color-text-muted)', marginBottom: 24 }}>
-        AI-powered brainstorming and draft critique tailored to each school
+        Brainstorm essay topics or paste a draft to get AI feedback tailored to each school.
       </p>
 
       {/* Tab switcher */}

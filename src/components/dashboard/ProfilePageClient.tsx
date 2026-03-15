@@ -67,7 +67,7 @@ export function ProfilePageClient({ userId }: { userId: string }) {
     <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} style={{ maxWidth: 600 }}>
       <h1 style={{ fontSize: 26, fontWeight: 800, marginBottom: 6 }}>Profile</h1>
       <p style={{ fontSize: 14, color: 'var(--color-text-muted)', marginBottom: 28 }}>
-        Your academic profile powers AI recommendations and strategy.
+        Update your stats and schools here — every tool in the app uses this info.
       </p>
 
       <div className="card-elevated" style={{ padding: '28px 28px 32px', marginBottom: 24 }}>

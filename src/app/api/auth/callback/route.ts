@@ -13,6 +13,11 @@ export async function GET(request: NextRequest) {
 
   // Handle token_hash flow (email OTP / PKCE token verification)
   if (token_hash && type) {
+    // For password recovery, sign out any existing session first so the
+    // recovery token creates a fresh session for the correct user
+    if (type === 'recovery') {
+      await supabase.auth.signOut()
+    }
     const { error } = await supabase.auth.verifyOtp({ token_hash, type })
     if (!error) {
       // Recovery flow should redirect to reset-password page
@@ -23,8 +28,13 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // Handle code exchange flow (OAuth / magic link)
+  // Handle code exchange flow (OAuth / magic link / password recovery)
   if (code) {
+    // If this is a recovery flow, sign out existing session first
+    // so the new session belongs to the correct user
+    if (next === '/reset-password') {
+      await supabase.auth.signOut()
+    }
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) {
       return NextResponse.redirect(`${origin}${next}`)

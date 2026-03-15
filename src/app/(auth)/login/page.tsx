@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic'
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -13,6 +13,8 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const message = searchParams.get('message')
   const supabase = createClient()
 
   async function handleLogin(e: React.FormEvent) {
@@ -89,6 +91,9 @@ export default function LoginPage() {
             />
           </div>
 
+          {message && (
+            <div style={{ color: 'var(--color-success, #16a34a)', fontSize: 13, background: '#f0fdf4', padding: '8px 12px', borderRadius: 8 }}>{message}</div>
+          )}
           {error && (
             <div style={{ color: 'var(--color-danger)', fontSize: 13 }}>{error}</div>
           )}

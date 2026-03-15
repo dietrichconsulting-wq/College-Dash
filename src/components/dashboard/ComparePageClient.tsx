@@ -119,7 +119,7 @@ export function ComparePageClient({ profile }: ComparePageClientProps) {
     <div style={{ maxWidth: 900 }}>
       <h1 style={{ fontSize: 26, fontWeight: 800, marginBottom: 6 }}>Compare Schools ⚖️</h1>
       <p style={{ fontSize: 14, color: 'var(--color-text-muted)', marginBottom: 28 }}>
-        Side-by-side comparison with real admissions data
+        Compare your schools side by side on cost, acceptance rate, and fit.
       </p>
 
       {/* Step indicators */}

@@ -29,7 +29,7 @@ export function DashboardClient({ userId }: DashboardClientProps) {
           {profileLoading ? '…' : `Welcome back, ${profile?.display_name?.split(' ')[0] || 'Student'} 👋`}
         </h1>
         <p style={{ fontSize: 14, color: 'var(--color-text-muted)', marginTop: 4 }}>
-          Your college application command center
+          Change your GPA, SAT, major, and schools to check your chance of getting in.
         </p>
       </div>
 

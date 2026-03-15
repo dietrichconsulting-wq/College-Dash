@@ -103,7 +103,7 @@ export function StrategyPageClient({ profile, userId }: StrategyPageClientProps)
     <div style={{ maxWidth: 800 }}>
       <h1 style={{ fontSize: 26, fontWeight: 800, marginBottom: 6 }}>College Strategy ⚡</h1>
       <p style={{ fontSize: 14, color: 'var(--color-text-muted)', marginBottom: 28 }}>
-        AI-powered reach / target / safety list backed by real admissions data
+        Get an AI-powered reach, target, and safety list tailored to your profile.
       </p>
 
       <div className="card-elevated" style={{ padding: '28px 28px 32px' }}>

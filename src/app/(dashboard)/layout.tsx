@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { Sidebar } from '@/components/dashboard/Sidebar'
 import { TrialBanner } from '@/components/dashboard/TrialBanner'
+import { AuthHashHandler } from '@/components/dashboard/AuthHashHandler'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -31,7 +32,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
         subscription={subscription}
       />
       <main className="sidebar-layout__content">
-                <TrialBanner status={subscription?.status ?? null} trialEnd={subscription?.trial_end ?? null} tier={subscription?.tier ?? null} />
+        <AuthHashHandler />
+        <TrialBanner status={subscription?.status ?? null} trialEnd={subscription?.trial_end ?? null} tier={subscription?.tier ?? null} />
         {children}
       </main>
     </div>

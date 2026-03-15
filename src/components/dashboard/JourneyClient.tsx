@@ -45,7 +45,7 @@ export function JourneyClient({ userId }: { userId: string }) {
       <div style={{ flex: '0 0 400px', minWidth: 0 }}>
         <h1 style={{ fontSize: 26, fontWeight: 800, marginBottom: 6 }}>Your Journey 🗺️</h1>
         <p style={{ fontSize: 14, color: 'var(--color-text-muted)', marginBottom: 32 }}>
-          {reached.size} of {MILESTONES.length} milestones reached · Click a circle to toggle
+          Track your progress toward key milestones on the road to acceptance. · {reached.size} of {MILESTONES.length} reached
         </p>
 
         <div style={{ position: 'relative' }}>

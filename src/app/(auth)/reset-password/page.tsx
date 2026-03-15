@@ -30,7 +30,9 @@ export default function ResetPasswordPage() {
       setError(error.message)
       setLoading(false)
     } else {
-      router.push('/dashboard')
+      // Sign out so the user logs in fresh with their new password
+      await supabase.auth.signOut()
+      router.push('/login?message=Password+updated.+Please+sign+in.')
     }
   }
 
