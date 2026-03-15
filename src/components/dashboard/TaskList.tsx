@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useUpdateTaskStatus, useCreateTask } from '@/hooks/useTasks'
+import { useUpdateTaskStatus, useUpdateTask, useCreateTask } from '@/hooks/useTasks'
 import type { Task, TaskStatus, TaskCategory } from '@/lib/types/database'
 import confetti from 'canvas-confetti'
 
@@ -33,8 +33,10 @@ export function TaskList({ tasks, loading, userId }: TaskListProps) {
   const [showDone, setShowDone] = useState(false)
   const [filter, setFilter] = useState<TaskCategory | 'All'>('All')
   const updateStatus = useUpdateTaskStatus(userId)
+  const updateTask = useUpdateTask(userId)
   const createTask = useCreateTask(userId)
   const [newTitle, setNewTitle] = useState('')
+  const [editingDateId, setEditingDateId] = useState<string | null>(null)
 
   const activeTasks = tasks.filter(t => t.status !== 'Done')
   const doneTasks = tasks.filter(t => t.status === 'Done')
@@ -148,10 +150,15 @@ export function TaskList({ tasks, loading, userId }: TaskListProps) {
                   <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {task.title}
                   </div>
-                  <div style={{ display: 'flex', gap: 6, marginTop: 2, alignItems: 'center' }}>
+                  <div style={{ display: 'flex', gap: 6, marginTop: 2, alignItems: 'center', flexWrap: 'wrap' }}>
                     <span style={{ fontSize: 10, fontWeight: 600, color: CATEGORY_COLORS[task.category], background: `${CATEGORY_COLORS[task.category]}18`, padding: '1px 6px', borderRadius: 10 }}>
                       {task.category}
                     </span>
+                    {task.description && !dateInfo && (
+                      <span style={{ fontSize: 10, color: 'var(--color-text-muted)', fontStyle: 'italic' }}>
+                        {task.description}
+                      </span>
+                    )}
                     {dateInfo && (
                       <span style={{ fontSize: 11, color: dateInfo.color, fontWeight: 600 }}>
                         {dateInfo.label}
@@ -159,6 +166,31 @@ export function TaskList({ tasks, loading, userId }: TaskListProps) {
                     )}
                   </div>
                 </div>
+                {/* Date picker */}
+                {editingDateId === task.id ? (
+                  <input
+                    type="date"
+                    defaultValue={task.due_date?.split('T')[0] ?? ''}
+                    autoFocus
+                    onChange={e => {
+                      updateTask.mutate({ taskId: task.id, updates: { due_date: e.target.value || null } })
+                      setEditingDateId(null)
+                    }}
+                    onBlur={() => setEditingDateId(null)}
+                    style={{ fontSize: 12, padding: '4px 8px', borderRadius: 6, border: '1.5px solid var(--color-border)', background: 'var(--color-column)', color: 'var(--color-text)', outline: 'none' }}
+                  />
+                ) : (
+                  <button
+                    onClick={() => setEditingDateId(task.id)}
+                    title={task.due_date ? 'Change date' : 'Set a due date'}
+                    style={{
+                      background: 'none', border: 'none', cursor: 'pointer', flexShrink: 0,
+                      fontSize: 11, color: 'var(--color-text-muted)', padding: '2px 6px',
+                    }}
+                  >
+                    {task.due_date ? '📅' : '+ date'}
+                  </button>
+                )}
                 {task.status === 'In Progress' && (
                   <span style={{ fontSize: 10, fontWeight: 700, color: '#2563EB', background: 'rgba(37,99,235,0.1)', padding: '2px 8px', borderRadius: 10 }}>
                     In Progress

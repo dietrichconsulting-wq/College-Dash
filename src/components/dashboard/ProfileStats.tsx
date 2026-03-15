@@ -3,9 +3,9 @@
 import { motion } from 'framer-motion'
 import { useState, useRef } from 'react'
 import type { Profile, Task } from '@/lib/types/database'
-import Link from 'next/link'
 import { useUpdateProfile } from '@/hooks/useProfile'
 import { MajorSelect } from '@/components/MajorSelect'
+import { CollegeSelect } from '@/components/CollegeSelect'
 
 interface ProfileStatsProps {
   profile: Profile | null | undefined
@@ -90,17 +90,20 @@ export function ProfileStats({ profile, loading, progress, tasks, userId }: Prof
         </div>
 
         {/* School chips */}
-        {schools.length > 0 && (
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginLeft: 'auto' }}>
-            {schools.map((s, i) => (
-              <SchoolChip key={i} name={s.name!} rank={i + 1} />
-            ))}
+        {!loading && (
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginLeft: 'auto', alignItems: 'center' }}>
+            {SCHOOLS_ORDER.map((k, i) => {
+              const name = profile?.[`${k}_name` as keyof Profile] as string | null
+              return (
+                <EditableSchoolChip
+                  key={k}
+                  name={name}
+                  rank={i + 1}
+                  onSave={v => updateProfile.mutate({ [`${k}_name`]: v || null })}
+                />
+              )
+            })}
           </div>
-        )}
-        {schools.length === 0 && !loading && (
-          <Link href="/profile" style={{ marginLeft: 'auto', fontSize: 13, color: 'var(--color-primary)', fontWeight: 600, textDecoration: 'none' }}>
-            + Add your schools →
-          </Link>
         )}
       </div>
     </motion.div>
@@ -227,21 +230,8 @@ function EditableMajorPill({ label, display, onSave }: {
   )
 }
 
-function StatPill({ label, value, color }: { label: string; value: string; color: string }) {
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column' }}>
-      <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>
-        {label}
-      </span>
-      <span style={{ fontSize: 20, fontWeight: 800, color, lineHeight: 1 }}>
-        {value}
-      </span>
-    </div>
-  )
-}
-
-function SchoolChip({ name, rank }: { name: string; rank: number }) {
-  const short = name.split(' ').pop() || name
+function EditableSchoolChip({ name, rank, onSave }: { name: string | null; rank: number; onSave: (v: string) => void }) {
+  const [editing, setEditing] = useState(false)
   const colors = [
     { bg: 'rgba(37,99,235,0.1)', color: '#2563EB' },
     { bg: 'rgba(124,58,237,0.1)', color: '#7c3aed' },
@@ -249,9 +239,48 @@ function SchoolChip({ name, rank }: { name: string; rank: number }) {
     { bg: 'rgba(245,158,11,0.1)', color: '#d97706' },
   ]
   const c = colors[(rank - 1) % colors.length]
+
+  if (editing) {
+    return (
+      <div style={{ width: 220 }}>
+        <CollegeSelect
+          value={name ?? ''}
+          onChange={v => { onSave(v); setEditing(false) }}
+          placeholder="Search for a college…"
+          inputStyle={{ padding: '5px 10px', fontSize: 12, borderRadius: 20 }}
+        />
+      </div>
+    )
+  }
+
+  if (!name) {
+    return (
+      <button
+        onClick={() => setEditing(true)}
+        style={{
+          background: 'var(--color-column)', color: 'var(--color-text-muted)',
+          fontWeight: 600, fontSize: 12, padding: '5px 12px', borderRadius: 20,
+          border: '1.5px dashed var(--color-border)', cursor: 'pointer',
+        }}
+      >
+        + School {rank}
+      </button>
+    )
+  }
+
+  const short = name.split(' ').pop() || name
   return (
-    <div style={{ background: c.bg, color: c.color, fontWeight: 700, fontSize: 12, padding: '5px 12px', borderRadius: 20, border: `1px solid ${c.color}30` }}>
-      {short.length > 8 ? short.slice(0, 8) + '…' : short}
-    </div>
+    <button
+      onClick={() => setEditing(true)}
+      title={`${name} — click to change`}
+      style={{
+        background: c.bg, color: c.color, fontWeight: 700, fontSize: 12,
+        padding: '5px 12px', borderRadius: 20, border: `1px solid ${c.color}30`,
+        cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4,
+      }}
+    >
+      {short.length > 10 ? short.slice(0, 10) + '…' : short}
+      <span style={{ fontSize: 9, opacity: 0.6 }}>✎</span>
+    </button>
   )
 }

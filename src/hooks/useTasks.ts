@@ -84,6 +84,25 @@ export function useDeleteTask(userId: string) {
   })
 }
 
+export function useUpdateTask(userId: string) {
+  const supabase = createClient()
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ taskId, updates }: { taskId: string; updates: Partial<Task> }) => {
+      const { data, error } = await supabase
+        .from('tasks')
+        .update(updates)
+        .eq('id', taskId)
+        .eq('user_id', userId)
+        .select()
+        .single()
+      if (error) throw error
+      return data
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['tasks', userId] }),
+  })
+}
+
 export function useSeedTasks(userId: string) {
   const supabase = createClient()
   const queryClient = useQueryClient()
