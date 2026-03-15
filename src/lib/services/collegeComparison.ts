@@ -4,12 +4,13 @@
  *
  * Hybrid approach:
  *   - Real data (College Scorecard + IPEDS + US News) for factual fields
- *   - Gemini AI fills only fields that can't come from APIs:
- *       yourChance, programRank, climate, climateEmoji
+ *   - Admission chances from admissionChance.ts (same as Dashboard)
+ *   - Gemini AI fills only non-factual fields: programRank, climate, climateEmoji
  */
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { batchCollegeProfiles } from './collegeDataAggregator';
+import { computeChances } from './admissionChance';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let model: any = null;
@@ -28,10 +29,23 @@ export async function compareColleges(schoolNames, { major, gpa, sat, homeState 
   if (!schoolNames || schoolNames.length === 0) return [];
 
   const majorLabel = major || 'Undecided';
-  const hasProfile = gpa || sat;
 
-  // ── Step 1: Fetch real data for all schools in parallel ──────────────────
-  const realData = await batchCollegeProfiles(schoolNames, homeState);
+  // ── Step 1: Fetch real data + admission chances in parallel ──────────────
+  const [realData, chanceResults] = await Promise.all([
+    batchCollegeProfiles(schoolNames, homeState),
+    (gpa || sat) ? computeChances({
+      gpa,
+      sat,
+      proposedMajor: majorLabel,
+      schools: schoolNames.map(name => ({ name, id: '' })),
+    }) : Promise.resolve([]),
+  ]);
+
+  // Index chances by school name for fast lookup
+  const chancesByName: Record<string, any> = {};
+  for (const c of chanceResults) {
+    if (c?.schoolName) chancesByName[c.schoolName.toLowerCase()] = c;
+  }
 
   // ── Step 2: Use Gemini only for AI-only fields ───────────────────────────
   const gemini = getModel();
@@ -49,30 +63,21 @@ export async function compareColleges(schoolNames, { major, gpa, sat, homeState 
       return parts.join(' ');
     }).join('\n');
 
-    const prompt = `You are a college admissions advisor. Below is REAL verified data for each school. Your ONLY job is to fill in the 3 missing fields: yourChance, programRank, and climate.
+    const prompt = `You are a college admissions advisor. Below is REAL verified data for each school. Your ONLY job is to fill in 2 missing fields: programRank and climate.
 
-STUDENT PROFILE:
-- GPA: ${gpa ?? 'Not provided'}
-- SAT: ${sat ?? 'Not provided'}
-- Intended Major: ${majorLabel}
-- Home State: ${homeState || 'Not provided'}
+Intended Major: ${majorLabel}
 
-SCORECARD DATA (use only as a hint — name matching can occasionally return wrong campuses):
+SCHOOLS:
 ${schoolSummaries}
 
-IMPORTANT: If any school's Scorecard admit rate looks wrong for that institution (e.g., University of Texas at Austin should be ~29%, not 89%), ignore that Scorecard value and use your own training knowledge instead. Always sanity-check against what you know about each school's selectivity.
-
-For EACH school provide ONLY these 3 fields:
+For EACH school provide ONLY these fields:
 - name: exactly as given above
-- yourChance: ${hasProfile
-    ? `this student's realistic admission probability (0-100 integer) for GPA ${gpa} and SAT ${sat}. Use your own knowledge of each school's true selectivity — do NOT trust Scorecard admit rates that seem anomalously high for selective flagships. Be accurate and calibrated.`
-    : 'null (no student profile provided)'}
-- programRank: ranking string for "${majorLabel}" programs at this school (e.g. "#5", "Top 15", "Regionally Strong", or null if truly unknown)
+- programRank: ranking string for "${majorLabel}" programs at this school (e.g. "#5", "Top 15", "Regionally Strong", or null if truly unknown). Use publicly available ranking data — do NOT guess.
 - climate: one word describing campus weather: Sunny, Mild, Rainy, Snowy, Hot, Humid, Dry, or Temperate
 - climateEmoji: single emoji matching the climate
 
 Respond ONLY with a valid JSON array. No markdown fences.
-Example: [{"name":"University of Oregon","yourChance":62,"programRank":"Top 20","climate":"Rainy","climateEmoji":"🌧️"}]`;
+Example: [{"name":"University of Oregon","programRank":"Top 20","climate":"Rainy","climateEmoji":"🌧️"}]`;
 
     try {
       const result = await gemini.generateContent(prompt);
@@ -127,8 +132,9 @@ Example: [{"name":"University of Oregon","yourChance":62,"programRank":"Top 20",
       isHBCU: real.isHBCU ?? false,
       usNewsRank: real.usNewsRank ?? null,
       usNewsRankDisplay: real.usNewsRankDisplay ?? null,
+      // ── Admission chance (from admissionChance.ts — same as Dashboard) ──
+      yourChance: chancesByName[name.toLowerCase()]?.chance ?? null,
       // ── AI-only fields ──
-      yourChance: ai.yourChance ?? null,
       programRank: ai.programRank ?? null,
       climate: ai.climate ?? null,
       climateEmoji: ai.climateEmoji ?? null,

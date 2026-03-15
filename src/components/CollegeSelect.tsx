@@ -2,22 +2,26 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react'
 
-interface CollegeResult {
+export interface CollegeResult {
   id: number
   name: string
   city: string
   state: string
+  costAttendance?: number | null
+  tuitionInState?: number | null
+  tuitionOutOfState?: number | null
 }
 
 interface CollegeSelectProps {
   value: string
-  onChange: (value: string) => void
+  onChange: (value: string, result?: CollegeResult) => void
   placeholder?: string
   style?: React.CSSProperties
   inputStyle?: React.CSSProperties
+  showCost?: boolean
 }
 
-export function CollegeSelect({ value, onChange, placeholder = 'Search for a college…', style, inputStyle: customInputStyle }: CollegeSelectProps) {
+export function CollegeSelect({ value, onChange, placeholder = 'Search for a college…', style, inputStyle: customInputStyle, showCost }: CollegeSelectProps) {
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState('')
   const [results, setResults] = useState<CollegeResult[]>([])
@@ -113,7 +117,7 @@ export function CollegeSelect({ value, onChange, placeholder = 'Search for a col
               <button
                 key={r.id}
                 type="button"
-                onClick={() => { onChange(r.name); setOpen(false); setSearch(''); inputRef.current?.blur() }}
+                onClick={() => { onChange(r.name, r); setOpen(false); setSearch(''); inputRef.current?.blur() }}
                 style={{
                   display: 'block',
                   width: '100%',
@@ -130,7 +134,14 @@ export function CollegeSelect({ value, onChange, placeholder = 'Search for a col
                 onMouseLeave={e => { (e.target as HTMLElement).style.background = r.name === value ? 'color-mix(in srgb, var(--color-primary) 12%, transparent)' : 'transparent' }}
               >
                 <div style={{ fontWeight: 600 }}>{r.name}</div>
-                <div style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>{r.city}, {r.state}</div>
+                <div style={{ fontSize: 11, color: 'var(--color-text-muted)', display: 'flex', gap: 8 }}>
+                  <span>{r.city}, {r.state}</span>
+                  {showCost && r.costAttendance && (
+                    <span style={{ fontWeight: 600, color: '#059669' }}>
+                      ~${Math.round(r.costAttendance).toLocaleString()}/yr
+                    </span>
+                  )}
+                </div>
               </button>
             ))
           )}

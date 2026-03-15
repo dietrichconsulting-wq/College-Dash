@@ -2,6 +2,8 @@
 
 import { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
+import { CollegeSelect } from '@/components/CollegeSelect'
+import type { CollegeResult } from '@/components/CollegeSelect'
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 function fmt$(n: number) {
@@ -51,6 +53,7 @@ interface Inputs {
 
 // ── component ────────────────────────────────────────────────────────────────
 export function FinancialPlanner() {
+  const [selectedCollege, setSelectedCollege] = useState('')
   const [inputs, setInputs] = useState<Inputs>({
     currentTuition: '45000',
     inflationRate: '4',
@@ -60,6 +63,17 @@ export function FinancialPlanner() {
     annualAid: '10000',
     annualIncome: '120000',
   })
+
+  function handleCollegeSelect(name: string, result?: CollegeResult) {
+    setSelectedCollege(name)
+    if (result?.costAttendance) {
+      set('currentTuition', String(Math.round(result.costAttendance)))
+    } else if (result?.tuitionOutOfState) {
+      set('currentTuition', String(Math.round(result.tuitionOutOfState)))
+    } else if (result?.tuitionInState) {
+      set('currentTuition', String(Math.round(result.tuitionInState)))
+    }
+  }
 
   // What-if sliders
   const [whatIfContrib, setWhatIfContrib] = useState<number | null>(null)
@@ -134,6 +148,22 @@ export function FinancialPlanner() {
 
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="card-elevated" style={{ padding: '22px 24px' }}>
             <SectionHeader>College Costs</SectionHeader>
+            <div style={{ marginBottom: 14 }}>
+              <label style={labelStyle}>Select a college</label>
+              <div style={{ fontSize: 10, color: 'var(--color-text-muted)', marginBottom: 3 }}>Auto-fills cost from College Scorecard</div>
+              <CollegeSelect
+                value={selectedCollege}
+                onChange={handleCollegeSelect}
+                placeholder="Search for a college…"
+                showCost
+                inputStyle={{ padding: '9px 12px', fontSize: 13, borderRadius: 8 }}
+              />
+              {selectedCollege && (
+                <div style={{ fontSize: 11, color: '#059669', fontWeight: 600, marginTop: 4 }}>
+                  {selectedCollege}
+                </div>
+              )}
+            </div>
             <Field label="Annual all-in cost today" prefix="$" value={inputs.currentTuition} onChange={v => set('currentTuition', v)} placeholder="45000" hint="Tuition + room + board + fees" />
             <Field label="Tuition inflation rate" suffix="%" value={inputs.inflationRate} onChange={v => set('inflationRate', v)} placeholder="4" hint="Avg ~4–6% per year" />
             <Field label="Years until enrollment" value={inputs.yearsUntilEnroll} onChange={v => set('yearsUntilEnroll', v)} placeholder="2" hint="Years until freshman year starts" />

@@ -30,7 +30,6 @@ interface TaskListProps {
 }
 
 export function TaskList({ tasks, loading, userId }: TaskListProps) {
-  const [showDone, setShowDone] = useState(false)
   const [filter, setFilter] = useState<TaskCategory | 'All'>('All')
   const updateStatus = useUpdateTaskStatus(userId)
   const updateTask = useUpdateTask(userId)
@@ -39,8 +38,7 @@ export function TaskList({ tasks, loading, userId }: TaskListProps) {
   const [editingDateId, setEditingDateId] = useState<string | null>(null)
 
   const activeTasks = tasks.filter(t => t.status !== 'Done')
-  const doneTasks = tasks.filter(t => t.status === 'Done')
-  const filtered = activeTasks.filter(t => filter === 'All' || t.category === filter)
+  const filtered = tasks.filter(t => filter === 'All' || t.category === filter)
 
   function formatDate(dateStr: string | null) {
     if (!dateStr) return null
@@ -52,9 +50,13 @@ export function TaskList({ tasks, loading, userId }: TaskListProps) {
     return { label: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), color: 'var(--color-text-muted)' }
   }
 
-  async function markDone(task: Task) {
-    await updateStatus.mutateAsync({ taskId: task.id, status: 'Done' })
-    confetti({ particleCount: 60, spread: 55, origin: { y: 0.7 }, colors: ['#2563EB', '#7c3aed', '#22C55E'] })
+  async function toggleDone(task: Task) {
+    if (task.status === 'Done') {
+      await updateStatus.mutateAsync({ taskId: task.id, status: 'To Do' })
+    } else {
+      await updateStatus.mutateAsync({ taskId: task.id, status: 'Done' })
+      confetti({ particleCount: 60, spread: 55, origin: { y: 0.7 }, colors: ['#2563EB', '#7c3aed', '#22C55E'] })
+    }
   }
 
   async function addTask() {
@@ -123,13 +125,14 @@ export function TaskList({ tasks, loading, userId }: TaskListProps) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         <AnimatePresence>
           {filtered.map(task => {
+            const isDone = task.status === 'Done'
             const dateInfo = formatDate(task.due_date)
             return (
               <motion.div
                 key={task.id}
                 layout
                 initial={{ opacity: 0, x: -8 }}
-                animate={{ opacity: 1, x: 0 }}
+                animate={{ opacity: isDone ? 0.5 : 1, x: 0 }}
                 exit={{ opacity: 0, x: 8 }}
                 style={{
                   display: 'flex',
@@ -142,59 +145,79 @@ export function TaskList({ tasks, loading, userId }: TaskListProps) {
                 }}
               >
                 <button
-                  onClick={() => markDone(task)}
-                  style={{ width: 20, height: 20, borderRadius: '50%', border: '2px solid var(--color-border)', background: 'var(--color-card)', cursor: 'pointer', flexShrink: 0, transition: 'all 0.15s' }}
-                  title="Mark done"
-                />
+                  onClick={() => toggleDone(task)}
+                  style={{
+                    width: 20, height: 20, borderRadius: '50%',
+                    border: isDone ? '2px solid var(--color-success)' : '2px solid var(--color-border)',
+                    background: isDone ? 'var(--color-success)' : 'var(--color-card)',
+                    cursor: 'pointer', flexShrink: 0, transition: 'all 0.15s',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 11, color: '#fff', fontWeight: 700,
+                  }}
+                  title={isDone ? 'Mark active' : 'Mark done'}
+                >
+                  {isDone ? '✓' : ''}
+                </button>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  <div style={{
+                    fontSize: 13, fontWeight: 600,
+                    color: isDone ? 'var(--color-text-muted)' : 'var(--color-text)',
+                    whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                    textDecoration: isDone ? 'line-through' : 'none',
+                  }}>
                     {task.title}
                   </div>
-                  <div style={{ display: 'flex', gap: 6, marginTop: 2, alignItems: 'center', flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: 10, fontWeight: 600, color: CATEGORY_COLORS[task.category], background: `${CATEGORY_COLORS[task.category]}18`, padding: '1px 6px', borderRadius: 10 }}>
-                      {task.category}
-                    </span>
-                    {task.description && !dateInfo && (
-                      <span style={{ fontSize: 10, color: 'var(--color-text-muted)', fontStyle: 'italic' }}>
-                        {task.description}
+                  {!isDone && (
+                    <div style={{ display: 'flex', gap: 6, marginTop: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+                      <span style={{ fontSize: 10, fontWeight: 600, color: CATEGORY_COLORS[task.category], background: `${CATEGORY_COLORS[task.category]}18`, padding: '1px 6px', borderRadius: 10 }}>
+                        {task.category}
                       </span>
-                    )}
-                    {dateInfo && (
-                      <span style={{ fontSize: 11, color: dateInfo.color, fontWeight: 600 }}>
-                        {dateInfo.label}
-                      </span>
-                    )}
-                  </div>
+                      {task.description && !dateInfo && (
+                        <span style={{ fontSize: 10, color: 'var(--color-text-muted)', fontStyle: 'italic' }}>
+                          {task.description}
+                        </span>
+                      )}
+                      {dateInfo && (
+                        <span style={{ fontSize: 11, color: dateInfo.color, fontWeight: 600 }}>
+                          {dateInfo.label}
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
-                {/* Date picker */}
-                {editingDateId === task.id ? (
-                  <input
-                    type="date"
-                    defaultValue={task.due_date?.split('T')[0] ?? ''}
-                    autoFocus
-                    onChange={e => {
-                      updateTask.mutate({ taskId: task.id, updates: { due_date: e.target.value || null } })
-                      setEditingDateId(null)
-                    }}
-                    onBlur={() => setEditingDateId(null)}
-                    style={{ fontSize: 12, padding: '4px 8px', borderRadius: 6, border: '1.5px solid var(--color-border)', background: 'var(--color-column)', color: 'var(--color-text)', outline: 'none' }}
-                  />
-                ) : (
-                  <button
-                    onClick={() => setEditingDateId(task.id)}
-                    title={task.due_date ? 'Change date' : 'Set a due date'}
-                    style={{
-                      background: 'none', border: 'none', cursor: 'pointer', flexShrink: 0,
-                      fontSize: 11, color: 'var(--color-text-muted)', padding: '2px 6px',
-                    }}
-                  >
-                    {task.due_date ? '📅' : '+ date'}
-                  </button>
-                )}
-                {task.status === 'In Progress' && (
-                  <span style={{ fontSize: 10, fontWeight: 700, color: '#2563EB', background: 'rgba(37,99,235,0.1)', padding: '2px 8px', borderRadius: 10 }}>
-                    In Progress
-                  </span>
+                {!isDone && (
+                  <>
+                    {/* Date picker */}
+                    {editingDateId === task.id ? (
+                      <input
+                        type="date"
+                        defaultValue={task.due_date?.split('T')[0] ?? ''}
+                        autoFocus
+                        onChange={e => {
+                          updateTask.mutate({ taskId: task.id, updates: { due_date: e.target.value || null } })
+                          setEditingDateId(null)
+                        }}
+                        onBlur={() => setEditingDateId(null)}
+                        style={{ fontSize: 12, padding: '4px 8px', borderRadius: 6, border: '1.5px solid var(--color-border)', background: 'var(--color-column)', color: 'var(--color-text)', outline: 'none' }}
+                      />
+                    ) : (
+                      <button
+                        onClick={() => setEditingDateId(task.id)}
+                        title={task.due_date ? 'Change date' : 'Set a due date'}
+                        style={{
+                          background: 'none', border: 'none', cursor: 'pointer', flexShrink: 0,
+                          fontSize: 11, color: 'var(--color-text-muted)', padding: '2px 6px',
+                        }}
+                      >
+                        {task.due_date ? '📅' : '+ date'}
+                      </button>
+                    )}
+                    {task.status === 'In Progress' && (
+                      <span style={{ fontSize: 10, fontWeight: 700, color: '#2563EB', background: 'rgba(37,99,235,0.1)', padding: '2px 8px', borderRadius: 10 }}>
+                        In Progress
+                      </span>
+                    )}
+                  </>
                 )}
               </motion.div>
             )
@@ -208,29 +231,6 @@ export function TaskList({ tasks, loading, userId }: TaskListProps) {
         )}
       </div>
 
-      {/* Done section */}
-      {doneTasks.length > 0 && (
-        <div style={{ marginTop: 16, borderTop: '1px solid var(--color-border)', paddingTop: 12 }}>
-          <button
-            onClick={() => setShowDone(!showDone)}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, color: 'var(--color-text-muted)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}
-          >
-            {showDone ? '▾' : '▸'} Done ({doneTasks.length})
-          </button>
-          <AnimatePresence>
-            {showDone && (
-              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}>
-                {doneTasks.slice(0, 20).map(task => (
-                  <div key={task.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', opacity: 0.55 }}>
-                    <span style={{ fontSize: 14, color: 'var(--color-success)' }}>✓</span>
-                    <span style={{ fontSize: 13, color: 'var(--color-text-muted)', textDecoration: 'line-through' }}>{task.title}</span>
-                  </div>
-                ))}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      )}
     </div>
   )
 }
