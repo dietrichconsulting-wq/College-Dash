@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useProfile, useUpdateProfile } from '@/hooks/useProfile'
 import { useSeedTasks, useTasks } from '@/hooks/useTasks'
+import { MajorSelect } from '@/components/MajorSelect'
+import { CollegeSelect } from '@/components/CollegeSelect'
 
 const US_STATES = ['AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY']
 
@@ -81,8 +83,9 @@ export function ProfilePageClient({ userId }: { userId: string }) {
           </div>
           <Field label="GPA" type="number" step="0.01" min="0" max="5.0" value={form.gpa} onChange={v => setForm(f => ({ ...f, gpa: v }))} placeholder="3.9" />
           <Field label="SAT Score" type="number" min="400" max="1600" value={form.sat} onChange={v => setForm(f => ({ ...f, sat: v }))} placeholder="1400" />
-          <div style={{ gridColumn: 'span 2' }}>
-            <Field label="Intended Major" value={form.proposed_major} onChange={v => setForm(f => ({ ...f, proposed_major: v }))} placeholder="e.g. Computer Science" />
+          <div style={{ gridColumn: 'span 2', display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <label style={labelStyle}>Intended Major</label>
+            <MajorSelect value={form.proposed_major} onChange={v => setForm(f => ({ ...f, proposed_major: v }))} />
           </div>
         </div>
       </div>
@@ -91,7 +94,10 @@ export function ProfilePageClient({ userId }: { userId: string }) {
         <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 20 }}>Target Schools</h2>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {(['school1_name', 'school2_name', 'school3_name', 'school4_name'] as const).map((key, i) => (
-            <Field key={key} label={`School ${i + 1}${i === 0 ? ' (Top choice)' : ''}`} value={form[key]} onChange={v => setForm(f => ({ ...f, [key]: v }))} placeholder="e.g. University of Texas at Austin" />
+            <div key={key} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <label style={labelStyle}>School {i + 1}{i === 0 ? ' (Top choice)' : ''}</label>
+              <CollegeSelect value={form[key]} onChange={v => setForm(f => ({ ...f, [key]: v }))} placeholder="Search for a college…" />
+            </div>
           ))}
         </div>
       </div>

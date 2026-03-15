@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useScholarships, useCreateScholarship, useUpdateScholarship, useDeleteScholarship } from '@/hooks/useScholarships'
 import type { Scholarship, ScholarshipStage, ScholarshipDifficulty, Profile } from '@/lib/types/database'
 import type { ScholarshipSuggestion } from '@/lib/services/scholarshipFinder'
+import { MajorSelect } from '@/components/MajorSelect'
 
 const STAGES: ScholarshipStage[] = ['Researching', 'Applying', 'Submitted', 'Won']
 const DIFFICULTIES: ScholarshipDifficulty[] = ['Easy', 'Medium', 'Hard']
@@ -224,7 +225,7 @@ export function ScholarshipsPageClient({ userId, profile }: Props) {
               </div>
               <div>
                 <label style={labelS}>Intended Major</label>
-                <input value={finderProfile.major} onChange={e => setFinderProfile(p => ({ ...p, major: e.target.value }))} placeholder="e.g. Computer Science" style={iS} />
+                <MajorSelect value={finderProfile.major} onChange={v => setFinderProfile(p => ({ ...p, major: v }))} />
               </div>
               <div>
                 <label style={labelS}>Home State</label>

@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { createClient } from '@/lib/supabase/client'
 import { useSeedTasks } from '@/hooks/useTasks'
+import { MajorSelect } from '@/components/MajorSelect'
+import { CollegeSelect } from '@/components/CollegeSelect'
 
 const US_STATES = ['AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY']
 const CURRENT_YEAR = new Date().getFullYear()
@@ -59,14 +61,14 @@ type FormData = {
   school4_name: string
 }
 
-export function OnboardingClient({ userId }: { userId: string }) {
+export function OnboardingClient({ userId, initialName = '' }: { userId: string; initialName?: string }) {
   const router = useRouter()
   const seedTasks = useSeedTasks(userId)
   const [step, setStep] = useState(0)
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState('')
   const [form, setForm] = useState<FormData>({
-    display_name: '',
+    display_name: initialName,
     home_state: '',
     grad_year: String(CURRENT_YEAR + 1),
     gpa: '',
@@ -285,7 +287,10 @@ function StepAcademics({ form, set }: { form: FormData; set: (k: keyof FormData,
         <Field label="SAT Score" value={form.sat} onChange={v => set('sat', v)} placeholder="1400" type="number" min="400" max="1600" />
         <Field label="ACT Score" value={form.act_score} onChange={v => set('act_score', v)} placeholder="32" type="number" min="1" max="36" />
       </div>
-      <Field label="Intended Major" value={form.proposed_major} onChange={v => set('proposed_major', v)} placeholder="e.g. Computer Science, Business, Undecided" required />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        <label style={labelStyle}>Intended Major <span style={{ color: 'var(--color-primary)', marginLeft: 2 }}>*</span></label>
+        <MajorSelect value={form.proposed_major} onChange={v => set('proposed_major', v)} />
+      </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
         <label style={labelStyle}>Extracurricular Activities</label>
         <textarea
@@ -359,12 +364,10 @@ function StepSchools({ form, set }: { form: FormData; set: (k: keyof FormData, v
       {schools.map(({ key, label, hint }) => (
         <div key={key} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           <label style={labelStyle}>{label}</label>
-          <input
-            type="text"
+          <CollegeSelect
             value={form[key] as string}
-            onChange={e => set(key, e.target.value)}
+            onChange={v => set(key, v)}
             placeholder={hint}
-            style={inputStyle}
           />
         </div>
       ))}

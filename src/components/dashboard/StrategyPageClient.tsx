@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { createClient } from '@/lib/supabase/client'
+import { MajorSelect } from '@/components/MajorSelect'
 
 const CLIMATE_OPTIONS = [
   '', 'Mountains', 'Beach / Coastal', 'Sunny / Southwest',
@@ -109,8 +110,9 @@ export function StrategyPageClient({ profile, userId }: StrategyPageClientProps)
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 14, marginBottom: 20 }}>
           <Field label="GPA" type="number" step="0.01" min="0" max="5.0" placeholder="3.9" value={form.gpa} onChange={v => setForm(f => ({ ...f, gpa: v }))} />
           <Field label="SAT Score" type="number" min="400" max="1600" placeholder="1400" value={form.sat} onChange={v => setForm(f => ({ ...f, sat: v }))} />
-          <div style={{ gridColumn: 'span 2' }}>
-            <Field label="Intended Major" placeholder="Environmental Design" value={form.major} onChange={v => setForm(f => ({ ...f, major: v }))} />
+          <div style={{ gridColumn: 'span 2', display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Intended Major</label>
+            <MajorSelect value={form.major} onChange={v => setForm(f => ({ ...f, major: v }))} />
           </div>
           <Field label="Annual Budget ($)" type="number" min="0" placeholder="30000" value={form.budget} onChange={v => setForm(f => ({ ...f, budget: v }))} />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>

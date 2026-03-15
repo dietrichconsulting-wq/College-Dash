@@ -17,5 +17,6 @@ export default async function OnboardingPage() {
 
   if (profile?.onboarding_complete) redirect('/dashboard')
 
-  return <OnboardingClient userId={user.id} />
+  const fullName = user.user_metadata?.full_name ?? ''
+  return <OnboardingClient userId={user.id} initialName={fullName} />
 }

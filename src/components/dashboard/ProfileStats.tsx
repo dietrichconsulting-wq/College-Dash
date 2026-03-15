@@ -5,6 +5,7 @@ import { useState, useRef } from 'react'
 import type { Profile, Task } from '@/lib/types/database'
 import Link from 'next/link'
 import { useUpdateProfile } from '@/hooks/useProfile'
+import { MajorSelect } from '@/components/MajorSelect'
 
 interface ProfileStatsProps {
   profile: Profile | null | undefined
@@ -183,19 +184,14 @@ function EditableMajorPill({ label, display, onSave }: {
 }) {
   const color = '#059669'
   const [editing, setEditing] = useState(false)
-  const [draft, setDraft] = useState('')
   const [saved, setSaved] = useState(false)
-  const inputRef = useRef<HTMLInputElement>(null)
 
   function startEdit() {
-    setDraft(display === 'Not set' || display === '—' ? '' : display)
     setEditing(true)
-    setTimeout(() => inputRef.current?.focus(), 30)
   }
 
-  function commit() {
+  function handleSelect(val: string) {
     setEditing(false)
-    const val = draft.trim()
     onSave(val)
     if (val) { setSaved(true); setTimeout(() => setSaved(false), 1800) }
   }
@@ -206,20 +202,13 @@ function EditableMajorPill({ label, display, onSave }: {
         {label}
       </span>
       {editing ? (
-        <input
-          ref={inputRef}
-          value={draft}
-          onChange={e => setDraft(e.target.value)}
-          onBlur={commit}
-          onKeyDown={e => { if (e.key === 'Enter') commit(); if (e.key === 'Escape') setEditing(false) }}
-          type="text"
-          placeholder="e.g. Computer Science"
-          style={{
-            fontSize: 16, fontWeight: 800, color, lineHeight: 1,
-            width: 180, border: 'none', borderBottom: `2px solid ${color}`,
-            background: 'transparent', outline: 'none', padding: '0 0 2px',
-          }}
-        />
+        <div style={{ width: 200 }}>
+          <MajorSelect
+            value={display === 'Not set' || display === '—' ? '' : display}
+            onChange={handleSelect}
+            placeholder="Search major…"
+          />
+        </div>
       ) : (
         <button
           onClick={startEdit}

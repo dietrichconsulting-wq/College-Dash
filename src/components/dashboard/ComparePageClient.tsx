@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import type { Profile } from '@/lib/types/database'
+import { CollegeSelect } from '@/components/CollegeSelect'
 
 const SESSION_KEY = 'compare_results_v1'
 const SESSION_SCHOOLS_KEY = 'compare_schools_v1'
@@ -158,11 +159,12 @@ export function ComparePageClient({ profile }: ComparePageClientProps) {
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 16 }}>
           {schools.map((s, i) => (
             <div key={i} style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-              <input
+              <CollegeSelect
                 value={s}
-                onChange={e => setSchools(prev => prev.map((v, j) => j === i ? e.target.value : v))}
+                onChange={v => setSchools(prev => prev.map((old, j) => j === i ? v : old))}
                 placeholder={`School ${i + 1}`}
-                style={{ padding: '9px 12px', borderRadius: 8, border: '1.5px solid var(--color-border)', background: 'var(--color-column)', color: 'var(--color-text)', fontSize: 13, outline: 'none', width: 220 }}
+                style={{ width: 240 }}
+                inputStyle={{ padding: '9px 12px', fontSize: 13 }}
               />
               {schools.length > 2 && (
                 <button onClick={() => setSchools(prev => prev.filter((_, j) => j !== i))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', fontSize: 16 }}>×</button>
