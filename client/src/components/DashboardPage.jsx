@@ -151,7 +151,7 @@ export default function DashboardPage({ userId, profile, updateProfile, dark, on
               onUpdateStat={handleUpdateStat}
               dark={dark}
             />
-            <Timeline milestones={milestones} loading={progressLoading} />
+            <CollegeComparison profile={effectiveProfile} />
             <DeadlineRadar columns={columns} loading={tasksLoading} />
             <ActivityFeed milestones={milestones} columns={columns} loading={tasksLoading || progressLoading} />
             <div className="task-section-card mt-10" ref={taskSectionRef}>
@@ -170,13 +170,9 @@ export default function DashboardPage({ userId, profile, updateProfile, dark, on
           </>
         )}
 
-        {/* ── College Explorer placeholder ── */}
-        {activePage === 'explorer' && (
-          <div className="explorer-placeholder">
-            <div className="explorer-placeholder__icon">🔭</div>
-            <div className="explorer-placeholder__title">College Explorer</div>
-            <div className="explorer-placeholder__sub">Search and discover colleges — coming soon.</div>
-          </div>
+        {/* ── Your Journey page ── */}
+        {activePage === 'journey' && (
+          <Timeline milestones={milestones} loading={progressLoading} />
         )}
 
         {/* ── Compare page ── */}

@@ -155,7 +155,7 @@ export default function CollegeStrategy({ profile }) {
           College Strategy Generator
         </h2>
         <p style={{ fontSize: 13, color: 'var(--color-text-muted)', marginTop: 4 }}>
-          AI-powered reach / target / safety list tailored to your profile
+          Get an AI-powered game plan tailored to your profile and goals.
         </p>
       </div>
 

@@ -5,6 +5,7 @@ import CollegeSearch from './CollegeSearch';
 export default function ProfileForm({ onSubmit }) {
   const [form, setForm] = useState({
     displayName: '',
+    email: '',
     gpa: '',
     sat: '',
     proposedMajor: '',
@@ -52,6 +53,18 @@ export default function ProfileForm({ onSubmit }) {
           value={form.displayName}
           onChange={e => setForm({ ...form, displayName: e.target.value })}
           placeholder="Enter your name"
+          className="w-full px-4 py-2.5 rounded-lg border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-navy focus:border-transparent transition-all"
+          required
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-semibold mb-1.5 text-navy">Email</label>
+        <input
+          type="email"
+          value={form.email}
+          onChange={e => setForm({ ...form, email: e.target.value })}
+          placeholder="you@example.com"
           className="w-full px-4 py-2.5 rounded-lg border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-navy focus:border-transparent transition-all"
           required
         />

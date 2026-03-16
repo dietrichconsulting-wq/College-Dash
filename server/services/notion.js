@@ -40,12 +40,13 @@ async function queryDatabase(databaseId, { filter, sorts, start_cursor } = {}) {
 
 // ─── Profiles ────────────────────────────────────────────
 
-export async function createProfile({ userId, displayName, gpa, sat, proposedMajor, schools }) {
+export async function createProfile({ userId, displayName, email, gpa, sat, proposedMajor, schools }) {
   return notion.pages.create({
     parent: { database_id: PROFILES_DB },
     properties: {
       UserID:        { title: [{ text: { content: userId } }] },
       DisplayName:   { rich_text: [{ text: { content: displayName || '' } }] },
+      Email:         { rich_text: [{ text: { content: email || '' } }] },
       GPA:           { number: gpa || null },
       SAT:           { number: sat || null },
       ProposedMajor: { rich_text: [{ text: { content: proposedMajor || '' } }] },
@@ -94,6 +95,16 @@ export async function updateProfile(userId, updates) {
       }
     }
   }
+  if (updates.email !== undefined)
+    properties.Email = { rich_text: [{ text: { content: updates.email } }] };
+  if (updates.subscriptionStatus !== undefined)
+    properties.SubscriptionStatus = { select: { name: updates.subscriptionStatus } };
+  if (updates.subscriptionEnd !== undefined)
+    properties.SubscriptionEnd = updates.subscriptionEnd ? { date: { start: updates.subscriptionEnd } } : { date: null };
+  if (updates.stripeCustomerId !== undefined)
+    properties.StripeCustomerID = { rich_text: [{ text: { content: updates.stripeCustomerId } }] };
+  if (updates.stripeSubscriptionId !== undefined)
+    properties.StripeSubscriptionID = { rich_text: [{ text: { content: updates.stripeSubscriptionId } }] };
 
   return notion.pages.update({ page_id: pageId, properties });
 }
@@ -104,6 +115,7 @@ function parseProfile(page) {
     id: page.id,
     userId: p.UserID?.title?.[0]?.plain_text || '',
     displayName: p.DisplayName?.rich_text?.[0]?.plain_text || '',
+    email: p.Email?.rich_text?.[0]?.plain_text || '',
     gpa: p.GPA?.number,
     sat: p.SAT?.number,
     proposedMajor: p.ProposedMajor?.rich_text?.[0]?.plain_text || '',
@@ -112,8 +124,20 @@ function parseProfile(page) {
       { name: p.School2?.rich_text?.[0]?.plain_text || '', id: p.School2ID?.rich_text?.[0]?.plain_text || '' },
       { name: p.School3?.rich_text?.[0]?.plain_text || '', id: p.School3ID?.rich_text?.[0]?.plain_text || '' },
       { name: p.School4?.rich_text?.[0]?.plain_text || '', id: p.School4ID?.rich_text?.[0]?.plain_text || '' },
-    ]
+    ],
+    subscriptionStatus: p.SubscriptionStatus?.select?.name || null,
+    subscriptionEnd: p.SubscriptionEnd?.date?.start || null,
+    stripeCustomerId: p.StripeCustomerID?.rich_text?.[0]?.plain_text || '',
+    stripeSubscriptionId: p.StripeSubscriptionID?.rich_text?.[0]?.plain_text || '',
   };
+}
+
+export async function getProfileByStripeCustomerId(customerId) {
+  const res = await queryDatabase(PROFILES_DB, {
+    filter: { property: 'StripeCustomerID', rich_text: { equals: customerId } }
+  });
+  if (res.results.length === 0) return null;
+  return parseProfile(res.results[0]);
 }
 
 // ─── Tasks ───────────────────────────────────────────────

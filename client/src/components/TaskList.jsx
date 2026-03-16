@@ -368,7 +368,12 @@ export default function TaskList({
     <div>
       {/* Header */}
       <div className="task-list__header">
-        <h2 className="task-list__title">Your Tasks</h2>
+        <div>
+          <h2 className="task-list__title">Your Tasks</h2>
+          <p style={{ fontSize: 13, color: 'var(--color-text-muted)', margin: '2px 0 0', fontWeight: 400 }}>
+            Track every step of your college application — check them off as you go.
+          </p>
+        </div>
         <div className="task-list__header-right">
           <span className="task-list__count">{activeTasks.length} remaining</span>
           {onOpenRoadmap && (

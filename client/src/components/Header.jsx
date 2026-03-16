@@ -18,9 +18,14 @@ export default function Header({ profile, onToggleChat, dark, onToggleDark }) {
           College Dashboard
         </h1>
         {profile?.displayName && (
-          <span className="header-bar__welcome">
-            Welcome, {profile.displayName}
-          </span>
+          <div>
+            <span className="header-bar__welcome">
+              Welcome, {profile.displayName}
+            </span>
+            <p style={{ fontSize: 'var(--font-size-micro)', color: 'var(--color-text-muted)', margin: 0, marginTop: 2 }}>
+              Change your GPA, SAT, major, and schools to check your chance of getting in.
+            </p>
+          </div>
         )}
       </div>
       <div className="flex items-center gap-3">

@@ -4,7 +4,31 @@
       "Bash(node --version)",
       "Bash(npm --version)",
       "Bash(npm install -D tailwindcss @tailwindcss/vite)",
-      "Bash(npm install)"
+      "Bash(npm install)",
+      "Bash(head -5 /c/Users/idietric/college-app/src/app/\\\\\\(auth\\\\\\)/login/page.tsx)",
+      "Bash(git add -A)",
+      "Bash(git commit:*)",
+      "Bash(node -e \":*)",
+      "Bash(node scripts/reset-onboarding.mjs)",
+      "Bash(xargs grep -n \"fetch\\\\|useEffect\\\\|userId\")",
+      "Bash(find \"C:/Users/idietric/college-app/src/app/\\(dashboard\\)/journey\" -type f)",
+      "Bash(xargs ls -1)",
+      "Bash(python3 -c \":*)",
+      "Bash(find \"C:\\\\Users\\\\idietric\\\\college-app\\\\src\\\\app\\\\\\(dashboard\\)\\\\scholarships\" -type f)",
+      "Bash(cat \"C:/Users/idietric/college-app/src/app/\\(dashboard\\)/compare/page.tsx\")",
+      "Bash(ls \"c:/Users/idietric/college-app/src/app/\\(auth\\)\")",
+      "Bash(ls \"c:/Users/idietric/college-app/src/app/\\(auth\\)/login\")",
+      "Bash(cat \"c:/Users/idietric/college-app/src/app/\\(auth\\)/login/page.tsx\")",
+      "Bash(cat \"c:/Users/idietric/college-app/src/app/\\(auth\\)/layout.tsx\")",
+      "Bash(ls \"c:/Users/idietric/college-app/src/app/\\(dashboard\\)\")",
+      "Bash(sed -i 's/school4_name: string | null$/school4_name: string | null\\\\n    strategy_result?: StrategyResult | null\\\\n    strategy_generated_at?: string | null/' src/components/dashboard/StrategyPageClient.tsx)",
+      "Bash(sed -i 's/const \\\\[result, setResult\\\\] = useState<StrategyResult | null>\\(null\\)/const [result, setResult] = useState<StrategyResult | null>\\(profile?.strategy_result ?? null\\)/' src/components/dashboard/StrategyPageClient.tsx)",
+      "mcp__claude_ai_Notion__notion-search",
+      "mcp__claude_ai_Notion__notion-fetch"
+    ],
+    "additionalDirectories": [
+      "\\tmp",
+      "\\dev"
     ]
   }
 }

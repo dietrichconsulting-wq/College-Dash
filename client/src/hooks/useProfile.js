@@ -39,5 +39,5 @@ export function useProfile() {
     return data;
   };
 
-  return { userId, profile, loading, createProfile, updateProfile: updateProfileData };
+  return { userId, profile, loading, createProfile, updateProfile: updateProfileData, setProfile };
 }

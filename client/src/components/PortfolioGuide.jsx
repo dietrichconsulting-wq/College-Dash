@@ -394,7 +394,7 @@ export default function PortfolioGuide({ profile }) {
         <div>
           <h2 className="portfolio-guide__title">Portfolio & Major Guidance</h2>
           <p className="portfolio-guide__subtitle">
-            What you need to get into each design program
+            See what each program looks for and how to build a standout portfolio.
           </p>
         </div>
       </div>

@@ -42,7 +42,7 @@ export default function AIChatPanel({ open, onClose, messages, loading, onSend }
                   className="text-blue-200"
                   style={{ fontSize: 'var(--font-size-micro)' }}
                 >
-                  Ask about portfolios & scholarships
+                  Ask for personalized advice on your college list and scholarship strategy.
                 </p>
               </div>
               <button

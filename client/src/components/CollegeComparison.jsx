@@ -306,7 +306,12 @@ export default function CollegeComparison({ profile }) {
       {/* Header */}
       <div className="college-comparison__header">
         <div className="college-comparison__title-row">
-          <h2 className="college-comparison__title">College Comparison</h2>
+          <div>
+            <h2 className="college-comparison__title">College Comparison</h2>
+            <p style={{ fontSize: 13, color: 'var(--color-text-muted)', margin: '2px 0 0', fontWeight: 400 }}>
+              Compare your schools side by side on cost, acceptance rate, and fit.
+            </p>
+          </div>
           <div className="college-comparison__actions">
             {!loading && schools.length > 0 && (
               <button className="comp-refresh-btn" onClick={refreshData} title="Refresh data">

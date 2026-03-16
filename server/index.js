@@ -15,7 +15,9 @@ import generateRoutes from './routes/generate.js';
 import scholarshipRoutes from './routes/scholarships.js';
 import portfolioRoutes from './routes/portfolio.js';
 import strategyRoutes from './routes/strategy.js';
+import subscriptionRoutes from './routes/subscription.js';
 import errorHandler from './middleware/errorHandler.js';
+import requireSubscription from './middleware/requireSubscription.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: resolve(__dirname, '../.env') });
@@ -24,20 +26,26 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 app.use(cors());
+
+// Stripe webhook needs raw body for signature verification — must come before express.json()
+app.use('/api/subscription/webhook', express.raw({ type: 'application/json' }));
 app.use(express.json());
 
-// API routes
+// Public routes (no subscription check)
 app.use('/api/profile', profileRoutes);
-app.use('/api/tasks', taskRoutes);
-app.use('/api/progress', progressRoutes);
-app.use('/api/colleges', collegeRoutes);
-app.use('/api/auth', authRoutes);
-app.use('/api/calendar', calendarRoutes);
-app.use('/api/chat', chatRoutes);
-app.use('/api/generate', generateRoutes);
-app.use('/api/scholarships', scholarshipRoutes);
-app.use('/api/portfolio', portfolioRoutes);
-app.use('/api/strategy', strategyRoutes);
+app.use('/api/subscription', subscriptionRoutes);
+
+// Protected routes (subscription required)
+app.use('/api/tasks', requireSubscription, taskRoutes);
+app.use('/api/progress', requireSubscription, progressRoutes);
+app.use('/api/colleges', requireSubscription, collegeRoutes);
+app.use('/api/auth', requireSubscription, authRoutes);
+app.use('/api/calendar', requireSubscription, calendarRoutes);
+app.use('/api/chat', requireSubscription, chatRoutes);
+app.use('/api/generate', requireSubscription, generateRoutes);
+app.use('/api/scholarships', requireSubscription, scholarshipRoutes);
+app.use('/api/portfolio', requireSubscription, portfolioRoutes);
+app.use('/api/strategy', requireSubscription, strategyRoutes);
 
 // Serve static frontend in production
 app.use(express.static(resolve(__dirname, 'public')));

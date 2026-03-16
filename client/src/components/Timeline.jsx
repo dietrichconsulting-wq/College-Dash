@@ -42,6 +42,9 @@ export default function Timeline({ milestones, loading }) {
       >
         Your Journey
       </h2>
+      <p style={{ fontSize: 13, color: 'var(--color-text-muted)', marginTop: -12, marginBottom: 12 }}>
+        See your progress toward key milestones on the road to acceptance.
+      </p>
       <div className="card-elevated p-6 overflow-x-auto">
         <div className="flex items-center min-w-[800px]">
           {milestones.map((m, i) => (

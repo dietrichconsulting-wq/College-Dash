@@ -378,7 +378,12 @@ export default function ScholarshipPipeline({ userId }) {
     <div className="scholarship-pipeline">
       <div className="scholarship-pipeline__header">
         <div className="scholarship-pipeline__title-row">
-          <h2 className="scholarship-pipeline__title">Scholarship Pipeline</h2>
+          <div>
+            <h2 className="scholarship-pipeline__title">Scholarship Pipeline</h2>
+            <p style={{ fontSize: 13, color: 'var(--color-text-muted)', margin: '2px 0 0', fontWeight: 400 }}>
+              Find, track, and manage scholarship applications in one place.
+            </p>
+          </div>
           {totalCount > 0 && (
             <span className="scholarship-pipeline__badge">{totalCount} tracked</span>
           )}

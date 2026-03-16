@@ -73,6 +73,16 @@ async function main() {
     School3ID:     { rich_text: {} },
     School4:       { rich_text: {} },
     School4ID:     { rich_text: {} },
+    Email:         { rich_text: {} },
+    SubscriptionStatus: { select: { options: [
+      { name: 'trial', color: 'yellow' },
+      { name: 'active', color: 'green' },
+      { name: 'cancelled', color: 'orange' },
+      { name: 'expired', color: 'red' },
+    ]}},
+    SubscriptionEnd:    { date: {} },
+    StripeCustomerID:   { rich_text: {} },
+    StripeSubscriptionID: { rich_text: {} },
   });
   console.log(`Profiles DB created: ${profiles.id}`);
 
