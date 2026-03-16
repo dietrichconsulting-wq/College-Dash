@@ -26,10 +26,11 @@ interface AdmissionSnapshotProps {
   loading: boolean
 }
 
-function chanceLabel(pct: number): { label: string; color: string } {
-  if (pct >= 65) return { label: 'Safety', color: '#059669' }
-  if (pct >= 35) return { label: 'Target', color: '#d97706' }
-  return { label: 'Reach', color: '#dc2626' }
+function chanceLabel(pct: number): { label: string; color: string; softColor: string; bgColor: string; borderColor: string } {
+  // Desaturated, softer palette for dark mode readability
+  if (pct >= 65) return { label: 'Safety', color: '#34D399', softColor: '#6EE7B7', bgColor: 'rgba(52,211,153,0.10)', borderColor: 'rgba(52,211,153,0.22)' }
+  if (pct >= 35) return { label: 'Target', color: '#FBBF24', softColor: '#FCD34D', bgColor: 'rgba(251,191,36,0.10)', borderColor: 'rgba(251,191,36,0.22)' }
+  return { label: 'Reach', color: '#FB7185', softColor: '#FDA4AF', bgColor: 'rgba(251,113,133,0.10)', borderColor: 'rgba(251,113,133,0.22)' }
 }
 
 const SNAPSHOT_KEY = 'admission_snapshot_v2'
@@ -137,8 +138,16 @@ export function AdmissionSnapshot({ profile, loading }: AdmissionSnapshotProps) 
       {!fetching && results.length > 0 && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 14 }}>
           {results.map((r, i) => {
-            const { label, color } = chanceLabel(r.chance)
+            const { label, color, softColor, bgColor, borderColor } = chanceLabel(r.chance)
             const schoolAdmitRate = r.admissionRate != null ? `${r.admissionRate}% overall admit rate` : null
+
+            // Desaturated SAT policy colors for dark mode
+            const testPolicyStyle = (() => {
+              if (r.testPolicy === 'Required') return { bg: 'rgba(251,113,133,0.08)', color: '#FDA4AF', border: 'rgba(251,113,133,0.18)' }
+              if (r.testPolicy === 'Test-Optional') return { bg: 'rgba(52,211,153,0.08)', color: '#6EE7B7', border: 'rgba(52,211,153,0.18)' }
+              return { bg: 'rgba(251,191,36,0.08)', color: '#FCD34D', border: 'rgba(251,191,36,0.18)' }
+            })()
+
             return (
               <motion.div
                 key={i}
@@ -146,10 +155,10 @@ export function AdmissionSnapshot({ profile, loading }: AdmissionSnapshotProps) 
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: i * 0.05 }}
                 style={{
-                  background: 'var(--color-column)',
+                  background: 'var(--color-card)',
                   borderRadius: 12,
                   padding: '14px 16px',
-                  border: '1.5px solid var(--color-border)',
+                  border: '1px solid rgba(255,255,255,0.08)',
                   display: 'flex',
                   flexDirection: 'column',
                   gap: 10,
@@ -157,22 +166,22 @@ export function AdmissionSnapshot({ profile, loading }: AdmissionSnapshotProps) 
               >
                 {/* School name + tier label */}
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-text)', lineHeight: 1.3, maxWidth: 160 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.92)', lineHeight: 1.3, maxWidth: 160 }}>
                     {r.schoolName}
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0 }}>
                     {r.portfolioRequired && (
                       <span title="Portfolio required" style={{
                         fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 20,
-                        background: 'rgba(124,58,237,0.1)', color: '#7c3aed',
-                        border: '1px solid rgba(124,58,237,0.25)', whiteSpace: 'nowrap',
+                        background: 'rgba(167,139,250,0.10)', color: '#C4B5FD',
+                        border: '1px solid rgba(167,139,250,0.20)', whiteSpace: 'nowrap',
                       }}>
                         📁 Portfolio
                       </span>
                     )}
                     <span style={{
                       fontSize: 10, fontWeight: 800, padding: '3px 8px', borderRadius: 20,
-                      background: `${color}18`, color, border: `1px solid ${color}40`,
+                      background: bgColor, color: softColor, border: `1px solid ${borderColor}`,
                       whiteSpace: 'nowrap',
                     }}>
                       {label}
@@ -182,39 +191,39 @@ export function AdmissionSnapshot({ profile, loading }: AdmissionSnapshotProps) 
 
                 {/* Chance bar */}
                 <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                    <span style={{ fontSize: 11, color: 'var(--color-text-muted)', fontWeight: 600 }}>Your chance</span>
-                    <span style={{ fontSize: 14, fontWeight: 800, color }}>{r.chance}%</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 5 }}>
+                    <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.50)', fontWeight: 600 }}>Your chance</span>
+                    <span style={{ fontSize: 18, fontWeight: 800, color: 'rgba(255,255,255,0.92)' }}>{r.chance}%</span>
                   </div>
-                  <div style={{ height: 6, background: 'var(--color-border)', borderRadius: 99, overflow: 'hidden' }}>
+                  <div style={{ height: 6, background: 'rgba(255,255,255,0.06)', borderRadius: 99, overflow: 'hidden' }}>
                     <motion.div
                       initial={{ width: 0 }}
                       animate={{ width: `${r.chance}%` }}
                       transition={{ duration: 0.8, delay: i * 0.1, ease: 'easeOut' }}
-                      style={{ height: '100%', background: color, borderRadius: 99 }}
+                      style={{ height: '100%', background: `${color}B3`, borderRadius: 99 }}
                     />
                   </div>
                   {schoolAdmitRate && (
-                    <div style={{ fontSize: 10, color: 'var(--color-text-muted)', marginTop: 3 }}>{schoolAdmitRate}</div>
+                    <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.40)', marginTop: 4 }}>{schoolAdmitRate}</div>
                   )}
                 </div>
 
                 {/* Top factors */}
                 {r.topFactors?.length > 0 && (
-                  <div style={{ borderTop: '1px solid var(--color-border)', paddingTop: 8 }}>
-                    <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 5 }}>
+                  <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 8 }}>
+                    <div style={{ fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.40)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 5 }}>
                       What they value most
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                       {r.topFactors.map((f, fi) => (
                         <div key={fi} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                           <span style={{
-                            fontSize: 9, fontWeight: 900, color: fi === 0 ? color : 'var(--color-text-muted)',
+                            fontSize: 9, fontWeight: 900, color: fi === 0 ? softColor : 'rgba(255,255,255,0.35)',
                             minWidth: 14, textAlign: 'center',
                           }}>
                             {fi === 0 ? '①' : fi === 1 ? '②' : '③'}
                           </span>
-                          <span style={{ fontSize: 11, color: fi === 0 ? 'var(--color-text)' : 'var(--color-text-muted)', fontWeight: fi === 0 ? 600 : 400 }}>
+                          <span style={{ fontSize: 11, color: fi === 0 ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.50)', fontWeight: fi === 0 ? 600 : 400 }}>
                             {f}
                           </span>
                         </div>
@@ -229,7 +238,8 @@ export function AdmissionSnapshot({ profile, loading }: AdmissionSnapshotProps) 
                     {r.keyRequirements.map((req, ri) => (
                       <span key={ri} style={{
                         fontSize: 10, padding: '2px 8px', borderRadius: 20,
-                        background: 'var(--color-border)', color: 'var(--color-text-muted)',
+                        background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.50)',
+                        border: '1px solid rgba(255,255,255,0.08)',
                         fontWeight: 500,
                       }}>
                         {req}
@@ -240,17 +250,16 @@ export function AdmissionSnapshot({ profile, loading }: AdmissionSnapshotProps) 
 
                 {/* SAT policy */}
                 {(r.testPolicy || r.satSuperscore != null || r.satNotes?.length > 0) && (
-                  <div style={{ borderTop: '1px solid var(--color-border)', paddingTop: 8 }}>
-                    <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>
+                  <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 8 }}>
+                    <div style={{ fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.40)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>
                       SAT Policy
                     </div>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: r.satNotes?.length > 0 ? 6 : 0 }}>
                       {r.testPolicy && (
                         <span style={{
                           fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20,
-                          background: r.testPolicy === 'Required' ? 'rgba(239,68,68,0.08)' : r.testPolicy === 'Test-Optional' ? 'rgba(5,150,105,0.08)' : 'rgba(245,158,11,0.08)',
-                          color: r.testPolicy === 'Required' ? '#dc2626' : r.testPolicy === 'Test-Optional' ? '#059669' : '#d97706',
-                          border: `1px solid ${r.testPolicy === 'Required' ? 'rgba(239,68,68,0.2)' : r.testPolicy === 'Test-Optional' ? 'rgba(5,150,105,0.2)' : 'rgba(245,158,11,0.2)'}`,
+                          background: testPolicyStyle.bg, color: testPolicyStyle.color,
+                          border: `1px solid ${testPolicyStyle.border}`,
                         }}>
                           {r.testPolicy}
                         </span>
@@ -258,8 +267,8 @@ export function AdmissionSnapshot({ profile, loading }: AdmissionSnapshotProps) 
                       {r.satSuperscore === true && (
                         <span style={{
                           fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20,
-                          background: 'rgba(37,99,235,0.08)', color: '#2563eb',
-                          border: '1px solid rgba(37,99,235,0.2)',
+                          background: 'rgba(96,165,250,0.08)', color: '#93C5FD',
+                          border: '1px solid rgba(96,165,250,0.18)',
                         }}>
                           ✓ Superscores
                         </span>
@@ -267,8 +276,8 @@ export function AdmissionSnapshot({ profile, loading }: AdmissionSnapshotProps) 
                       {r.satSuperscore === false && (
                         <span style={{
                           fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20,
-                          background: 'var(--color-border)', color: 'var(--color-text-muted)',
-                          border: '1px solid var(--color-border)',
+                          background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.45)',
+                          border: '1px solid rgba(255,255,255,0.08)',
                         }}>
                           Single sitting only
                         </span>
@@ -277,8 +286,8 @@ export function AdmissionSnapshot({ profile, loading }: AdmissionSnapshotProps) 
                     {r.satNotes?.length > 0 && (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                         {r.satNotes.map((note, ni) => (
-                          <div key={ni} style={{ fontSize: 10, color: 'var(--color-text-muted)', display: 'flex', gap: 4 }}>
-                            <span style={{ color: 'var(--color-primary)', flexShrink: 0 }}>·</span>
+                          <div key={ni} style={{ fontSize: 10, color: 'rgba(255,255,255,0.45)', display: 'flex', gap: 4 }}>
+                            <span style={{ color: '#93C5FD', flexShrink: 0 }}>·</span>
                             {note}
                           </div>
                         ))}
@@ -290,10 +299,10 @@ export function AdmissionSnapshot({ profile, loading }: AdmissionSnapshotProps) 
                 {/* AI tip */}
                 {r.aiTip && (
                   <div style={{
-                    fontSize: 11, color: 'var(--color-text-muted)', lineHeight: 1.4,
-                    borderTop: '1px solid var(--color-border)', paddingTop: 8,
+                    fontSize: 11, color: 'rgba(255,255,255,0.50)', lineHeight: 1.4,
+                    borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 8,
                   }}>
-                    <span style={{ fontWeight: 700, color: 'var(--color-primary)' }}>Focus: </span>
+                    <span style={{ fontWeight: 700, color: '#93C5FD' }}>Focus: </span>
                     {r.aiTip}
                   </div>
                 )}
