@@ -268,19 +268,19 @@ function EditableSchoolChip({ name, rank, onSave }: { name: string | null; rank:
     )
   }
 
-  const short = name.split(' ').pop() || name
   return (
     <button
       onClick={() => setEditing(true)}
       title={`${name} — click to change`}
       style={{
-        background: c.bg, color: c.color, fontWeight: 700, fontSize: 12,
-        padding: '5px 12px', borderRadius: 20, border: `1px solid ${c.color}30`,
+        background: 'rgba(255,255,255,0.1)', color: '#ffffff', fontWeight: 600, fontSize: 11,
+        padding: '5px 12px', borderRadius: 20, border: '1px solid rgba(255,255,255,0.2)',
         cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4,
+        maxWidth: 200, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
       }}
     >
-      {short.length > 10 ? short.slice(0, 10) + '…' : short}
-      <span style={{ fontSize: 9, opacity: 0.6 }}>✎</span>
+      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{name}</span>
+      <span style={{ fontSize: 9, opacity: 0.6, flexShrink: 0 }}>✎</span>
     </button>
   )
 }
