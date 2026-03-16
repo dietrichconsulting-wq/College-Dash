@@ -79,32 +79,9 @@ function calculateChance(studentSAT, studentGPA, school) {
   const adjustedSAT = satFactor * selectivityScale;
   const adjustedGPA = gpaFactor * selectivityScale;
 
-  const chance = clamp(Math.round(baseRate + adjustedSAT + adjustedGPA), 3, 97);
-  return chance;
-}
-
-/**
- * Calculate what a student's chance would be with an improved SAT score.
- */
-function calculateWhatIf(currentSAT, studentGPA, school) {
-  const current = calculateChance(currentSAT, studentGPA, school);
-  if (current == null) return { satPlusFifty: null, gpaPlusTwo: null };
-
-  // SAT +50
-  let satPlusFifty = null;
-  if (currentSAT && currentSAT < 1600) {
-    const improved = calculateChance(Math.min(currentSAT + 50, 1600), studentGPA, school);
-    if (improved != null) satPlusFifty = improved;
-  }
-
-  // GPA +0.2
-  let gpaPlusTwo = null;
-  if (studentGPA && studentGPA < 4.0) {
-    const improved = calculateChance(currentSAT, Math.min(studentGPA + 0.2, 4.0), school);
-    if (improved != null) gpaPlusTwo = improved;
-  }
-
-  return { satPlusFifty, gpaPlusTwo };
+  // Round to nearest 5% to signal this is an estimate, not a precise prediction
+  const raw = clamp(baseRate + adjustedSAT + adjustedGPA, 5, 95);
+  return Math.round(raw / 5) * 5;
 }
 
 /**
@@ -128,8 +105,6 @@ export async function computeChances(profile) {
         const chance = calculateChance(profile.sat, profile.gpa, college);
         if (chance == null) return null;
 
-        const whatIf = calculateWhatIf(profile.sat, profile.gpa, college);
-
         return {
           schoolName: s.name,
           schoolId: college.id,
@@ -138,8 +113,6 @@ export async function computeChances(profile) {
           avgSAT: college.avgSAT,
           sat25: college.sat25,
           sat75: college.sat75,
-          satPlusFiftyChance: whatIf.satPlusFifty,
-          gpaPlusTwoChance: whatIf.gpaPlusTwo,
         };
       } catch {
         return null;

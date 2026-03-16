@@ -19,9 +19,6 @@ interface SchoolResult {
   satSuperscore: boolean | null
   testPolicy: string | null
   satNotes: string[]
-  improvement: { improvedSAT: number; currentChance: number; improvedChance: number; delta: number } | null
-  satPlusFiftyChance: number | null
-  gpaPlusTwoChance: number | null
 }
 
 interface AdmissionSnapshotProps {
@@ -35,7 +32,7 @@ function chanceLabel(pct: number): { label: string; color: string } {
   return { label: 'Reach', color: '#dc2626' }
 }
 
-const SNAPSHOT_KEY = 'admission_snapshot_v1'
+const SNAPSHOT_KEY = 'admission_snapshot_v2'
 
 export function AdmissionSnapshot({ profile, loading }: AdmissionSnapshotProps) {
   const schools = profile
@@ -114,7 +111,7 @@ export function AdmissionSnapshot({ profile, loading }: AdmissionSnapshotProps) 
         <div>
           <h2 style={{ fontSize: 15, fontWeight: 800, margin: 0 }}>Admission Snapshot</h2>
           <p style={{ fontSize: 12, color: 'var(--color-text-muted)', margin: '2px 0 0' }}>
-            AI-powered estimates based on your GPA{profile?.sat ? ', SAT' : ''} & major
+            Estimates based on your GPA{profile?.sat ? ', SAT' : ''} & school admit rates
           </p>
         </div>
         <Link href="/strategy" style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-primary)', textDecoration: 'none' }}>
@@ -301,44 +298,6 @@ export function AdmissionSnapshot({ profile, loading }: AdmissionSnapshotProps) 
                   </div>
                 )}
 
-                {/* What-if projections */}
-                {(r.satPlusFiftyChance != null || r.gpaPlusTwoChance != null) && (
-                  <div style={{ borderTop: '1px solid var(--color-border)', paddingTop: 8 }}>
-                    <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>
-                      What if?
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                      {r.satPlusFiftyChance != null && (() => {
-                        const delta = r.satPlusFiftyChance - r.chance
-                        const deltaColor = delta > 0 ? '#059669' : delta < 0 ? '#dc2626' : 'var(--color-text-muted)'
-                        return (
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>
-                              SAT +50 pts ({profile?.sat ? profile.sat + 50 : '—'})
-                            </span>
-                            <span style={{ fontSize: 11, fontWeight: 700, color: deltaColor }}>
-                              {delta > 0 ? '+' : ''}{delta}% → {r.satPlusFiftyChance}%
-                            </span>
-                          </div>
-                        )
-                      })()}
-                      {r.gpaPlusTwoChance != null && (() => {
-                        const delta = r.gpaPlusTwoChance - r.chance
-                        const deltaColor = delta > 0 ? '#059669' : delta < 0 ? '#dc2626' : 'var(--color-text-muted)'
-                        return (
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>
-                              GPA +0.2 ({profile?.gpa ? Math.min(Number(profile.gpa) + 0.2, 5.0).toFixed(1) : '—'})
-                            </span>
-                            <span style={{ fontSize: 11, fontWeight: 700, color: deltaColor }}>
-                              {delta > 0 ? '+' : ''}{delta}% → {r.gpaPlusTwoChance}%
-                            </span>
-                          </div>
-                        )
-                      })()}
-                    </div>
-                  </div>
-                )}
               </motion.div>
             )
           })}
