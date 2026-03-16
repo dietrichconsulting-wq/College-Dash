@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { getCollege, searchColleges } from './collegeScorecard';
+import { getCollege, lookupByName } from './collegeScorecard';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -121,37 +121,13 @@ export async function computeChances(profile) {
   const results = await Promise.all(
     schools.map(async (s) => {
       try {
-        let collegeId = s.id;
-        if (!collegeId || collegeId.trim() === '') {
-          // Try multiple query strategies to find the right school
-          const name = s.name.trim();
-          const queries = [
-            name,
-            `University of ${name}`,
-            `${name} University`,
-            `${name} State University`,
-          ];
-          let resolved = null;
-          for (const q of queries) {
-            const hits = await searchColleges(q);
-            if (hits && hits.length > 0) {
-              // Prefer exact or near-exact name match with admission data
-              const normQ = q.toLowerCase().replace(/[^a-z0-9\s]/g, '');
-              const exact = hits.find(h => {
-                const n = (h.name || '').toLowerCase().replace(/[^a-z0-9\s]/g, '');
-                return n === normQ || n.includes(normQ) || normQ.includes(n);
-              });
-              resolved = (exact && exact.admissionRate != null)
-                ? exact
-                : (hits.find(h => h.admissionRate != null) || hits[0]);
-              break;
-            }
-          }
-          if (!resolved) return null;
-          collegeId = resolved.id;
+        let college;
+        if (s.id && s.id.trim() !== '') {
+          college = await getCollege(s.id);
+        } else {
+          // Use lookupByName which handles name expansions (e.g. "Texas" → "University of Texas at Austin")
+          college = await lookupByName(s.name);
         }
-
-        const college = await getCollege(collegeId);
         if (!college) return null;
 
         const chance = calculateChance(profile.sat, profile.gpa, college);
@@ -233,7 +209,7 @@ Respond with ONLY a valid JSON array. No markdown, no explanation.
       validResults.forEach(res => {
         const aiData = parsed.find(p => p.schoolId === res.schoolId);
         if (aiData) {
-          res.chance = aiData.aiChance;
+          // Never override data-driven chance with AI guess
           res.aiTip = aiData.aiTip;
           res.portfolioRequired = aiData.portfolioRequired ?? false;
           res.topFactors = aiData.topFactors ?? [];

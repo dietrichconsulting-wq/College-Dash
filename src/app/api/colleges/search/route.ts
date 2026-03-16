@@ -42,24 +42,36 @@ export async function GET(req: Request) {
       }
     }
 
-    const qLower = q.toLowerCase()
+    const qLower = q.toLowerCase().replace(/^the\s+/, '')
+    const qWords = qLower.split(/\s+/)
     const results = deduped
       // Filter out tiny/vocational schools when query is broad (single word)
       .filter(r => {
         const size = r['latest.student.size']
-        // Keep all schools if query has multiple words (more specific)
         if (q.includes(' ')) return true
-        // For single-word queries, prefer schools with 1000+ students to cut noise
         return size == null || size >= 1000
       })
-      // Sort: name starts with query first, then larger schools first
+      // Sort by relevance: exact/prefix match > contains all words > larger schools
       .sort((a, b) => {
-        const aName = (a['school.name'] as string).toLowerCase()
-        const bName = (b['school.name'] as string).toLowerCase()
+        const aName = (a['school.name'] as string).toLowerCase().replace(/^the\s+/, '')
+        const bName = (b['school.name'] as string).toLowerCase().replace(/^the\s+/, '')
+
+        // Exact match (ignoring "The" prefix)
+        const aExact = aName === qLower ? 0 : 1
+        const bExact = bName === qLower ? 0 : 1
+        if (aExact !== bExact) return aExact - bExact
+
+        // Starts with query (ignoring "The")
         const aStarts = aName.startsWith(qLower) ? 0 : 1
         const bStarts = bName.startsWith(qLower) ? 0 : 1
         if (aStarts !== bStarts) return aStarts - bStarts
-        // Larger schools first
+
+        // Contains all query words in order
+        const aAll = qWords.every(w => aName.includes(w)) ? 0 : 1
+        const bAll = qWords.every(w => bName.includes(w)) ? 0 : 1
+        if (aAll !== bAll) return aAll - bAll
+
+        // Larger schools first (better relevance signal)
         const aSize = a['latest.student.size'] ?? 0
         const bSize = b['latest.student.size'] ?? 0
         return bSize - aSize
