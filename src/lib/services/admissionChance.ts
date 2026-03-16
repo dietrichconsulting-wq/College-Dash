@@ -86,30 +86,25 @@ function calculateChance(studentSAT, studentGPA, school) {
 /**
  * Calculate what a student's chance would be with an improved SAT score.
  */
-function calculateImprovement(currentSAT, studentGPA, school) {
-  if (!currentSAT) return null;
-
+function calculateWhatIf(currentSAT, studentGPA, school) {
   const current = calculateChance(currentSAT, studentGPA, school);
-  if (current == null) return null;
+  if (current == null) return { satPlusFifty: null, gpaPlusTwo: null };
 
-  // Try +50, +100 point improvements
-  const bumps = [50, 100];
-  for (const bump of bumps) {
-    const improvedSAT = Math.min(currentSAT + bump, 1600);
-    if (improvedSAT === currentSAT) continue;
-
-    const improved = calculateChance(improvedSAT, studentGPA, school);
-    if (improved != null && improved > current + 3) {
-      return {
-        improvedSAT,
-        currentChance: current,
-        improvedChance: improved,
-        delta: improved - current,
-      };
-    }
+  // SAT +50
+  let satPlusFifty = null;
+  if (currentSAT && currentSAT < 1600) {
+    const improved = calculateChance(Math.min(currentSAT + 50, 1600), studentGPA, school);
+    if (improved != null) satPlusFifty = improved;
   }
 
-  return null;
+  // GPA +0.2
+  let gpaPlusTwo = null;
+  if (studentGPA && studentGPA < 4.0) {
+    const improved = calculateChance(currentSAT, Math.min(studentGPA + 0.2, 4.0), school);
+    if (improved != null) gpaPlusTwo = improved;
+  }
+
+  return { satPlusFifty, gpaPlusTwo };
 }
 
 /**
@@ -133,7 +128,7 @@ export async function computeChances(profile) {
         const chance = calculateChance(profile.sat, profile.gpa, college);
         if (chance == null) return null;
 
-        const improvement = calculateImprovement(profile.sat, profile.gpa, college);
+        const whatIf = calculateWhatIf(profile.sat, profile.gpa, college);
 
         return {
           schoolName: s.name,
@@ -143,7 +138,8 @@ export async function computeChances(profile) {
           avgSAT: college.avgSAT,
           sat25: college.sat25,
           sat75: college.sat75,
-          improvement,
+          satPlusFiftyChance: whatIf.satPlusFifty,
+          gpaPlusTwoChance: whatIf.gpaPlusTwo,
         };
       } catch {
         return null;
@@ -179,8 +175,6 @@ For each school, use your training knowledge (not numbers I provide) to return:
 6. satSuperscore: true if this school superscores the SAT (takes highest section scores across test dates), false if they take the highest single sitting, null if test-optional with no clear policy.
 7. testPolicy: one of "Required", "Test-Optional", "Test-Free", or "Recommended" — the school's current standardized test policy.
 8. satNotes: array of 0-2 short strings with any notable SAT-specific policies (e.g. "CSS Profile required", "No score choice — must send all scores", "Score Choice accepted", "Self-reported scores accepted", "Requires SAT Essay"). Leave empty array if nothing notable.
-9. satPlusFiftyChance: the student's estimated admission chance if their SAT were ${profile.sat ? profile.sat + 50 : 'N/A'} (50 points higher). Use the same calibration as aiChance. If student has no SAT or is already at 1600, return null.
-10. gpaPlusTwoChance: the student's estimated admission chance if their GPA were ${profile.gpa ? Math.min(Number(profile.gpa) + 0.2, 5.0).toFixed(1) : 'N/A'} (0.2 higher). Use the same calibration as aiChance. If GPA is already 4.0+ or not provided, return null.
 
 Respond with ONLY a valid JSON array. No markdown, no explanation.
 [
@@ -193,9 +187,7 @@ Respond with ONLY a valid JSON array. No markdown, no explanation.
     "keyRequirements": ["string", "string"],
     "satSuperscore": boolean or null,
     "testPolicy": "Required" | "Test-Optional" | "Test-Free" | "Recommended",
-    "satNotes": ["string"],
-    "satPlusFiftyChance": integer 0-100 or null,
-    "gpaPlusTwoChance": integer 0-100 or null
+    "satNotes": ["string"]
   }
 ]`;
 
@@ -217,8 +209,6 @@ Respond with ONLY a valid JSON array. No markdown, no explanation.
           res.satSuperscore = aiData.satSuperscore ?? null;
           res.testPolicy = aiData.testPolicy ?? null;
           res.satNotes = aiData.satNotes ?? [];
-          res.satPlusFiftyChance = aiData.satPlusFiftyChance ?? null;
-          res.gpaPlusTwoChance = aiData.gpaPlusTwoChance ?? null;
         }
       });
     } catch (err) {
