@@ -255,7 +255,7 @@ export async function lookupByName(schoolName) {
     api_key: API_KEY,
     'school.name': expanded,
     fields: RICH_FIELDS,
-    per_page: '5',
+    per_page: '15',
     'school.degrees_awarded.predominant__range': '3..4', // bachelor's and graduate
   });
 
