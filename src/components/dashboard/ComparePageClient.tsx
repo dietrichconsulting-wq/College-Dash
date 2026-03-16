@@ -21,11 +21,10 @@ interface ComparedSchool {
   netCost?: number
   gradRate?: number
   medianEarnings10yr?: number
-  usNewsRankDisplay?: string
   tuitionInState?: number
   tuitionOutOfState?: number
   yourChance?: number
-  programRank?: string
+  retentionRate?: number
   _dataSources?: { scorecard?: boolean }
 }
 
@@ -102,14 +101,13 @@ export function ComparePageClient({ profile }: ComparePageClientProps) {
 
   const METRICS: { key: keyof ComparedSchool; label: string; format: (v: unknown) => string }[] = [
     { key: 'admitRate', label: 'Admit Rate', format: v => v != null ? `${v}%` : '—' },
-    { key: 'yourChance', label: 'Your Chance', format: v => v != null ? `${v}%` : '—' },
+    { key: 'yourChance', label: 'Your Chance', format: v => v != null ? `~${v}%` : '—' },
     { key: 'avgSAT', label: 'Avg SAT', format: v => v != null ? String(v) : '—' },
     { key: 'netCost', label: 'Net Cost/yr', format: v => v != null ? `$${((v as number) / 1000).toFixed(0)}k` : '—' },
     { key: 'tuitionInState', label: 'Tuition (in-state)', format: v => v != null ? `$${((v as number) / 1000).toFixed(0)}k` : '—' },
     { key: 'gradRate', label: 'Grad Rate', format: v => v != null ? `${v}%` : '—' },
+    { key: 'retentionRate', label: 'Retention Rate', format: v => v != null ? `${v}%` : '—' },
     { key: 'medianEarnings10yr', label: 'Earnings 10yr', format: v => v != null ? `$${((v as number) / 1000).toFixed(0)}k` : '—' },
-    { key: 'usNewsRankDisplay', label: 'US News Rank', format: v => (v as string) ?? '—' },
-    { key: 'programRank', label: 'Program Strength', format: v => (v as string) ?? '—' },
   ]
 
   const validCount = schools.filter(s => s.trim()).length
@@ -228,11 +226,11 @@ export function ComparePageClient({ profile }: ComparePageClientProps) {
             Your comparison table will appear here
           </div>
           <div style={{ fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 20, maxWidth: 440, margin: '0 auto 20px' }}>
-            You&apos;ll see admit rate, your personal chance, avg SAT, net cost, graduation rate, earnings, US News rank, and program strength — side by side.
+            You&apos;ll see admit rate, your personal chance, avg SAT, net cost, graduation rate, retention rate, and earnings — side by side.
           </div>
           {/* Mini preview of metrics */}
           <div style={{ display: 'flex', justifyContent: 'center', gap: 8, flexWrap: 'wrap' }}>
-            {['Admit Rate', 'Your Chance', 'Avg SAT', 'Net Cost', 'Grad Rate', 'Earnings 10yr', 'US News Rank'].map(m => (
+            {['Admit Rate', 'Your Chance', 'Avg SAT', 'Net Cost', 'Grad Rate', 'Retention', 'Earnings 10yr'].map(m => (
               <span key={m} style={{ fontSize: 11, fontWeight: 600, padding: '4px 10px', borderRadius: 20, background: 'var(--color-border)', color: 'var(--color-text-muted)' }}>
                 {m}
               </span>

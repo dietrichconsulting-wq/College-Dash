@@ -42,6 +42,7 @@ const RICH_FIELDS = [
   'latest.student.retention_rate.four_year.full_time',
   // Completion
   'latest.completion.rate_suppressed.4yr',
+  'latest.completion.rate_suppressed.overall',
   // Outcomes
   'latest.earnings.10_yrs_after_entry.median',
   'latest.earnings.6_yrs_after_entry.median',
@@ -74,7 +75,7 @@ function mapRichResult(r) {
     ? r['latest.cost.avg_net_price.public']
     : r['latest.cost.avg_net_price.private'];
 
-  const gradRate = r['latest.completion.rate_suppressed.4yr'];
+  const gradRate = r['latest.completion.rate_suppressed.4yr'] ?? r['latest.completion.rate_suppressed.overall'];
   const retentionRate = r['latest.student.retention_rate.four_year.full_time'];
 
   return {
