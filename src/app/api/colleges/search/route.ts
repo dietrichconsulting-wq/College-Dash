@@ -25,8 +25,8 @@ export async function GET(req: Request) {
     // Run two queries in parallel: exact-name prefix match + full-text search
     // This ensures "texas" finds both "Texas Tech" (prefix) and "University of Texas at San Antonio" (full-text)
     const [nameRes, searchRes] = await Promise.all([
-      fetch(`${base}?api_key=${key}&school.name=${encodeURIComponent(q)}&fields=${FIELDS}&per_page=15`),
-      fetch(`${base}?api_key=${key}&school.search=${encodeURIComponent(q)}&fields=${FIELDS}&per_page=15`),
+      fetch(`${base}?api_key=${key}&school.name=${encodeURIComponent(q)}&fields=${FIELDS}&per_page=50`),
+      fetch(`${base}?api_key=${key}&school.search=${encodeURIComponent(q)}&fields=${FIELDS}&per_page=50`),
     ])
 
     const [nameJson, searchJson] = await Promise.all([nameRes.json(), searchRes.json()])
