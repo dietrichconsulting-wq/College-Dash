@@ -13,6 +13,65 @@ interface ScorecardResult {
   'latest.student.size'?: number | null
 }
 
+// Well-known schools that the Scorecard API fails to return for common queries.
+// Maps lowercase query fragments → Scorecard IDs to inject via direct lookup.
+const BOOST_IDS: Record<string, number[]> = {
+  'texas': [228778, 228723, 227757],           // UT Austin, Texas A&M, Texas Tech
+  'university of texas': [228778],              // UT Austin
+  'ut': [228778],                               // UT Austin
+  'ut austin': [228778],
+  'a&m': [228723],                              // Texas A&M
+  'tamu': [228723],
+  'georgia': [139959, 139931],                  // UGA, Georgia Tech
+  'uga': [139959],
+  'georgia tech': [139931],
+  'michigan': [170976, 171100],                 // U of Michigan, Michigan State
+  'stanford': [243744],
+  'mit': [166683],
+  'harvard': [166027],
+  'yale': [130794],
+  'princeton': [186131],
+  'columbia': [190150],
+  'ucla': [110662],
+  'usc': [123961],
+  'berkeley': [110635],
+  'uc berkeley': [110635],
+  'cal': [110635],
+  'florida': [134130, 136172],                  // UF, FSU
+  'uf': [134130],
+  'fsu': [136172],
+  'ohio state': [204796],
+  'osu': [204796],
+  'penn state': [214777],
+  'virginia': [234076, 233921],                 // UVA, Virginia Tech
+  'uva': [234076],
+  'carolina': [199120, 218663],                 // UNC, South Carolina
+  'unc': [199120],
+  'duke': [198419],
+  'oregon': [209551],                           // U of Oregon
+  'alabama': [100751],
+  'auburn': [100858],
+  'clemson': [217882],
+  'wisconsin': [240444],
+  'illinois': [145637],
+  'purdue': [243780],
+  'iowa': [153658],
+  'minnesota': [174066],
+  'colorado': [126614],
+  'washington': [236948],                        // U of Washington
+  'uw': [236948],
+  'notre dame': [152080],
+  'rice': [227757],
+  'emory': [139658],
+  'vanderbilt': [221999],
+  'northwestern': [147767],
+  'cornell': [190415],
+  'brown': [217156],
+  'dartmouth': [182670],
+  'penn': [215062],
+  'upenn': [215062],
+}
+
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url)
   const q = searchParams.get('q')
@@ -22,15 +81,30 @@ export async function GET(req: Request) {
   const base = 'https://api.data.gov/ed/collegescorecard/v1/schools'
 
   try {
-    // Run two queries in parallel: exact-name prefix match + full-text search
-    // This ensures "texas" finds both "Texas Tech" (prefix) and "University of Texas at San Antonio" (full-text)
-    const [nameRes, searchRes] = await Promise.all([
+    // Check if we need to boost specific well-known schools the API misses
+    const qLowerTrimmed = q.toLowerCase().trim()
+    const boostIds = BOOST_IDS[qLowerTrimmed] ?? []
+
+    // Run queries in parallel: name prefix + full-text + optional boost by ID
+    const fetches: Promise<Response>[] = [
       fetch(`${base}?api_key=${key}&school.name=${encodeURIComponent(q)}&fields=${FIELDS}&per_page=50`),
       fetch(`${base}?api_key=${key}&school.search=${encodeURIComponent(q)}&fields=${FIELDS}&per_page=50`),
-    ])
+    ]
+    if (boostIds.length > 0) {
+      fetches.push(
+        fetch(`${base}?api_key=${key}&id=${boostIds.join(',')}&fields=${FIELDS}`)
+      )
+    }
 
-    const [nameJson, searchJson] = await Promise.all([nameRes.json(), searchRes.json()])
-    const raw: ScorecardResult[] = [...(nameJson.results ?? []), ...(searchJson.results ?? [])]
+    const responses = await Promise.all(fetches)
+    const jsons = await Promise.all(responses.map(r => r.json()))
+
+    const raw: ScorecardResult[] = []
+    for (const j of jsons) {
+      for (const r of (j.results ?? [])) {
+        raw.push(r)
+      }
+    }
 
     // Deduplicate by id
     const seen = new Set<number>()
@@ -51,8 +125,13 @@ export async function GET(req: Request) {
         if (q.includes(' ')) return true
         return size == null || size >= 1000
       })
-      // Sort by relevance: exact/prefix match > contains all words > larger schools
+      // Sort by relevance: boosted IDs > exact/prefix match > contains all words > larger schools
       .sort((a, b) => {
+        // Boosted schools always come first
+        const aBoosted = boostIds.includes(a.id) ? 0 : 1
+        const bBoosted = boostIds.includes(b.id) ? 0 : 1
+        if (aBoosted !== bBoosted) return aBoosted - bBoosted
+
         const aName = (a['school.name'] as string).toLowerCase().replace(/^the\s+/, '')
         const bName = (b['school.name'] as string).toLowerCase().replace(/^the\s+/, '')
 
