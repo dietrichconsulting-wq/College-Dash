@@ -33,7 +33,7 @@ function clamp(val, min, max) {
  * Core probability calculation for a single school.
  * Returns 0-100 integer.
  */
-function calculateChance(studentSAT, studentGPA, school) {
+function calculateChance(studentSAT, studentGPA, school, { withBreakdown = false } = {}) {
   const { admissionRate, avgSAT, sat25, sat75 } = school;
 
   // If no admission data at all, return null
@@ -45,6 +45,7 @@ function calculateChance(studentSAT, studentGPA, school) {
   // Position student within 25th-75th range
   // Below 25th → penalty, above 75th → bonus
   let satFactor = 0;
+  let satPosition = null; // 'above', 'within', 'below' the 25-75 range
   if (studentSAT && (sat25 || avgSAT)) {
     const low = sat25 || (avgSAT - 80);   // Estimate 25th if missing
     const high = sat75 || (avgSAT + 80);   // Estimate 75th if missing
@@ -56,6 +57,10 @@ function calculateChance(studentSAT, studentGPA, school) {
 
     // Map to factor: -30 to +25 percentage points
     satFactor = clamp(z * 18, -30, 25);
+
+    if (studentSAT >= high) satPosition = 'above';
+    else if (studentSAT >= low) satPosition = 'within';
+    else satPosition = 'below';
   }
 
   // ── GPA Factor ──
@@ -84,7 +89,38 @@ function calculateChance(studentSAT, studentGPA, school) {
   const adjustedGPA = gpaFactor * selectivityScale;
 
   const chance = clamp(Math.round(baseRate + adjustedSAT + adjustedGPA), 3, 97);
-  return chance;
+
+  if (!withBreakdown) return chance;
+
+  return {
+    chance,
+    breakdown: {
+      baseRate: Math.round(baseRate),
+      satFactor: Math.round(adjustedSAT),
+      gpaFactor: Math.round(adjustedGPA),
+      selectivityScale,
+      satPosition,
+      studentSAT: studentSAT || null,
+      studentGPA: studentGPA || null,
+      schoolSAT25: sat25 || null,
+      schoolSAT75: sat75 || null,
+      schoolAvgSAT: avgSAT || null,
+    },
+  };
+}
+
+/**
+ * Public wrapper: compute chance from real school data fields.
+ * Used by collegeStrategy.js to replace AI-guessed percentages.
+ */
+export function calculateChanceFromData(studentSAT, studentGPA, schoolData) {
+  const school = {
+    admissionRate: schoolData.admitRate != null ? schoolData.admitRate / 100 : null,
+    avgSAT: schoolData.avgSAT,
+    sat25: schoolData.sat25,
+    sat75: schoolData.sat75,
+  };
+  return calculateChance(studentSAT, studentGPA, school);
 }
 
 /**
@@ -145,15 +181,17 @@ export async function computeChances(profile) {
         const college = await getCollege(collegeId);
         if (!college) return null;
 
-        const chance = calculateChance(profile.sat, profile.gpa, college);
-        if (chance == null) return null;
+        const result = calculateChance(profile.sat, profile.gpa, college, { withBreakdown: true });
+        if (result == null) return null;
 
+        const { chance, breakdown } = result;
         const improvement = calculateImprovement(profile.sat, profile.gpa, college);
 
         return {
           schoolName: s.name,
           schoolId: college.id,
           chance,
+          breakdown,
           admissionRate: college.admissionRate,
           avgSAT: college.avgSAT,
           sat25: college.sat25,
@@ -184,13 +222,15 @@ ${validResults.map(r =>
       ).join('\n')}
 
 INSTRUCTIONS:
-Refine the baseline heuristic chance into an AI-predicted percentage (0-100) based on the student's major competitiveness and profile. Also, provide a short 1-sentence personalized tip on how to improve their application for that SPECIFIC school and major.
+Provide a short 1-sentence personalized tip on how to improve their application for that SPECIFIC school and major. Also classify each school as "Safety", "Target", or "Reach" based on the student's profile.
+
+IMPORTANT: Do NOT provide a numeric chance percentage — that is calculated from real data. Only provide the tip and classification.
 
 Respond with ONLY a JSON array of objects. No markdown formatting.
 [
   {
     "schoolId": "string",
-    "aiChance": int (0-100),
+    "classification": "Safety" | "Target" | "Reach",
     "aiTip": "string"
   }
 ]`;
@@ -205,8 +245,9 @@ Respond with ONLY a JSON array of objects. No markdown formatting.
       validResults.forEach(res => {
         const aiData = parsed.find(p => p.schoolId === res.schoolId);
         if (aiData) {
-          res.chance = aiData.aiChance; // Replace heuristic with AI chance
+          // Never override the data-driven chance — AI provides tips only
           res.aiTip = aiData.aiTip;
+          if (aiData.classification) res.classification = aiData.classification;
         }
       });
     } catch (err) {

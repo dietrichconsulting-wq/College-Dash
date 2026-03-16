@@ -48,7 +48,92 @@ function ChanceRing({ percent, color, size = 64 }) {
   );
 }
 
+function BreakdownFactor({ label, value, description }) {
+  const isPositive = value > 0;
+  const isNegative = value < 0;
+  const color = isPositive ? '#22C55E' : isNegative ? '#EF4444' : 'var(--color-text-muted)';
+  const sign = isPositive ? '+' : '';
+
+  return (
+    <div className="chance-breakdown__factor">
+      <div className="chance-breakdown__factor-row">
+        <span className="chance-breakdown__factor-label">{label}</span>
+        <span className="chance-breakdown__factor-value" style={{ color }}>
+          {sign}{value}%
+        </span>
+      </div>
+      <span className="chance-breakdown__factor-desc">{description}</span>
+    </div>
+  );
+}
+
+function BreakdownPanel({ breakdown, chance }) {
+  if (!breakdown) return null;
+
+  const { baseRate, satFactor, gpaFactor, satPosition, studentSAT, studentGPA, schoolSAT25, schoolSAT75, schoolAvgSAT } = breakdown;
+
+  const satDesc = (() => {
+    if (!studentSAT) return 'No SAT score provided';
+    const range = schoolSAT25 && schoolSAT75 ? `${schoolSAT25}–${schoolSAT75}` : `avg ${schoolAvgSAT}`;
+    if (satPosition === 'above') return `Your ${studentSAT} is above the 75th pctile (${range})`;
+    if (satPosition === 'within') return `Your ${studentSAT} is within range (${range})`;
+    return `Your ${studentSAT} is below the 25th pctile (${range})`;
+  })();
+
+  const gpaDesc = (() => {
+    if (!studentGPA) return 'No GPA provided';
+    if (studentGPA >= 3.9) return `${studentGPA} GPA — well above average`;
+    if (studentGPA >= 3.7) return `${studentGPA} GPA — strong`;
+    if (studentGPA >= 3.5) return `${studentGPA} GPA — above average`;
+    if (studentGPA >= 3.2) return `${studentGPA} GPA — average`;
+    return `${studentGPA} GPA — below average`;
+  })();
+
+  return (
+    <motion.div
+      className="chance-breakdown"
+      initial={{ opacity: 0, height: 0 }}
+      animate={{ opacity: 1, height: 'auto' }}
+      exit={{ opacity: 0, height: 0 }}
+      transition={{ duration: 0.2 }}
+    >
+      <div className="chance-breakdown__title">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+        </svg>
+        How We Calculated {chance}%
+      </div>
+
+      <BreakdownFactor
+        label="School Admit Rate"
+        value={baseRate}
+        description={`Base admission rate from College Scorecard`}
+      />
+      <BreakdownFactor
+        label="SAT Adjustment"
+        value={satFactor}
+        description={satDesc}
+      />
+      <BreakdownFactor
+        label="GPA Adjustment"
+        value={gpaFactor}
+        description={gpaDesc}
+      />
+
+      <div className="chance-breakdown__total">
+        <span>Estimated Chance</span>
+        <span style={{ fontWeight: 800 }}>{chance}%</span>
+      </div>
+
+      <div className="chance-breakdown__caveat">
+        Estimate only — does not account for essays, extracurriculars, class rank, or major-specific competitiveness.
+      </div>
+    </motion.div>
+  );
+}
+
 function SchoolChanceCard({ data, index }) {
+  const [showBreakdown, setShowBreakdown] = useState(false);
   const level = getChanceLevel(data.chance);
   const schoolColors = getSchoolColors(data.schoolName);
   const shortName = getSchoolShortName(data.schoolName);
@@ -110,8 +195,23 @@ function SchoolChanceCard({ data, index }) {
               </span>
             </div>
           ) : null}
+
+          {/* Show rationale toggle */}
+          {data.breakdown && (
+            <button
+              className="chance-card__rationale-toggle"
+              onClick={() => setShowBreakdown(v => !v)}
+            >
+              {showBreakdown ? 'Hide' : 'How is this calculated?'}
+            </button>
+          )}
         </div>
       </div>
+
+      {/* Expandable breakdown panel */}
+      {showBreakdown && data.breakdown && (
+        <BreakdownPanel breakdown={data.breakdown} chance={data.chance} />
+      )}
     </motion.div>
   );
 }
