@@ -53,7 +53,7 @@ export async function compareColleges(schoolNames, { major, gpa, sat, homeState 
       return parts.join(' ');
     }).join('\n');
 
-    const prompt = `You are a college admissions advisor. Below is REAL verified data for each school. Your ONLY job is to fill in the 3 missing fields: yourChance, programRank, and climate.
+    const prompt = `You are a college admissions advisor. Below is REAL verified data for each school. Your ONLY job is to estimate each student's admission probability.
 
 STUDENT PROFILE:
 - GPA: ${gpa ?? 'Not provided'}
@@ -64,17 +64,14 @@ STUDENT PROFILE:
 REAL DATA (do NOT override these — only use them to inform yourChance):
 ${schoolSummaries}
 
-For EACH school provide ONLY these 3 fields:
+For EACH school provide ONLY these fields:
 - name: exactly as given above
 - yourChance: ${hasProfile
     ? `this student's estimated admission probability (0-100 integer) based on their GPA ${gpa} and SAT ${sat} vs the school's real SAT range and admit rate above. Factor in ${majorLabel} competitiveness. Be realistic and honest.`
     : 'null (no student profile provided)'}
-- programRank: ranking string for "${majorLabel}" programs at this school (e.g. "#5", "Top 15", "Regionally Strong", or null if truly unknown)
-- climate: one word describing campus weather: Sunny, Mild, Rainy, Snowy, Hot, Humid, Dry, or Temperate
-- climateEmoji: single emoji matching the climate
 
 Respond ONLY with a valid JSON array. No markdown fences.
-Example: [{"name":"University of Oregon","yourChance":62,"programRank":"Top 20","climate":"Rainy","climateEmoji":"🌧️"}]`;
+Example: [{"name":"University of Oregon","yourChance":62}]`;
 
     try {
       const result = await gemini.generateContent(prompt);
@@ -130,10 +127,7 @@ Example: [{"name":"University of Oregon","yourChance":62,"programRank":"Top 20",
       usNewsRank: real.usNewsRank ?? null,
       usNewsRankDisplay: real.usNewsRankDisplay ?? null,
       // ── AI-only fields ──
-      yourChance: ai.yourChance ?? null,
-      programRank: ai.programRank ?? null,
-      climate: ai.climate ?? null,
-      climateEmoji: ai.climateEmoji ?? null,
+      yourChance: ai.yourChance != null ? Math.round(ai.yourChance / 5) * 5 : null,
       // ── Metadata ──
       _dataSources: real._dataSources ?? { scorecard: false, ipeds: false, usNews: false },
     };

@@ -76,6 +76,8 @@ const SCHOOL_COLORS = {
   'villanova university': { primary: '#003366', secondary: '#FFFFFF', accent: '#13B5EA', short: 'Nova' },
   'baylor university': { primary: '#003015', secondary: '#FFB81C', accent: '#154734', short: 'Baylor' },
   'tcu': { primary: '#4D1979', secondary: '#FFFFFF', accent: '#6A2C91', short: 'TCU' },
+  'texas state university': { primary: '#501214', secondary: '#8D734A', accent: '#6A1A1D', short: 'TX State' },
+  'texas state': { primary: '#501214', secondary: '#8D734A', accent: '#6A1A1D', short: 'TX State' },
   'texas christian university': { primary: '#4D1979', secondary: '#FFFFFF', accent: '#6A2C91', short: 'TCU' },
   'smu': { primary: '#CC0035', secondary: '#002588', accent: '#E00040', short: 'SMU' },
   'southern methodist university': { primary: '#CC0035', secondary: '#002588', accent: '#E00040', short: 'SMU' },
@@ -119,14 +121,33 @@ export function getSchoolColors(schoolName) {
 export function getSchoolShortName(schoolName) {
   const colors = getSchoolColors(schoolName);
   if (colors?.short) return colors.short;
-  // Fallback: strip common words and return what's left
+  // Fallback: build a sensible short name from the full name
   if (!schoolName) return '?';
-  const stripped = schoolName
+  const name = schoolName.trim();
+
+  // "University of X" → "X"
+  const uOfMatch = name.match(/^university\s+of\s+(.+)/i);
+  if (uOfMatch) {
+    const place = uOfMatch[1].replace(/[,\-–].*/g, '').trim(); // drop "at …" suffixes
+    return place.length > 12 ? place.split(/\s+/)[0] : place;
+  }
+
+  // "X State University", "X A&M University", "X Tech", etc. → "X State", "X A&M", "X Tech"
+  const prefixMatch = name.match(/^(.+?)\s+(state|a\s*&\s*m|tech|institute)\b/i);
+  if (prefixMatch) {
+    const prefix = prefixMatch[1];
+    const suffix = prefixMatch[2].replace(/\s+/g, '');
+    const short = `${prefix} ${suffix}`;
+    return short.length > 14 ? prefix : short;
+  }
+
+  // Strip generic words as last resort
+  const stripped = name
     .replace(/\buniversity\b|\bcollege\b|\bof\b|\bthe\b|\bat\b|\bin\b|\bmain\b|\bcampus\b/gi, '')
     .replace(/[,\-–]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
-  return stripped || schoolName.slice(0, 6);
+  return stripped || name.slice(0, 8);
 }
 
 // Default theme if no school colors found

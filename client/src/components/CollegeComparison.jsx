@@ -51,10 +51,11 @@ const METRICS = [
     label: 'Your Chance',
     icon: '⭐',
     colorFn: v => v == null ? null : v >= 70 ? '#22C55E' : v >= 40 ? '#F59E0B' : '#EF4444',
-    tooltip: 'Your estimated admission probability based on your GPA, SAT & major',
+    tooltip: 'AI-estimated admission probability (rounded to 5%) based on your GPA & SAT vs the school\'s published admit rate and SAT range',
     highlight: true,
-    ring: true,           // show MiniRing + animated counter
+    ring: true,
     suffix: '%',
+    aiOnly: true,
   },
   {
     key: 'admitRate',
@@ -105,29 +106,6 @@ const METRICS = [
     colorFn: () => null,
     static: true,
     format: (_, school) => (school.city && school.state) ? `${school.city}, ${school.state}` : '—',
-  },
-  {
-    key: 'climate',
-    label: 'Climate',
-    icon: '🌤',
-    colorFn: () => null,
-    static: true,
-    format: (_, school) => school.climate ? `${school.climateEmoji || ''} ${school.climate}` : '—',
-  },
-  {
-    key: 'programRank',
-    label: 'Program Rank',
-    icon: '🏆',
-    colorFn: v => {
-      if (!v) return null;
-      const n = parseInt(String(v).replace(/\D/g, ''), 10);
-      if (isNaN(n)) return null;
-      return n <= 10 ? '#22C55E' : n <= 25 ? '#F59E0B' : null;
-    },
-    tooltip: 'National program ranking for your major (AI-estimated)',
-    static: true,
-    format: v => v || '—',
-    aiOnly: true,
   },
   {
     key: 'usNewsRankDisplay',
@@ -293,9 +271,7 @@ export default function CollegeComparison({ profile }) {
   const schoolDataMap = {};
   compData.forEach(d => { schoolDataMap[d.name] = d; });
 
-  const programRankLabel = majorLabel ? `${majorLabel} Rank` : 'Program Rank';
   const metricsToShow = METRICS.map(m => {
-    if (m.key === 'programRank') return { ...m, label: programRankLabel };
     if (m.key === 'netCost') return { ...m, label: homeState ? `Est. Net Cost/yr (${homeState} resident)` : 'Est. Net Cost/yr', tooltip: homeState ? `Estimated cost after aid for a ${homeState} resident` : 'Estimated annual cost after typical aid' };
     if (m.key === 'tuitionOutOfState') return { ...m, label: homeState ? 'OOS Tuition (non-resident)' : 'OOS Tuition' };
     return m;
@@ -310,6 +286,9 @@ export default function CollegeComparison({ profile }) {
             <h2 className="college-comparison__title">College Comparison</h2>
             <p style={{ fontSize: 13, color: 'var(--color-text-muted)', margin: '2px 0 0', fontWeight: 400 }}>
               Compare your schools side by side on cost, acceptance rate, and fit.
+            </p>
+            <p style={{ fontSize: 11, color: 'var(--color-text-muted)', margin: '4px 0 0', fontWeight: 400, opacity: 0.75, lineHeight: 1.5 }}>
+              <strong>Data sources:</strong> Admit Rate, SAT, Tuition, Net Cost, Grad Rate, Retention, and Earnings from <em>College Scorecard</em>. Location &amp; Type from <em>IPEDS</em>. US News Rank from ~2024 published rankings. "Your Chance" is an AI estimate (rounded to nearest 5%) using your GPA &amp; SAT vs each school's published stats — not a guarantee.
             </p>
           </div>
           <div className="college-comparison__actions">
@@ -495,7 +474,7 @@ export default function CollegeComparison({ profile }) {
       )}
 
       <p className="college-comparison__disclaimer">
-        Rows marked <span style={{ color: '#22C55E', fontWeight: 600 }}>✓ Scorecard</span> use live College Scorecard data. US News ranks are approximate (~2024). "Your Chance" and "Program Rank" are AI-estimated. Always verify on each school's official site.
+        Rows marked <span style={{ color: '#22C55E', fontWeight: 600 }}>✓ Scorecard</span> use live College Scorecard data. US News ranks are approximate (~2024). "Your Chance" is AI-estimated (rounded to nearest 5%) and is not a guarantee. Always verify on each school's official site.
       </p>
     </div>
   );

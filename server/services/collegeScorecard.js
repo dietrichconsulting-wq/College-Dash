@@ -59,6 +59,7 @@ const SEARCH_FIELDS = [
   'latest.admissions.sat_scores.average.overall',
   'latest.cost.tuition.in_state',
   'latest.cost.tuition.out_of_state',
+  'latest.student.size',
 ].join(',');
 
 function mapRichResult(r) {
@@ -128,18 +129,22 @@ function mapRichResult(r) {
 export async function searchColleges(query) {
   if (!API_KEY) return [];
 
+  // Strip commas, hyphens, extra spaces — Scorecard does substring matching
+  // but punctuation like "texas, austin" breaks it ("texas austin" works fine)
+  const cleaned = query.replace(/[,\-]/g, ' ').replace(/\s+/g, ' ').trim();
+
   const params = new URLSearchParams({
     api_key: API_KEY,
-    'school.name': query,
+    'school.name': cleaned,
     fields: SEARCH_FIELDS,
-    per_page: '10',
+    per_page: '50',
   });
 
   const res = await fetch(`${BASE_URL}?${params}`);
   if (!res.ok) return [];
 
   const data = await res.json();
-  return (data.results || []).map(r => ({
+  const mapped = (data.results || []).map(r => ({
     id: String(r.id),
     name: r['school.name'],
     city: r['school.city'],
@@ -150,7 +155,24 @@ export async function searchColleges(query) {
       ? Math.round(r['latest.admissions.sat_scores.average.overall']) : null,
     tuitionInState: r['latest.cost.tuition.in_state'] || null,
     tuitionOutOfState: r['latest.cost.tuition.out_of_state'] || null,
+    _size: r['latest.student.size'] || 0,
   }));
+
+  // Sort by relevance: prefer exact-start matches, then larger schools
+  const q = cleaned.toLowerCase();
+  mapped.sort((a, b) => {
+    const aName = a.name.toLowerCase();
+    const bName = b.name.toLowerCase();
+    // Schools whose name starts with the query come first
+    const aStarts = aName.startsWith(q) || aName.startsWith('the ' + q) ? 1 : 0;
+    const bStarts = bName.startsWith(q) || bName.startsWith('the ' + q) ? 1 : 0;
+    if (bStarts !== aStarts) return bStarts - aStarts;
+    // Then sort by enrollment (larger = more well-known)
+    return b._size - a._size;
+  });
+
+  // Return top 10, drop internal _size field
+  return mapped.slice(0, 10).map(({ _size, ...rest }) => rest);
 }
 
 /** Get full rich profile by Scorecard UNITID */

@@ -28,6 +28,9 @@
 ## Design Rules
 - **Dark mode by default** — All UI should be designed in dark mode as the primary theme.
 
+## Deployment Rules
+- **Two git remotes** — `origin` (College-Dash) is the source repo. `stairwayu` is the Vercel-connected production repo. **Always push to BOTH remotes** when deploying: `git push origin && git push stairwayu`. Forgetting `stairwayu` means the live site at stairwayu.com does not update.
+
 ## Behavioral Rules
 - Kanban and timeline update reactively on task changes
 - Confetti + fight song play when task moves to Done

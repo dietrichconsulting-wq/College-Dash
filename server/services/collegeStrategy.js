@@ -13,6 +13,7 @@ import dotenv from 'dotenv';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { batchCollegeProfiles } from './collegeDataAggregator.js';
+import { calculateChanceFromData } from './admissionChance.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: resolve(__dirname, '../../.env') });
@@ -60,16 +61,17 @@ Return exactly:
 For each school provide ONLY:
 - name: full official school name
 - tier: "reach" | "target" | "safety"
-- yourChance: estimated admission probability 0-100 integer for THIS student specifically
 - programStrength: 1-2 words for the ${major} program (e.g. "Top 10", "Strong", "Solid", "Emerging")
 - whyFit: one sentence ≤15 words explaining fit
+
+DO NOT include admission percentages — those are calculated from real data separately.
 
 Also include top-level "rationale": 2-3 sentences on the overall strategy.
 
 Respond ONLY with valid JSON, no markdown:
 {
   "rationale": "...",
-  "schools": [{ "name": "...", "tier": "reach|target|safety", "yourChance": 0, "programStrength": "...", "whyFit": "..." }]
+  "schools": [{ "name": "...", "tier": "reach|target|safety", "programStrength": "...", "whyFit": "..." }]
 }`;
 
   const result = await gemini.generateContent(recommendPrompt);
@@ -101,7 +103,9 @@ Respond ONLY with valid JSON, no markdown:
       state: real.state ?? null,
       // ── Real admissions data (override AI) ──
       admitRate: real.admitRate ?? null,         // [REAL]
-      yourChance: ai.yourChance ?? null,          // [AI] personalized
+      yourChance: (real.admitRate != null)
+        ? calculateChanceFromData(Number(sat), Number(gpa), real)
+        : null,                                  // [CALCULATED from real data, never AI-guessed]
       avgSAT: real.avgSAT ?? null,               // [REAL]
       sat25: real.sat25 ?? null,                 // [REAL]
       sat75: real.sat75 ?? null,                 // [REAL]

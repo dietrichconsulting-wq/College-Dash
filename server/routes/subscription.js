@@ -3,7 +3,9 @@ import Stripe from 'stripe';
 import { getProfile, updateProfile, getProfileByStripeCustomerId } from '../services/notion.js';
 
 const router = Router();
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+const stripe = process.env.STRIPE_SECRET_KEY
+  ? new Stripe(process.env.STRIPE_SECRET_KEY)
+  : null;
 
 // Create Stripe Checkout Session with 7-day trial
 router.post('/create-checkout', async (req, res, next) => {
