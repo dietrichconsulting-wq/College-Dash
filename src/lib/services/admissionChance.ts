@@ -1,17 +1,5 @@
 // @ts-nocheck
 import { getCollege, lookupByName } from './collegeScorecard';
-import { GoogleGenerativeAI } from '@google/generative-ai';
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let model: any = null;
-
-function getModel() {
-  if (!model && process.env.GEMINI_API_KEY) {
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
-  }
-  return model;
-}
 /**
  * Estimate admission probability using a logistic model based on:
  * 1. SAT score relative to school's 25th-75th percentile range
@@ -120,74 +108,5 @@ export async function computeChances(profile) {
     })
   );
 
-  const validResults = results.filter(Boolean);
-
-  // If we have AI configured, enhance the chances with AI prediction and personalized tip
-  const gemini = getModel();
-  if (gemini && validResults.length > 0) {
-    try {
-      const prompt = `You are an expert college admissions counselor. Evaluate this student's realistic admission chances and provide detailed admissions intelligence for each school.
-
-STUDENT PROFILE:
-- GPA: ${profile.gpa || 'Not provided'}
-- SAT: ${profile.sat || 'Not provided'}
-- Intended Major: ${profile.proposedMajor || 'Not provided'}
-
-TARGET SCHOOLS:
-${validResults.map(r =>
-        `ID: ${r.schoolId} | Name: ${r.schoolName} | Scorecard Avg SAT: ${r.avgSAT || 'N/A'}`
-      ).join('\n')}
-
-INSTRUCTIONS:
-For each school, use your training knowledge (not numbers I provide) to return:
-1. aiChance: realistic personal admission chance 0-100 for THIS student. Calibrate carefully — do not inflate. UT Austin (~29% overall) should not be 90%+ for anyone.
-2. aiTip: 1-sentence personalized advice for this student's specific major at this school.
-3. portfolioRequired: true if a portfolio/audition/creative supplement is typically required or strongly recommended for ${profile.proposedMajor || 'this major'} at this school, false otherwise.
-4. topFactors: array of exactly 3 strings — the most important admission factors at this school in priority order (e.g. "GPA & class rank", "Essays", "Test scores", "Extracurriculars", "Portfolio", "Demonstrated interest", "Letters of recommendation", "Major-specific talent").
-5. keyRequirements: array of 2-3 short strings listing notable application requirements or considerations specific to this school (e.g. "Holistic review", "No test score minimum", "Requires portfolio for design programs", "In-state applicants preferred", "Rolling admissions").
-6. satSuperscore: true if this school superscores the SAT (takes highest section scores across test dates), false if they take the highest single sitting, null if test-optional with no clear policy.
-7. testPolicy: one of "Required", "Test-Optional", "Test-Free", or "Recommended" — the school's current standardized test policy.
-8. satNotes: array of 0-2 short strings with any notable SAT-specific policies (e.g. "CSS Profile required", "No score choice — must send all scores", "Score Choice accepted", "Self-reported scores accepted", "Requires SAT Essay"). Leave empty array if nothing notable.
-
-Respond with ONLY a valid JSON array. No markdown, no explanation.
-[
-  {
-    "schoolId": "string",
-    "aiChance": integer 0-100,
-    "aiTip": "string",
-    "portfolioRequired": boolean,
-    "topFactors": ["string", "string", "string"],
-    "keyRequirements": ["string", "string"],
-    "satSuperscore": boolean or null,
-    "testPolicy": "Required" | "Test-Optional" | "Test-Free" | "Recommended",
-    "satNotes": ["string"]
-  }
-]`;
-
-      const aiResult = await gemini.generateContent(prompt);
-      let text = aiResult.response.text().trim();
-      if (text.startsWith('\`\`\`')) {
-        text = text.replace(/^\`\`\`(?:json)?\s*/, '').replace(/\s*\`\`\`$/, '');
-      }
-      const parsed = JSON.parse(text);
-
-      validResults.forEach(res => {
-        const aiData = parsed.find(p => p.schoolId === res.schoolId);
-        if (aiData) {
-          // Never override data-driven chance with AI guess
-          res.aiTip = aiData.aiTip;
-          res.portfolioRequired = aiData.portfolioRequired ?? false;
-          res.topFactors = aiData.topFactors ?? [];
-          res.keyRequirements = aiData.keyRequirements ?? [];
-          res.satSuperscore = aiData.satSuperscore ?? null;
-          res.testPolicy = aiData.testPolicy ?? null;
-          res.satNotes = aiData.satNotes ?? [];
-        }
-      });
-    } catch (err) {
-      console.error('Failed to augment admission chances with AI:', err);
-    }
-  }
-
-  return validResults;
+  return results.filter(Boolean);
 }
