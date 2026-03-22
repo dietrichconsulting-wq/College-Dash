@@ -33,7 +33,7 @@ function getModel() {
  * Generate a tiered college strategy list.
  * Returns { reach: [], target: [], safety: [], rationale: string }
  */
-export async function generateStrategy({ gpa, sat, act, major, budget, climate }) {
+export async function generateStrategy({ gpa, sat, act, major, budget, climate, schools }) {
   const gemini = getModel();
   if (!gemini) throw new Error('Gemini API key not configured');
 
@@ -53,6 +53,11 @@ export async function generateStrategy({ gpa, sat, act, major, budget, climate }
     : `- SAT: ${sat || 'Not provided'}${act ? `\n- ACT: ${act}` : ''}`;
 
   // ── Step 1: Get school recommendations from Gemini ─────────────────────
+  const userSchools = Array.isArray(schools) ? schools.filter(s => s && s.trim()) : [];
+  const userSchoolsNote = userSchools.length
+    ? `\nTHE STUDENT'S SCHOOLS (must ALL be included and classified into the correct tier):\n${userSchools.map(s => `- ${s}`).join('\n')}\n\nYou MUST include every school listed above. Classify each into reach, target, or safety based on the student's profile. Then add additional schools to fill out the list.`
+    : '';
+
   const recommendPrompt = `You are a college admissions strategist. Generate a balanced college list for this US high school student.
 
 STUDENT PROFILE:
@@ -61,11 +66,14 @@ ${testScoreLine}
 - Intended Major: ${major}
 - ${budgetNote}
 - ${climateNote}
+${userSchoolsNote}
 
-Return exactly:
-- 3 REACH schools (<30% admission chance for this student but great fit)
-- 4 TARGET schools (40-65% admission chance)
-- 3 SAFETY schools (high confidence admission)
+Return a balanced list with roughly:
+- REACH schools (<30% admission chance for this student but great fit)
+- TARGET schools (40-65% admission chance)
+- SAFETY schools (high confidence admission)
+
+${userSchools.length ? `Include all ${userSchools.length} of the student's schools above, plus enough additional recommendations to reach at least 10 total schools.` : 'Return exactly 3 reach, 4 target, and 3 safety schools.'}
 
 For each school provide ONLY:
 - name: full official school name
