@@ -17,6 +17,18 @@ interface ProfileStatsProps {
 
 const SCHOOLS_ORDER = ['school1', 'school2', 'school3', 'school4'] as const
 
+/** Shorten school name: strip "University", "of", "The", "College" to fit chips */
+function chipName(name: string): string {
+  return name
+    .replace(/^The\s+/i, '')
+    .replace(/\s+at\s+/i, ' ')
+    .replace(/\bUniversity\b/gi, '')
+    .replace(/\bCollege\b/gi, '')
+    .replace(/\bof\b/gi, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim()
+}
+
 export function ProfileStats({ profile, loading, progress, tasks, userId }: ProfileStatsProps) {
   const updateProfile = useUpdateProfile(userId)
   const schools = SCHOOLS_ORDER
@@ -279,7 +291,7 @@ function EditableSchoolChip({ name, rank, onSave }: { name: string | null; rank:
         maxWidth: 200, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
       }}
     >
-      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{name}</span>
+      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{chipName(name)}</span>
       <span style={{ fontSize: 9, opacity: 0.6, flexShrink: 0 }}>✎</span>
     </button>
   )
