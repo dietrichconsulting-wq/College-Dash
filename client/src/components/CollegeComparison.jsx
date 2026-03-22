@@ -282,14 +282,20 @@ export default function CollegeComparison({ profile }) {
       {/* Header */}
       <div className="college-comparison__header">
         <div className="college-comparison__title-row">
-          <div>
+          <div style={{ flex: '1 1 0' }}>
             <h2 className="college-comparison__title">College Comparison</h2>
             <p style={{ fontSize: 13, color: 'var(--color-text-muted)', margin: '2px 0 0', fontWeight: 400 }}>
               Compare your schools side by side on cost, acceptance rate, and fit.
             </p>
-            <p style={{ fontSize: 11, color: 'var(--color-text-muted)', margin: '4px 0 0', fontWeight: 400, opacity: 0.75, lineHeight: 1.5 }}>
-              <strong>Data sources:</strong> Admit Rate, SAT, Tuition, Net Cost, Grad Rate, Retention, and Earnings from <em>College Scorecard</em>. Location &amp; Type from <em>IPEDS</em>. US News Rank from ~2024 published rankings. "Your Chance" is an AI estimate (rounded to nearest 5%) using your GPA &amp; SAT vs each school's published stats — not a guarantee.
-            </p>
+          </div>
+          <div className="comp-rationale-card">
+            <h4 className="comp-rationale-title">How We Calculate</h4>
+            <ul className="comp-rationale-list">
+              <li><strong>Admit Rate, SAT, Tuition, Net Cost, Grad Rate, Retention, Earnings</strong> — College Scorecard API (live)</li>
+              <li><strong>Location &amp; Type</strong> — IPEDS federal data</li>
+              <li><strong>US News Rank</strong> — ~2024 published rankings</li>
+              <li><strong>Your Chance</strong> — AI estimate (rounded to 5%) using your GPA &amp; SAT vs published admit rate &amp; SAT range. <em>Not a guarantee.</em></li>
+            </ul>
           </div>
           <div className="college-comparison__actions">
             {!loading && schools.length > 0 && (
