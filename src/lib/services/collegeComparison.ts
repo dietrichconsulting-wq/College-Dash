@@ -69,7 +69,9 @@ export async function compareColleges(schoolNames, { major, gpa, sat, homeState 
       carnegieClass: real.carnegieClass ?? null,
       isHBCU: real.isHBCU ?? false,
       // ── Admission chance (from admissionChance.ts — same as Dashboard) ──
-      yourChance: chancesByName[name.toLowerCase()]?.chance ?? null,
+      yourChance: chancesByName[name.toLowerCase()]?.chance != null
+        ? Math.round(chancesByName[name.toLowerCase()].chance / 5) * 5
+        : null,
       // ── Metadata ──
       _dataSources: real._dataSources ?? { scorecard: false, ipeds: false, usNews: false },
     };

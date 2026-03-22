@@ -101,7 +101,7 @@ export function ComparePageClient({ profile }: ComparePageClientProps) {
 
   const METRICS: { key: keyof ComparedSchool; label: string; format: (v: unknown) => string }[] = [
     { key: 'admitRate', label: 'Admit Rate', format: v => v != null ? `${v}%` : '—' },
-    { key: 'yourChance', label: 'Your Chance', format: v => v != null ? `~${v}%` : '—' },
+    { key: 'yourChance', label: 'Your Chance', format: v => v != null ? `~${v}%` : '—' },  // rounded to 5% on backend
     { key: 'avgSAT', label: 'Avg SAT', format: v => v != null ? String(v) : '—' },
     { key: 'netCost', label: 'Net Cost/yr', format: v => v != null ? `$${((v as number) / 1000).toFixed(0)}k` : '—' },
     { key: 'tuitionInState', label: 'Tuition (in-state)', format: v => v != null ? `$${((v as number) / 1000).toFixed(0)}k` : '—' },
@@ -115,10 +115,31 @@ export function ComparePageClient({ profile }: ComparePageClientProps) {
 
   return (
     <div style={{ maxWidth: 900 }}>
-      <h1 style={{ fontSize: 26, fontWeight: 800, marginBottom: 6 }}>Compare Schools ⚖️</h1>
-      <p style={{ fontSize: 14, color: 'var(--color-text-muted)', marginBottom: 28 }}>
-        Compare your schools side by side on cost, acceptance rate, and fit.
-      </p>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 20, flexWrap: 'wrap', marginBottom: 28 }}>
+        <div>
+          <h1 style={{ fontSize: 26, fontWeight: 800, marginBottom: 6 }}>Compare Schools ⚖️</h1>
+          <p style={{ fontSize: 14, color: 'var(--color-text-muted)', margin: 0 }}>
+            Compare your schools side by side on cost, acceptance rate, and fit.
+          </p>
+        </div>
+        <div style={{
+          background: 'rgba(255,255,255,0.04)',
+          border: '1px solid rgba(255,255,255,0.08)',
+          borderRadius: 10,
+          padding: '12px 16px',
+          maxWidth: 420,
+          flexShrink: 0,
+        }}>
+          <h4 style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 6px' }}>
+            How We Calculate
+          </h4>
+          <ul style={{ listStyle: 'none', margin: 0, padding: 0, fontSize: 11, lineHeight: 1.55, color: 'var(--color-text-muted)' }}>
+            <li style={{ marginBottom: 3 }}><strong style={{ color: 'var(--color-text-secondary)' }}>Admit Rate, SAT, Tuition, Net Cost, Grad Rate, Retention, Earnings</strong> — College Scorecard API (live)</li>
+            <li style={{ marginBottom: 3 }}><strong style={{ color: 'var(--color-text-secondary)' }}>Location &amp; Type</strong> — IPEDS federal data</li>
+            <li><strong style={{ color: 'var(--color-text-secondary)' }}>Your Chance</strong> — Algorithm using your GPA &amp; SAT vs published admit rate &amp; SAT range (rounded to 5%). <em style={{ color: '#F59E0B' }}>Not a guarantee.</em></li>
+          </ul>
+        </div>
+      </div>
 
       {/* Step indicators */}
       <div style={{ display: 'flex', gap: 0, marginBottom: 20 }}>
