@@ -15,6 +15,7 @@ import generateRoutes from './routes/generate.js';
 import scholarshipRoutes from './routes/scholarships.js';
 import portfolioRoutes from './routes/portfolio.js';
 import strategyRoutes from './routes/strategy.js';
+import discoveryRoutes from './routes/discovery.js';
 import subscriptionRoutes from './routes/subscription.js';
 import parentRoutes from './routes/parent.js';
 import cronRoutes from './routes/cron.js';
@@ -50,6 +51,7 @@ app.use('/api/generate', requireSubscription, generateRoutes);
 app.use('/api/scholarships', requireSubscription, scholarshipRoutes);
 app.use('/api/portfolio', requireSubscription, portfolioRoutes);
 app.use('/api/strategy', requireSubscription, strategyRoutes);
+app.use('/api/discovery', requireSubscription, discoveryRoutes);
 
 // Serve static frontend in production
 app.use(express.static(resolve(__dirname, 'public')));

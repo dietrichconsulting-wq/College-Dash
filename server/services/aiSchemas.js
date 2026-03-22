@@ -48,6 +48,18 @@ export const StrategyAISchema = z.object({
   ).default([]),
 });
 
+// ── schoolDiscovery.js — AI school discovery ────────────────────────────────
+export const DiscoveryAISchema = z.object({
+  schools: z.array(
+    z.object({
+      name: z.string(),
+      tier: z.enum(['reach', 'target', 'safety']),
+      programStrength: z.string().optional().default(''),
+      whyFit: z.string().optional().default(''),
+    })
+  ).default([]),
+});
+
 // ── portfolioAdvice.js — AI portfolio tips ──────────────────────────────────
 export const PortfolioTipSchema = z.array(
   z.object({

@@ -14,6 +14,7 @@ import ScholarshipPipeline from './ScholarshipPipeline';
 import CollegeComparison from './CollegeComparison';
 import PortfolioGuide from './PortfolioGuide';
 import CollegeStrategy from './CollegeStrategy';
+import SchoolDiscovery from './SchoolDiscovery';
 import FamilyAccessCard from './FamilyAccessCard';
 import { useTasks } from '../hooks/useTasks';
 import { useProgress } from '../hooks/useProgress';
@@ -203,6 +204,11 @@ export default function DashboardPage({ userId, profile, updateProfile, dark, on
               onOpenRoadmap={() => setRoadmapOpen(true)}
             />
           </div>
+        )}
+
+        {/* ── School Discovery page ── */}
+        {activePage === 'discovery' && (
+          <SchoolDiscovery profile={effectiveProfile} onSaveSchools={saveSchools} />
         )}
 
         {/* ── Strategy page ── */}
