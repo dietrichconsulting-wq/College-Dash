@@ -101,7 +101,23 @@ Respond ONLY with valid JSON, no markdown:
 
   const { rationale, schools: aiSchools } = parseResult.data;
 
-  if (!aiSchools.length) return { rationale, reach: [], target: [], safety: [] };
+  if (!aiSchools.length && !userSchools.length) return { rationale, reach: [], target: [], safety: [] };
+
+  // ── Step 1b: Guarantee user's schools are included ──────────────────────
+  // AI may skip or rename user schools — inject any missing ones directly
+  const aiNames = new Set(aiSchools.map(s => s.name.toLowerCase().replace(/[^a-z]/g, '')));
+  for (const uName of userSchools) {
+    const normalized = uName.toLowerCase().replace(/[^a-z]/g, '');
+    if (!aiNames.has(normalized)) {
+      aiSchools.push({
+        name: uName,
+        tier: 'target',   // placeholder — will be re-tiered from real data below
+        programStrength: 'On Your List',
+        whyFit: 'Selected by student',
+      });
+      aiNames.add(normalized);
+    }
+  }
 
   // ── Step 2: Fetch real data for all recommended schools ─────────────────
   const schoolNames = aiSchools.map(s => s.name);
@@ -151,8 +167,23 @@ Respond ONLY with valid JSON, no markdown:
     };
   });
 
+  // Re-tier schools that were injected with placeholder tier based on real chance data
+  enriched.forEach((s, i) => {
+    if (aiSchools[i]?.whyFit === 'Selected by student' && s.yourChance != null) {
+      if (s.yourChance < 30) aiSchools[i].tier = 'reach';
+      else if (s.yourChance >= 60) aiSchools[i].tier = 'safety';
+      else aiSchools[i].tier = 'target';
+    }
+  });
+
   // Split back into tiers (preserve tier from AI)
   const byTier = (tier) => enriched.filter((_, i) => aiSchools[i]?.tier === tier);
+
+  // Mark which schools are on the user's dashboard
+  const userSet = new Set(userSchools.map(n => n.toLowerCase().replace(/[^a-z]/g, '')));
+  enriched.forEach(s => {
+    s.isUserSchool = userSet.has(s.name.toLowerCase().replace(/[^a-z]/g, ''));
+  });
 
   return {
     rationale,
