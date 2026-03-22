@@ -150,7 +150,7 @@ export function FinancialPlanner() {
             <SectionHeader>College Costs</SectionHeader>
             <div style={{ marginBottom: 14 }}>
               <label style={labelStyle}>Select a college</label>
-              <div style={{ fontSize: 10, color: 'var(--color-text-muted)', marginBottom: 3 }}>Auto-fills cost from College Scorecard</div>
+              <div style={{ fontSize: 10, color: 'var(--color-text-muted)', marginBottom: 3 }}>Auto-fills cost from U.S. Dept of Education data</div>
               <CollegeSelect
                 value={selectedCollege}
                 onChange={handleCollegeSelect}
