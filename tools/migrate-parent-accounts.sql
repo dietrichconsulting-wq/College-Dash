@@ -43,3 +43,6 @@ ALTER TABLE digest_log ENABLE ROW LEVEL SECURITY;
 -- ─── 4. Generate link codes for existing student profiles ───
 UPDATE profiles SET link_code = substr(md5(random()::text), 1, 6)
   WHERE account_type = 'student' AND link_code IS NULL;
+
+-- ─── 5. Digest unsubscribe flag ──────────────────────────────
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS digest_unsubscribed boolean NOT NULL DEFAULT false;

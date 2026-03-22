@@ -562,3 +562,21 @@ export async function wasDigestSent(parentId, studentId, weekKey) {
   if (error) throw error;
   return !!data;
 }
+
+export async function isDigestUnsubscribed(parentId) {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('digest_unsubscribed')
+    .eq('id', parentId)
+    .maybeSingle();
+  if (error) throw error;
+  return !!data?.digest_unsubscribed;
+}
+
+export async function setDigestUnsubscribed(parentId) {
+  const { error } = await supabase
+    .from('profiles')
+    .update({ digest_unsubscribed: true })
+    .eq('id', parentId);
+  if (error) throw error;
+}

@@ -362,32 +362,34 @@ function ScholarshipCard({ scholarship, stageIndex, onMove, onEdit, onDelete }) 
         <span className="scholarship-card__name" title={scholarship.name}>
           {scholarship.name}
         </span>
-        <div className="scholarship-card__menu-wrap">
-          <button
-            className="scholarship-card__menu-btn"
-            onClick={() => setMenuOpen(!menuOpen)}
-            title="Actions"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-              <circle cx="12" cy="5" r="2" />
-              <circle cx="12" cy="12" r="2" />
-              <circle cx="12" cy="19" r="2" />
-            </svg>
-          </button>
-          {menuOpen && (
-            <div className="scholarship-card__menu" onClick={() => setMenuOpen(false)}>
-              <button onClick={() => onEdit(scholarship)}>Edit</button>
-              {STAGES.filter((_, i) => i !== stageIndex).map(s => (
-                <button key={s.key} onClick={() => onMove(scholarship.scholarshipId, s.key)}>
-                  Move to {s.label}
+        {(onMove || onEdit || onDelete) && (
+          <div className="scholarship-card__menu-wrap">
+            <button
+              className="scholarship-card__menu-btn"
+              onClick={() => setMenuOpen(!menuOpen)}
+              title="Actions"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                <circle cx="12" cy="5" r="2" />
+                <circle cx="12" cy="12" r="2" />
+                <circle cx="12" cy="19" r="2" />
+              </svg>
+            </button>
+            {menuOpen && (
+              <div className="scholarship-card__menu" onClick={() => setMenuOpen(false)}>
+                <button onClick={() => onEdit(scholarship)}>Edit</button>
+                {STAGES.filter((_, i) => i !== stageIndex).map(s => (
+                  <button key={s.key} onClick={() => onMove(scholarship.scholarshipId, s.key)}>
+                    Move to {s.label}
+                  </button>
+                ))}
+                <button className="scholarship-card__menu-delete" onClick={() => onDelete(scholarship.scholarshipId)}>
+                  Delete
                 </button>
-              ))}
-              <button className="scholarship-card__menu-delete" onClick={() => onDelete(scholarship.scholarshipId)}>
-                Delete
-              </button>
-            </div>
-          )}
-        </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Amount badge */}

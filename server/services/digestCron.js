@@ -6,6 +6,7 @@ import {
   getProgress,
   wasDigestSent,
   logDigestSent,
+  isDigestUnsubscribed,
 } from './supabase.js';
 import { sendWeeklyDigest } from './email.js';
 
@@ -37,6 +38,13 @@ export async function runWeeklyDigest() {
       continue;
     }
 
+    // Check if unsubscribed
+    const unsubscribed = await isDigestUnsubscribed(link.parentId);
+    if (unsubscribed) {
+      skipped++;
+      continue;
+    }
+
     // Check if already sent this week
     const alreadySent = await wasDigestSent(link.parentId, link.studentId, weekKey);
     if (alreadySent) {
@@ -55,6 +63,7 @@ export async function runWeeklyDigest() {
       const completionPercent = Math.round((allMilestones.length / 10) * 100);
 
       await sendWeeklyDigest({
+        parentId: link.parentId,
         parentEmail: link.parentEmail,
         parentName: link.parentName,
         studentName: link.studentName,

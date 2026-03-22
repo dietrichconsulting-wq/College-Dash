@@ -221,7 +221,7 @@ export default function ProfileSummary({ profile, completionPercent, onReorderSc
               </button>
             )}
           </>
-        ) : (
+        ) : !readOnly ? (
           <button
             onClick={onEditSchools}
             className="school-chips-section__add"
@@ -231,7 +231,7 @@ export default function ProfileSummary({ profile, completionPercent, onReorderSc
             </svg>
             Add Schools
           </button>
-        )}
+        ) : null}
       </div>
     </motion.div>
   );
