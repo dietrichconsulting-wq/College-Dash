@@ -26,7 +26,7 @@ function getModel() {
  * Generate a tiered college strategy list.
  * Returns { reach: [], target: [], safety: [], rationale: string }
  */
-export async function generateStrategy({ gpa, sat, major, budget, climate }) {
+export async function generateStrategy({ gpa, sat, major, budget, climate, schools: userSchools }) {
   const gemini = getModel();
   if (!gemini) throw new Error('Gemini API key not configured');
 
@@ -38,6 +38,11 @@ export async function generateStrategy({ gpa, sat, major, budget, climate }) {
     ? `Preferred campus climate/region: ${climate}. Prioritize schools in that environment but include strong options elsewhere.`
     : 'No climate preference.';
 
+  const userSchoolsList = (userSchools || []).filter(Boolean);
+  const schoolsNote = userSchoolsList.length
+    ? `The student is already interested in these schools — you MUST include all of them in the appropriate tier (reach/target/safety based on their stats): ${userSchoolsList.join(', ')}. Fill the remaining slots with additional recommendations.`
+    : '';
+
   // ── Step 1: Get school recommendations from Gemini ─────────────────────
   const recommendPrompt = `You are a college admissions strategist. Generate a balanced college list for this US high school student.
 
@@ -47,7 +52,7 @@ STUDENT PROFILE:
 - Intended Major: ${major}
 - ${budgetNote}
 - ${climateNote}
-
+${schoolsNote ? `\n${schoolsNote}\n` : ''}
 Return exactly:
 - 3 REACH schools (<30% admission chance for this student but great fit)
 - 4 TARGET schools (40-65% admission chance)

@@ -87,7 +87,7 @@ export function StrategyPageClient({ profile, userId }: StrategyPageClientProps)
       const res = await fetch('/api/strategy/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, schools: slots.filter(Boolean) }),
       })
       if (!res.ok) throw new Error(await res.text())
       const data = await res.json()
