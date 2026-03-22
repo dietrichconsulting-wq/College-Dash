@@ -368,6 +368,23 @@ body>#root {
   transform: translateY(0);
 }
 
+@media (max-width: 767px) {
+  .header-bar {
+    padding: 0.85rem 1rem 0.85rem 3.25rem; /* leave room for hamburger */
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .header-bar h1 {
+    font-size: 1.25rem !important;
+  }
+  .header-bar__welcome {
+    display: none;
+  }
+  .header-bar__school-badge {
+    display: none;
+  }
+}
+
 * {
   box-sizing: border-box;
 }
@@ -440,13 +457,22 @@ body>#root {
   margin-top: 2px;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   .profile-stats-row {
     grid-template-columns: repeat(2, 1fr);
   }
 
   .progress-ring-card {
     grid-column: span 2;
+  }
+
+  .school-chips-section {
+    width: 100%;
+    align-items: flex-start;
+  }
+
+  .school-chips-row {
+    justify-content: flex-start;
   }
 }
 
@@ -3095,6 +3121,26 @@ body>#root {
   font-weight: 600;
 }
 
+@media (max-width: 767px) {
+  .college-comparison {
+    padding: 1rem;
+  }
+  .college-comparison__title-row {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  .comp-rationale-card {
+    max-width: 100%;
+  }
+  .college-comparison__actions {
+    width: 100%;
+  }
+  .college-comparison__subtitle-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
 .comp-refresh-btn,
 .comp-add-trigger {
   display: flex;
@@ -3566,6 +3612,78 @@ body>#root {
   font-weight: 700;
 }
 
+/* Hamburger button — mobile only */
+.sidebar-hamburger {
+  display: none;
+  position: fixed;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 60;
+  width: 40px;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  color: var(--color-text);
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Close button inside sidebar — mobile only */
+.sidebar__close-btn {
+  display: none;
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+}
+.sidebar__close-btn:hover {
+  color: var(--color-text);
+  background: var(--color-column);
+}
+
+/* Mobile overlay backdrop */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
+}
+
+/* Desktop: show desktop sidebar, hide mobile sidebar/hamburger */
+.sidebar--desktop {
+  display: flex;
+}
+.sidebar--mobile {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .sidebar--desktop {
+    display: none;
+  }
+  .sidebar--mobile {
+    display: flex;
+    z-index: 100;
+  }
+  .sidebar-hamburger {
+    display: flex;
+  }
+  .sidebar__close-btn {
+    display: block;
+  }
+  .sidebar-overlay {
+    display: block;
+  }
+}
+
 /* Shift main content to account for sidebar */
 .sidebar-layout {
   display: flex;
@@ -3576,6 +3694,12 @@ body>#root {
   flex: 1;
   min-width: 0;
   margin-left: 220px;
+}
+
+@media (max-width: 767px) {
+  .sidebar-layout__content {
+    margin-left: 0;
+  }
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -3625,6 +3749,18 @@ body>#root {
 [data-theme="dark"] .strat-real-badge {
   color: #4ADE80;
   background: rgba(34, 197, 94, 0.15);
+}
+
+.strategy-container {
+  padding: 28px 28px 32px;
+  margin-top: 24px;
+}
+
+@media (max-width: 767px) {
+  .strategy-container {
+    padding: 16px 16px 20px;
+    margin-top: 16px;
+  }
 }
 
 .strategy-spinner {

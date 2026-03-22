@@ -136,7 +136,7 @@ export default function DashboardPage({ userId, profile, updateProfile, dark, on
       <div className="sidebar-layout__content">
       <Header profile={effectiveProfile} onToggleChat={() => setChatOpen(!chatOpen)} dark={dark} onToggleDark={onToggleDark} />
 
-      <main className="max-w-5xl mx-auto px-4 py-8">
+      <main className="max-w-5xl mx-auto px-3 py-4 md:px-4 md:py-8">
 
         {/* ── Dashboard page ── */}
         {activePage === 'dashboard' && (

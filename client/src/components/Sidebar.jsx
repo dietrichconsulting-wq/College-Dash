@@ -1,4 +1,5 @@
-import { motion } from 'framer-motion';
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const NAV_ITEMS = [
   {
@@ -82,16 +83,17 @@ const NAV_ITEMS = [
 const PARENT_NAV_KEYS = new Set(['dashboard', 'journey', 'compare', 'scholarships', 'strategy']);
 
 export default function Sidebar({ activePage, onNavigate, profile, dark, readOnly }) {
+  const [mobileOpen, setMobileOpen] = useState(false);
   const schoolName = profile?.schools?.[0]?.name || 'College Dashboard';
   const shortName = schoolName.length > 16 ? schoolName.slice(0, 14) + '…' : schoolName;
 
-  return (
-    <motion.aside
-      initial={{ x: -240 }}
-      animate={{ x: 0 }}
-      transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-      className="sidebar"
-    >
+  const handleNav = (key) => {
+    onNavigate(key);
+    setMobileOpen(false);
+  };
+
+  const sidebarContent = (
+    <>
       {/* Brand */}
       <div className="sidebar__brand">
         <div className="sidebar__brand-icon">
@@ -104,6 +106,16 @@ export default function Sidebar({ activePage, onNavigate, profile, dark, readOnl
           <span className="sidebar__brand-title">College</span>
           <span className="sidebar__brand-sub">{shortName}</span>
         </div>
+        {/* Close button - only visible on mobile */}
+        <button
+          className="sidebar__close-btn"
+          onClick={() => setMobileOpen(false)}
+          aria-label="Close menu"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
       </div>
 
       {/* Nav */}
@@ -114,7 +126,7 @@ export default function Sidebar({ activePage, onNavigate, profile, dark, readOnl
             <button
               key={item.key}
               className={`sidebar__nav-item ${isActive ? 'sidebar__nav-item--active' : ''}`}
-              onClick={() => onNavigate(item.key)}
+              onClick={() => handleNav(item.key)}
             >
               {isActive && (
                 <motion.div
@@ -130,7 +142,7 @@ export default function Sidebar({ activePage, onNavigate, profile, dark, readOnl
         })}
       </nav>
 
-      {/* Bottom: dark mode toggle hint */}
+      {/* Bottom */}
       <div className="sidebar__footer">
         <div className="sidebar__footer-gpa">
           {profile?.gpa && (
@@ -153,6 +165,56 @@ export default function Sidebar({ activePage, onNavigate, profile, dark, readOnl
           )}
         </div>
       </div>
-    </motion.aside>
+    </>
+  );
+
+  return (
+    <>
+      {/* Mobile hamburger button */}
+      <button
+        className="sidebar-hamburger"
+        onClick={() => setMobileOpen(true)}
+        aria-label="Open menu"
+      >
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+
+      {/* Desktop sidebar - always visible */}
+      <motion.aside
+        initial={{ x: -240 }}
+        animate={{ x: 0 }}
+        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+        className="sidebar sidebar--desktop"
+      >
+        {sidebarContent}
+      </motion.aside>
+
+      {/* Mobile sidebar - overlay */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <>
+            <motion.div
+              className="sidebar-overlay"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              onClick={() => setMobileOpen(false)}
+            />
+            <motion.aside
+              className="sidebar sidebar--mobile"
+              initial={{ x: -280 }}
+              animate={{ x: 0 }}
+              exit={{ x: -280 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+            >
+              {sidebarContent}
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
+    </>
   );
 }

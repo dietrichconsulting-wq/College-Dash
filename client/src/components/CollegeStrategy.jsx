@@ -148,8 +148,7 @@ export default function CollegeStrategy({ profile, readOnly }) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35 }}
-      className="card-elevated"
-      style={{ padding: '28px 28px 32px', marginTop: 24 }}
+      className="card-elevated strategy-container"
     >
       {/* Header */}
       <div style={{ marginBottom: 24 }}>
