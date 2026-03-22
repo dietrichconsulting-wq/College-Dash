@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 
-export default function Header({ profile, onToggleChat, dark, onToggleDark }) {
+export default function Header({ profile, onToggleChat, dark, onToggleDark, readOnly }) {
   return (
     <motion.header
       initial={{ opacity: 0, y: -10 }}
@@ -22,13 +22,23 @@ export default function Header({ profile, onToggleChat, dark, onToggleDark }) {
             <span className="header-bar__welcome">
               Welcome, {profile.displayName}
             </span>
-            <p style={{ fontSize: 'var(--font-size-micro)', color: 'var(--color-text-muted)', margin: 0, marginTop: 2 }}>
-              Change your GPA, SAT, major, and schools to check your chance of getting in.
-            </p>
+            {!readOnly && (
+              <p style={{ fontSize: 'var(--font-size-micro)', color: 'var(--color-text-muted)', margin: 0, marginTop: 2 }}>
+                Change your GPA, SAT, major, and schools to check your chance of getting in.
+              </p>
+            )}
           </div>
         )}
       </div>
       <div className="flex items-center gap-3">
+        {readOnly && (
+          <span
+            className="header-bar__school-badge"
+            style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#3B82F6', border: '1px solid rgba(59, 130, 246, 0.2)' }}
+          >
+            Parent View
+          </span>
+        )}
         {profile?.schools?.[0]?.name && (
           <span className="header-bar__school-badge">
             #1: {profile.schools[0].name}
@@ -60,12 +70,14 @@ export default function Header({ profile, onToggleChat, dark, onToggleDark }) {
             </svg>
           )}
         </button>
-        <button
-          onClick={onToggleChat}
-          className="header-bar__action-btn"
-        >
-          AI Advisor
-        </button>
+        {!readOnly && (
+          <button
+            onClick={onToggleChat}
+            className="header-bar__action-btn"
+          >
+            AI Advisor
+          </button>
+        )}
       </div>
     </motion.header>
   );

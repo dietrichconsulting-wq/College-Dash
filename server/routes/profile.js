@@ -5,20 +5,24 @@ import { seedTasksForUser } from '../services/seedTasks.js';
 
 const router = Router();
 
-// Create profile + seed default tasks
+// Create profile + seed default tasks (students only)
 router.post('/', async (req, res, next) => {
   try {
     const userId = req.body.userId || uuidv4();
-    const { displayName, email, gpa, sat, act, proposedMajor, schools } = req.body;
+    const { displayName, email, gpa, sat, act, proposedMajor, schools, accountType } = req.body;
 
-    await createProfile({ userId, displayName, email, gpa, sat, act, proposedMajor, schools });
-    await seedTasksForUser(userId);
-    await createProgress({
-      entryId: uuidv4(),
-      userId,
-      milestoneKey: 'profile_complete',
-      notes: 'Profile created and tasks seeded',
-    });
+    await createProfile({ userId, displayName, email, gpa, sat, act, proposedMajor, schools, accountType });
+
+    // Only seed tasks and milestones for student accounts
+    if ((accountType || 'student') === 'student') {
+      await seedTasksForUser(userId);
+      await createProgress({
+        entryId: uuidv4(),
+        userId,
+        milestoneKey: 'profile_complete',
+        notes: 'Profile created and tasks seeded',
+      });
+    }
 
     const profile = await getProfile(userId);
     res.status(201).json(profile);

@@ -78,7 +78,10 @@ const NAV_ITEMS = [
   },
 ];
 
-export default function Sidebar({ activePage, onNavigate, profile, dark }) {
+// Pages visible to parent accounts (read-only subset)
+const PARENT_NAV_KEYS = new Set(['dashboard', 'journey', 'compare', 'scholarships', 'strategy']);
+
+export default function Sidebar({ activePage, onNavigate, profile, dark, readOnly }) {
   const schoolName = profile?.schools?.[0]?.name || 'College Dashboard';
   const shortName = schoolName.length > 16 ? schoolName.slice(0, 14) + '…' : schoolName;
 
@@ -105,7 +108,7 @@ export default function Sidebar({ activePage, onNavigate, profile, dark }) {
 
       {/* Nav */}
       <nav className="sidebar__nav">
-        {NAV_ITEMS.map((item) => {
+        {NAV_ITEMS.filter(item => !readOnly || PARENT_NAV_KEYS.has(item.key)).map((item) => {
           const isActive = activePage === item.key;
           return (
             <button

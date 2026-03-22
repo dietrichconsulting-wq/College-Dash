@@ -490,20 +490,22 @@ function PipelineColumn({ stage, items, stageIndex, onAdd, onMove, onEdit, onDel
         )}
       </div>
 
-      <button className="pipeline-column__add" onClick={onAdd}>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-          <line x1="12" y1="5" x2="12" y2="19" />
-          <line x1="5" y1="12" x2="19" y2="12" />
-        </svg>
-        Add
-      </button>
+      {onAdd && (
+        <button className="pipeline-column__add" onClick={onAdd}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+          Add
+        </button>
+      )}
     </div>
   );
 }
 
 // ── Main Component ──
 
-export default function ScholarshipPipeline({ userId }) {
+export default function ScholarshipPipeline({ userId, readOnly }) {
   const { columns, loading, createScholarship, updateScholarship, moveScholarship, deleteScholarship } = useScholarships(userId);
   const [formOpen, setFormOpen] = useState(false);
   const [addStage, setAddStage] = useState('Researching');
@@ -566,10 +568,10 @@ export default function ScholarshipPipeline({ userId }) {
             stage={stage}
             items={columns[stage.key] || []}
             stageIndex={i}
-            onAdd={() => handleAdd(stage.key)}
-            onMove={moveScholarship}
-            onEdit={handleEdit}
-            onDelete={deleteScholarship}
+            onAdd={readOnly ? undefined : () => handleAdd(stage.key)}
+            onMove={readOnly ? undefined : moveScholarship}
+            onEdit={readOnly ? undefined : handleEdit}
+            onDelete={readOnly ? undefined : deleteScholarship}
           />
         ))}
       </div>

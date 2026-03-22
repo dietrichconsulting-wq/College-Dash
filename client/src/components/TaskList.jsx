@@ -95,7 +95,7 @@ function snoozeDate(dateStr, days = 3) {
 }
 
 // ── Individual Task Row ──
-function TaskRow({ task, index, onDone, onEdit, onDelete, onSnooze }) {
+function TaskRow({ task, index, onDone, onEdit, onDelete, onSnooze, readOnly }) {
   const [expanded, setExpanded] = useState(false);
   const [completing, setCompleting] = useState(false);
   const priority = getPriority(task);
@@ -129,7 +129,7 @@ function TaskRow({ task, index, onDone, onEdit, onDelete, onSnooze }) {
         {/* Top line: checkbox + title + meta */}
         <div className="task-row__header">
           {/* Checkbox */}
-          <button
+          {!readOnly && <button
             onClick={handleComplete}
             className="task-row__check"
             title="Mark as done"
@@ -148,7 +148,7 @@ function TaskRow({ task, index, onDone, onEdit, onDelete, onSnooze }) {
                 d="M5 13l4 4L19 7"
               />
             </motion.svg>
-          </button>
+          </button>}
 
           {/* Title + Category pill — click to expand */}
           <div
@@ -205,28 +205,30 @@ function TaskRow({ task, index, onDone, onEdit, onDelete, onSnooze }) {
         </div>
 
         {/* Quick actions bar — appears on hover */}
-        <div className="task-row__actions">
-          <button onClick={() => onEdit(task)} className="task-row__action-btn">
-            <svg className="task-row__action-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-            </svg>
-            Edit
-          </button>
-          <span className="task-row__action-divider" />
-          <button onClick={() => onSnooze(task)} className="task-row__action-btn">
-            <svg className="task-row__action-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            Snooze
-          </button>
-          <span className="task-row__action-divider" />
-          <button onClick={handleComplete} className="task-row__action-btn task-row__action-btn--complete">
-            <svg className="task-row__action-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-            </svg>
-            Complete
-          </button>
-        </div>
+        {!readOnly && (
+          <div className="task-row__actions">
+            <button onClick={() => onEdit(task)} className="task-row__action-btn">
+              <svg className="task-row__action-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+              Edit
+            </button>
+            <span className="task-row__action-divider" />
+            <button onClick={() => onSnooze(task)} className="task-row__action-btn">
+              <svg className="task-row__action-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Snooze
+            </button>
+            <span className="task-row__action-divider" />
+            <button onClick={handleComplete} className="task-row__action-btn task-row__action-btn--complete">
+              <svg className="task-row__action-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+              Complete
+            </button>
+          </div>
+        )}
 
         {/* Expandable detail section */}
         <AnimatePresence>
@@ -276,20 +278,22 @@ function TaskRow({ task, index, onDone, onEdit, onDelete, onSnooze }) {
                 )}
 
                 {/* Inline actions */}
-                <div className="task-row__detail-actions">
-                  <button onClick={() => onEdit(task)} className="task-row__detail-btn">
-                    ✏️ Edit
-                  </button>
-                  <button onClick={() => onSnooze(task)} className="task-row__detail-btn">
-                    ⏰ Snooze 3 days
-                  </button>
-                  <button
-                    onClick={() => onDelete(task.taskId)}
-                    className="task-row__detail-btn task-row__detail-btn--danger"
-                  >
-                    🗑️ Delete
-                  </button>
-                </div>
+                {!readOnly && (
+                  <div className="task-row__detail-actions">
+                    <button onClick={() => onEdit(task)} className="task-row__detail-btn">
+                      ✏️ Edit
+                    </button>
+                    <button onClick={() => onSnooze(task)} className="task-row__detail-btn">
+                      ⏰ Snooze 3 days
+                    </button>
+                    <button
+                      onClick={() => onDelete(task.taskId)}
+                      className="task-row__detail-btn task-row__detail-btn--danger"
+                    >
+                      🗑️ Delete
+                    </button>
+                  </div>
+                )}
               </div>
             </motion.div>
           )}
@@ -310,6 +314,7 @@ export default function TaskList({
   onTaskCompleted,
   openAddTaskTrigger,
   onOpenRoadmap,
+  readOnly,
 }) {
   if (loading) return <TaskListSkeleton />;
   const [modalOpen, setModalOpen] = useState(false);
@@ -376,24 +381,26 @@ export default function TaskList({
         </div>
         <div className="task-list__header-right">
           <span className="task-list__count">{activeTasks.length} remaining</span>
-          {onOpenRoadmap && (
+          {!readOnly && onOpenRoadmap && (
             <button className="roadmap-cta" onClick={onOpenRoadmap}>
               <span className="roadmap-cta__sparkle">✨</span>
               AI Roadmap
             </button>
           )}
-          <button
-            onClick={() => {
-              setEditingTask(null);
-              setModalOpen(true);
-            }}
-            className="task-list__add-btn"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-            </svg>
-            Add Task
-          </button>
+          {!readOnly && (
+            <button
+              onClick={() => {
+                setEditingTask(null);
+                setModalOpen(true);
+              }}
+              className="task-list__add-btn"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+              </svg>
+              Add Task
+            </button>
+          )}
         </div>
       </div>
 
@@ -415,6 +422,7 @@ export default function TaskList({
                 onEdit={handleEdit}
                 onDelete={onDeleteTask}
                 onSnooze={handleSnooze}
+                readOnly={readOnly}
               />
             ))}
           </AnimatePresence>

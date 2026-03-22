@@ -74,7 +74,7 @@ function ProgressRing({ percent = 0 }) {
   );
 }
 
-function StatCard({ label, field, value, small, onSave, inputType = 'text', step }) {
+function StatCard({ label, field, value, small, onSave, inputType = 'text', step, readOnly }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(String(value ?? ''));
   const inputRef = useRef(null);
@@ -98,9 +98,9 @@ function StatCard({ label, field, value, small, onSave, inputType = 'text', step
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      className="card-elevated px-5 py-5 flex flex-col gap-1 cursor-pointer group relative"
-      onClick={() => { if (!editing) { setDraft(String(value ?? '')); setEditing(true); } }}
-      title={`Click to edit ${label}`}
+      className={`card-elevated px-5 py-5 flex flex-col gap-1 group relative ${readOnly ? '' : 'cursor-pointer'}`}
+      onClick={() => { if (!readOnly && !editing) { setDraft(String(value ?? '')); setEditing(true); } }}
+      title={readOnly ? label : `Click to edit ${label}`}
     >
       <span
         className="uppercase tracking-wider font-medium"
@@ -138,7 +138,7 @@ function StatCard({ label, field, value, small, onSave, inputType = 'text', step
           {value || '--'}
         </span>
       )}
-      {!editing && (
+      {!editing && !readOnly && (
         <svg
           className="absolute top-2 right-2 opacity-0 group-hover:opacity-40 transition-opacity"
           width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}
@@ -150,7 +150,7 @@ function StatCard({ label, field, value, small, onSave, inputType = 'text', step
   );
 }
 
-export default function ProfileSummary({ profile, completionPercent, onReorderSchools, onEditSchools, onUpdateStat, dark }) {
+export default function ProfileSummary({ profile, completionPercent, onReorderSchools, onEditSchools, onUpdateStat, dark, readOnly }) {
 
   const schools = (profile?.schools || []).filter(s => s?.name && s.name.trim() !== '');
   const [orderedSchools, setOrderedSchools] = useState(schools);
@@ -176,10 +176,10 @@ export default function ProfileSummary({ profile, completionPercent, onReorderSc
     >
       {/* Stats + Progress ring on the left */}
       <div className="profile-stats-row">
-        <StatCard label="GPA" field="gpa" value={profile?.gpa?.toFixed(2)} inputType="number" step="0.01" onSave={onUpdateStat} />
-        <StatCard label="SAT" field="sat" value={profile?.sat} inputType="number" onSave={onUpdateStat} />
-        <StatCard label="ACT" field="act" value={profile?.act} inputType="number" onSave={onUpdateStat} />
-        <StatCard label="Major" field="major" value={profile?.proposedMajor} small onSave={onUpdateStat} />
+        <StatCard label="GPA" field="gpa" value={profile?.gpa?.toFixed(2)} inputType="number" step="0.01" onSave={onUpdateStat} readOnly={readOnly} />
+        <StatCard label="SAT" field="sat" value={profile?.sat} inputType="number" onSave={onUpdateStat} readOnly={readOnly} />
+        <StatCard label="ACT" field="act" value={profile?.act} inputType="number" onSave={onUpdateStat} readOnly={readOnly} />
+        <StatCard label="Major" field="major" value={profile?.proposedMajor} small onSave={onUpdateStat} readOnly={readOnly} />
 
         {/* Progress Ring Card */}
         <motion.div
@@ -209,15 +209,17 @@ export default function ProfileSummary({ profile, completionPercent, onReorderSc
                 <SchoolChip key={school.name} school={school} index={i} isTop={i === 0} dark={dark} />
               ))}
             </Reorder.Group>
-            <button
-              onClick={onEditSchools}
-              className="school-chips-section__edit"
-            >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-              </svg>
-              edit schools
-            </button>
+            {!readOnly && (
+              <button
+                onClick={onEditSchools}
+                className="school-chips-section__edit"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                edit schools
+              </button>
+            )}
           </>
         ) : (
           <button

@@ -14,6 +14,7 @@ import ScholarshipPipeline from './ScholarshipPipeline';
 import CollegeComparison from './CollegeComparison';
 import PortfolioGuide from './PortfolioGuide';
 import CollegeStrategy from './CollegeStrategy';
+import FamilyAccessCard from './FamilyAccessCard';
 import { useTasks } from '../hooks/useTasks';
 import { useProgress } from '../hooks/useProgress';
 import { useConfetti } from '../hooks/useConfetti';
@@ -211,14 +212,17 @@ export default function DashboardPage({ userId, profile, updateProfile, dark, on
 
         {/* ── Profile page ── */}
         {activePage === 'profile' && (
-          <ProfileSummary
-            profile={effectiveProfile}
-            completionPercent={completionPercent}
-            onReorderSchools={handleReorderSchools}
-            onEditSchools={() => setSchoolsModalOpen(true)}
-            onUpdateStat={handleUpdateStat}
-            dark={dark}
-          />
+          <>
+            <ProfileSummary
+              profile={effectiveProfile}
+              completionPercent={completionPercent}
+              onReorderSchools={handleReorderSchools}
+              onEditSchools={() => setSchoolsModalOpen(true)}
+              onUpdateStat={handleUpdateStat}
+              dark={dark}
+            />
+            <FamilyAccessCard userId={userId} />
+          </>
         )}
 
       </main>

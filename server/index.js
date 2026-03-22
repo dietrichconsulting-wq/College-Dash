@@ -16,6 +16,8 @@ import scholarshipRoutes from './routes/scholarships.js';
 import portfolioRoutes from './routes/portfolio.js';
 import strategyRoutes from './routes/strategy.js';
 import subscriptionRoutes from './routes/subscription.js';
+import parentRoutes from './routes/parent.js';
+import cronRoutes from './routes/cron.js';
 import errorHandler from './middleware/errorHandler.js';
 import requireSubscription from './middleware/requireSubscription.js';
 
@@ -34,6 +36,8 @@ app.use(express.json());
 // Public routes (no subscription check)
 app.use('/api/profile', profileRoutes);
 app.use('/api/subscription', subscriptionRoutes);
+app.use('/api/parent', parentRoutes);
+app.use('/api/cron', cronRoutes);
 
 // Protected routes (subscription required)
 app.use('/api/tasks', requireSubscription, taskRoutes);

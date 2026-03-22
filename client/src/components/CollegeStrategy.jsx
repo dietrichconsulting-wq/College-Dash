@@ -109,7 +109,7 @@ function TierSection({ tier, schools }) {
   );
 }
 
-export default function CollegeStrategy({ profile }) {
+export default function CollegeStrategy({ profile, readOnly }) {
   const [form, setForm] = useState({
     gpa:     profile?.gpa     || '',
     sat:     profile?.sat     || '',
@@ -119,7 +119,7 @@ export default function CollegeStrategy({ profile }) {
     climate: '',
   });
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState(null);
+  const [result, setResult] = useState(readOnly && profile?.strategyResult ? profile.strategyResult : null);
   const [error, setError] = useState(null);
 
   const handleChange = (field, value) => setForm(f => ({ ...f, [field]: value }));
@@ -161,74 +161,84 @@ export default function CollegeStrategy({ profile }) {
         </p>
       </div>
 
-      {/* Input form */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12, marginBottom: 20 }}>
-        <Field label="GPA" type="number" step="0.01" min="0" max="4.0" placeholder="3.9"
-          value={form.gpa} onChange={v => handleChange('gpa', v)} />
-        <Field label="SAT Score" type="number" min="400" max="1600" placeholder="1400"
-          value={form.sat} onChange={v => handleChange('sat', v)} />
-        <Field label="ACT Score" type="number" min="1" max="36" placeholder="28"
-          value={form.act} onChange={v => handleChange('act', v)} />
-        <Field label="Intended Major" placeholder="Environmental Design"
-          value={form.major} onChange={v => handleChange('major', v)} style={{ gridColumn: 'span 2' }} />
-        <Field label="Annual Budget ($)" type="number" min="0" placeholder="30000"
-          hint="Max out-of-pocket after aid"
-          value={form.budget} onChange={v => handleChange('budget', v)} />
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            Climate <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(optional)</span>
-          </label>
-          <select
-            value={form.climate}
-            onChange={e => handleChange('climate', e.target.value)}
+      {/* Input form (hidden in read-only parent view) */}
+      {!readOnly && (
+        <>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12, marginBottom: 20 }}>
+            <Field label="GPA" type="number" step="0.01" min="0" max="4.0" placeholder="3.9"
+              value={form.gpa} onChange={v => handleChange('gpa', v)} />
+            <Field label="SAT Score" type="number" min="400" max="1600" placeholder="1400"
+              value={form.sat} onChange={v => handleChange('sat', v)} />
+            <Field label="ACT Score" type="number" min="1" max="36" placeholder="28"
+              value={form.act} onChange={v => handleChange('act', v)} />
+            <Field label="Intended Major" placeholder="Environmental Design"
+              value={form.major} onChange={v => handleChange('major', v)} style={{ gridColumn: 'span 2' }} />
+            <Field label="Annual Budget ($)" type="number" min="0" placeholder="30000"
+              hint="Max out-of-pocket after aid"
+              value={form.budget} onChange={v => handleChange('budget', v)} />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                Climate <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(optional)</span>
+              </label>
+              <select
+                value={form.climate}
+                onChange={e => handleChange('climate', e.target.value)}
+                style={{
+                  padding: '9px 12px',
+                  borderRadius: 8,
+                  border: '1.5px solid var(--color-border)',
+                  background: 'var(--color-column)',
+                  color: 'var(--color-text)',
+                  fontSize: 13,
+                  outline: 'none',
+                }}
+              >
+                {CLIMATE_OPTIONS.map(opt => (
+                  <option key={opt} value={opt}>{opt || 'Any climate'}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {error && (
+            <div style={{ color: '#EF4444', fontSize: 13, marginBottom: 12 }}>{error}</div>
+          )}
+
+          <button
+            onClick={handleGenerate}
+            disabled={loading}
             style={{
-              padding: '9px 12px',
-              borderRadius: 8,
-              border: '1.5px solid var(--color-border)',
-              background: 'var(--color-column)',
-              color: 'var(--color-text)',
-              fontSize: 13,
-              outline: 'none',
+              background: loading ? 'var(--color-text-muted)' : 'var(--color-primary)',
+              color: '#fff',
+              border: 'none',
+              borderRadius: 10,
+              padding: '11px 28px',
+              fontWeight: 700,
+              fontSize: 14,
+              cursor: loading ? 'not-allowed' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              transition: 'background 0.2s',
             }}
           >
-            {CLIMATE_OPTIONS.map(opt => (
-              <option key={opt} value={opt}>{opt || 'Any climate'}</option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      {error && (
-        <div style={{ color: '#EF4444', fontSize: 13, marginBottom: 12 }}>{error}</div>
+            {loading ? (
+              <>
+                <span className="strategy-spinner" />
+                Generating…
+              </>
+            ) : (
+              <>✨ Generate Strategy</>
+            )}
+          </button>
+        </>
       )}
 
-      <button
-        onClick={handleGenerate}
-        disabled={loading}
-        style={{
-          background: loading ? 'var(--color-text-muted)' : 'var(--color-primary)',
-          color: '#fff',
-          border: 'none',
-          borderRadius: 10,
-          padding: '11px 28px',
-          fontWeight: 700,
-          fontSize: 14,
-          cursor: loading ? 'not-allowed' : 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8,
-          transition: 'background 0.2s',
-        }}
-      >
-        {loading ? (
-          <>
-            <span className="strategy-spinner" />
-            Generating…
-          </>
-        ) : (
-          <>✨ Generate Strategy</>
-        )}
-      </button>
+      {readOnly && !result && (
+        <p style={{ fontSize: 13, color: 'var(--color-text-muted)', fontStyle: 'italic' }}>
+          No strategy has been generated yet.
+        </p>
+      )}
 
       {/* Results */}
       <AnimatePresence>

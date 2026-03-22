@@ -13,16 +13,22 @@ const supabase = createClient(
 
 // ─── Profiles ────────────────────────────────────────────
 
-export async function createProfile({ userId, displayName, gpa, sat, act, proposedMajor, schools }) {
+export async function createProfile({ userId, displayName, email, gpa, sat, act, proposedMajor, schools, accountType }) {
   const insertRow = {
     display_name: displayName || '',
+    email: email || '',
     gpa: gpa || null,
     sat: sat || null,
     act_score: act || null,
     proposed_major: proposedMajor || '',
+    account_type: accountType || 'student',
   };
   // If a specific id is provided, use it; otherwise let Supabase generate one
   if (userId) insertRow.id = userId;
+  // Generate a link code for student accounts
+  if ((accountType || 'student') === 'student') {
+    insertRow.link_code = generateLinkCode();
+  }
 
   const { data, error } = await supabase
     .from('profiles')
@@ -55,10 +61,17 @@ export async function getProfile(userId) {
 export async function updateProfile(userId, updates) {
   const row = {};
   if (updates.displayName !== undefined) row.display_name = updates.displayName;
+  if (updates.email !== undefined) row.email = updates.email;
   if (updates.gpa !== undefined) row.gpa = updates.gpa;
   if (updates.sat !== undefined) row.sat = updates.sat;
   if (updates.act !== undefined) row.act_score = updates.act;
   if (updates.proposedMajor !== undefined) row.proposed_major = updates.proposedMajor;
+  if (updates.accountType !== undefined) row.account_type = updates.accountType;
+  if (updates.linkCode !== undefined) row.link_code = updates.linkCode;
+  if (updates.stripeCustomerId !== undefined) row.stripe_customer_id = updates.stripeCustomerId;
+  if (updates.stripeSubscriptionId !== undefined) row.stripe_subscription_id = updates.stripeSubscriptionId;
+  if (updates.subscriptionStatus !== undefined) row.subscription_status = updates.subscriptionStatus;
+  if (updates.subscriptionEnd !== undefined) row.subscription_end = updates.subscriptionEnd;
 
   if (Object.keys(row).length > 0) {
     const { error } = await supabase
@@ -128,6 +141,7 @@ function parseProfile(row, schools = []) {
     id: row.id,
     userId: row.id,
     displayName: row.display_name || '',
+    email: row.email || '',
     gpa: row.gpa != null ? Number(row.gpa) : undefined,
     sat: row.sat,
     act: row.act_score,
@@ -144,6 +158,11 @@ function parseProfile(row, schools = []) {
     careerInterests: row.career_interests || '',
     strategyResult: row.strategy_result || null,
     strategyGeneratedAt: row.strategy_generated_at || null,
+    accountType: row.account_type || 'student',
+    linkCode: row.link_code || null,
+    stripeCustomerId: row.stripe_customer_id || null,
+    subscriptionStatus: row.subscription_status || 'none',
+    subscriptionEnd: row.subscription_end || null,
   };
 }
 
@@ -379,4 +398,167 @@ function parseScholarship(row) {
     url: row.url || '',
     notes: row.notes || '',
   };
+}
+
+// ─── Link Code Helper ────────────────────────────────────────
+
+function generateLinkCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no O/0/1/I to avoid confusion
+  let code = '';
+  for (let i = 0; i < 6; i++) {
+    code += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return code;
+}
+
+// ─── Parent Links ────────────────────────────────────────────
+
+export async function getProfileByLinkCode(linkCode) {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('link_code', linkCode.toUpperCase())
+    .eq('account_type', 'student')
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) return null;
+  const schools = await getSchools(data.id);
+  return parseProfile(data, schools);
+}
+
+export async function createParentLink(parentId, studentId) {
+  const { data, error } = await supabase
+    .from('parent_links')
+    .insert({ parent_id: parentId, student_id: studentId })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function getLinkedStudent(parentId) {
+  const { data, error } = await supabase
+    .from('parent_links')
+    .select('student_id')
+    .eq('parent_id', parentId)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) return null;
+  return getProfile(data.student_id);
+}
+
+export async function getLinkedParents(studentId) {
+  const { data, error } = await supabase
+    .from('parent_links')
+    .select('parent_id')
+    .eq('student_id', studentId);
+  if (error) throw error;
+
+  const parents = [];
+  for (const row of data || []) {
+    const profile = await getProfile(row.parent_id);
+    if (profile) parents.push({ id: profile.id, displayName: profile.displayName, email: profile.email });
+  }
+  return parents;
+}
+
+export async function deleteParentLink(parentId) {
+  const { error } = await supabase
+    .from('parent_links')
+    .delete()
+    .eq('parent_id', parentId);
+  if (error) throw error;
+  return { success: true };
+}
+
+export async function regenerateLinkCode(userId) {
+  const newCode = generateLinkCode();
+  const { error } = await supabase
+    .from('profiles')
+    .update({ link_code: newCode })
+    .eq('id', userId)
+    .eq('account_type', 'student');
+  if (error) throw error;
+  return newCode;
+}
+
+// ─── Digest Queries ──────────────────────────────────────────
+
+export async function getTasksCompletedSince(userId, sinceDate) {
+  const { data, error } = await supabase
+    .from('tasks')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('status', 'Done')
+    .gte('completed_at', sinceDate.toISOString())
+    .order('completed_at', { ascending: false });
+  if (error) throw error;
+  return (data || []).map(parseTask);
+}
+
+export async function getMilestonesSince(userId, sinceDate) {
+  const { data, error } = await supabase
+    .from('progress')
+    .select('*')
+    .eq('user_id', userId)
+    .gte('reached_at', sinceDate.toISOString())
+    .order('reached_at', { ascending: false });
+  if (error) throw error;
+  return (data || []).map(row => ({
+    milestoneKey: row.milestone_key,
+    reachedAt: row.reached_at,
+    notes: row.notes || '',
+  }));
+}
+
+export async function getUpcomingDeadlines(userId, limit = 5) {
+  const { data, error } = await supabase
+    .from('tasks')
+    .select('*')
+    .eq('user_id', userId)
+    .neq('status', 'Done')
+    .not('due_date', 'is', null)
+    .gte('due_date', new Date().toISOString().split('T')[0])
+    .order('due_date', { ascending: true })
+    .limit(limit);
+  if (error) throw error;
+  return (data || []).map(parseTask);
+}
+
+export async function getAllParentLinksWithEmails() {
+  const { data, error } = await supabase
+    .from('parent_links')
+    .select(`
+      parent_id,
+      student_id,
+      parent:profiles!parent_links_parent_id_fkey(id, display_name, email),
+      student:profiles!parent_links_student_id_fkey(id, display_name)
+    `);
+  if (error) throw error;
+  return (data || []).map(row => ({
+    parentId: row.parent_id,
+    studentId: row.student_id,
+    parentName: row.parent?.display_name || '',
+    parentEmail: row.parent?.email || '',
+    studentName: row.student?.display_name || '',
+  }));
+}
+
+export async function logDigestSent(parentId, studentId, weekKey) {
+  const { error } = await supabase
+    .from('digest_log')
+    .insert({ parent_id: parentId, student_id: studentId, week_key: weekKey });
+  if (error && error.code !== '23505') throw error; // ignore duplicate
+}
+
+export async function wasDigestSent(parentId, studentId, weekKey) {
+  const { data, error } = await supabase
+    .from('digest_log')
+    .select('id')
+    .eq('parent_id', parentId)
+    .eq('student_id', studentId)
+    .eq('week_key', weekKey)
+    .maybeSingle();
+  if (error) throw error;
+  return !!data;
 }
