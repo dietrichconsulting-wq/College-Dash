@@ -136,9 +136,9 @@ export function ComparePageClient({ profile }: ComparePageClientProps) {
             How We Calculate
           </h4>
           <ul style={{ listStyle: 'none', margin: 0, padding: 0, fontSize: 11, lineHeight: 1.55, color: 'var(--color-text-muted)' }}>
-            <li style={{ marginBottom: 3 }}><strong style={{ color: 'var(--color-text-secondary)' }}>Admit Rate, SAT, Tuition, Net Cost, Grad Rate, Retention, Earnings</strong> — College Scorecard API (live)</li>
-            <li style={{ marginBottom: 3 }}><strong style={{ color: 'var(--color-text-secondary)' }}>Location &amp; Type</strong> — IPEDS federal data</li>
-            <li><strong style={{ color: 'var(--color-text-secondary)' }}>Your Chance</strong> — Algorithm using your GPA &amp; SAT vs published admit rate &amp; SAT range (rounded to 5%). <em style={{ color: '#F59E0B' }}>Not a guarantee.</em></li>
+            <li style={{ marginBottom: 3 }}><strong style={{ color: 'var(--color-text-secondary)' }}>Admit Rate, SAT, Tuition, Net Cost, Grad Rate, Retention, Earnings</strong> — U.S. Department of Education (live data)</li>
+            <li style={{ marginBottom: 3 }}><strong style={{ color: 'var(--color-text-secondary)' }}>Location &amp; Type</strong> — U.S. Department of Education (IPEDS)</li>
+            <li><strong style={{ color: 'var(--color-text-secondary)' }}>Your Chance</strong> — chance = admitRate + (satFactor × scale) + (gpaFactor × scale), rounded to 5%. <em style={{ color: '#F59E0B' }}>Not a guarantee.</em></li>
           </ul>
         </div>
       </div>
