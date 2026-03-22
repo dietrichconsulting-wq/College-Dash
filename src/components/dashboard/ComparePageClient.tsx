@@ -60,6 +60,9 @@ export function ComparePageClient({ profile }: ComparePageClientProps) {
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [homeState, setHomeState] = useState(profile?.home_state || '')
+
+  const US_STATES = ['AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY']
 
   // Persist schools and results to sessionStorage whenever they change
   useEffect(() => {
@@ -86,7 +89,7 @@ export function ComparePageClient({ profile }: ComparePageClientProps) {
           gpa: profile?.gpa,
           sat: profile?.sat,
           major: profile?.proposed_major,
-          homeState: profile?.home_state,
+          homeState: homeState || null,
         }),
       })
       if (!res.ok) throw new Error(await res.text())
@@ -103,8 +106,7 @@ export function ComparePageClient({ profile }: ComparePageClientProps) {
     { key: 'admitRate', label: 'Admit Rate', format: v => v != null ? `${v}%` : '—' },
     { key: 'yourChance', label: 'Your Chance', format: v => v != null ? `~${v}%` : '—' },  // rounded to 5% on backend
     { key: 'avgSAT', label: 'Avg SAT', format: v => v != null ? String(v) : '—' },
-    { key: 'netCost', label: 'Net Cost/yr', format: v => v != null ? `$${((v as number) / 1000).toFixed(0)}k` : '—' },
-    { key: 'tuitionInState', label: 'Tuition (in-state)', format: v => v != null ? `$${((v as number) / 1000).toFixed(0)}k` : '—' },
+    { key: 'netCost', label: homeState ? `Tuition est. net (${homeState} resident)` : 'Tuition (est. net)', format: v => v != null ? `$${((v as number) / 1000).toFixed(0)}k` : '—' },
     { key: 'gradRate', label: 'Grad Rate', format: v => v != null ? `${v}%` : '—' },
     { key: 'retentionRate', label: 'Retention Rate', format: v => v != null ? `${v}%` : '—' },
     { key: 'medianEarnings10yr', label: 'Earnings 10yr', format: v => v != null ? `$${((v as number) / 1000).toFixed(0)}k` : '—' },
@@ -258,6 +260,36 @@ export function ComparePageClient({ profile }: ComparePageClientProps) {
             ))}
           </div>
         </motion.div>
+      )}
+
+      {results.length > 0 && (
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 10,
+          marginBottom: 12, padding: '10px 16px',
+          background: 'rgba(255,255,255,0.04)', borderRadius: 10,
+          border: '1px solid rgba(255,255,255,0.08)',
+        }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} style={{ flexShrink: 0, color: 'var(--color-text-muted)' }}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+          </svg>
+          <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text)' }}>State of Residency:</span>
+          <select
+            value={homeState}
+            onChange={e => setHomeState(e.target.value)}
+            style={{
+              background: 'var(--color-column)', color: 'var(--color-text)',
+              border: '1px solid var(--color-border)', borderRadius: 6,
+              padding: '5px 10px', fontSize: 13, fontWeight: 600,
+              cursor: 'pointer',
+            }}
+          >
+            <option value="">Not set</option>
+            {US_STATES.map(s => <option key={s} value={s}>{s}</option>)}
+          </select>
+          <span style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>
+            Affects net tuition estimate. Re-click Compare after changing.
+          </span>
+        </div>
       )}
 
       {results.length > 0 && (
