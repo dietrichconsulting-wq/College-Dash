@@ -9,9 +9,9 @@ const router = Router();
 
 router.post('/compare', async (req, res, next) => {
   try {
-    const { schools, major, gpa, sat, homeState } = req.body;
+    const { schools, major, gpa, sat, act, homeState } = req.body;
     if (!schools || !schools.length) return res.json([]);
-    const data = await compareColleges(schools, { major, gpa, sat, homeState });
+    const data = await compareColleges(schools, { major, gpa, sat, act, homeState });
     res.json(data);
   } catch (err) {
     next(err);

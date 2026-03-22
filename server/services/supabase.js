@@ -13,40 +13,43 @@ const supabase = createClient(
 
 // ─── Profiles ────────────────────────────────────────────
 
-export async function createProfile({ userId, displayName, email, gpa, sat, proposedMajor, schools }) {
+export async function createProfile({ userId, displayName, gpa, sat, act, proposedMajor, schools }) {
+  const insertRow = {
+    display_name: displayName || '',
+    gpa: gpa || null,
+    sat: sat || null,
+    act_score: act || null,
+    proposed_major: proposedMajor || '',
+  };
+  // If a specific id is provided, use it; otherwise let Supabase generate one
+  if (userId) insertRow.id = userId;
+
   const { data, error } = await supabase
     .from('profiles')
-    .insert({
-      user_id: userId,
-      display_name: displayName || '',
-      email: email || '',
-      gpa: gpa || null,
-      sat: sat || null,
-      proposed_major: proposedMajor || '',
-      school1: schools?.[0]?.name || '',
-      school1_id: schools?.[0]?.id || '',
-      school2: schools?.[1]?.name || '',
-      school2_id: schools?.[1]?.id || '',
-      school3: schools?.[2]?.name || '',
-      school3_id: schools?.[2]?.id || '',
-      school4: schools?.[3]?.name || '',
-      school4_id: schools?.[3]?.id || '',
-    })
+    .insert(insertRow)
     .select()
     .single();
   if (error) throw error;
-  return parseProfile(data);
+
+  const profileId = data.id;
+  if (schools?.length) {
+    await upsertSchools(profileId, schools);
+  }
+
+  return getProfile(profileId);
 }
 
 export async function getProfile(userId) {
   const { data, error } = await supabase
     .from('profiles')
     .select('*')
-    .eq('user_id', userId)
+    .eq('id', userId)
     .maybeSingle();
   if (error) throw error;
   if (!data) return null;
-  return parseProfile(data);
+
+  const schools = await getSchools(userId);
+  return parseProfile(data, schools);
 }
 
 export async function updateProfile(userId, updates) {
@@ -54,30 +57,22 @@ export async function updateProfile(userId, updates) {
   if (updates.displayName !== undefined) row.display_name = updates.displayName;
   if (updates.gpa !== undefined) row.gpa = updates.gpa;
   if (updates.sat !== undefined) row.sat = updates.sat;
+  if (updates.act !== undefined) row.act_score = updates.act;
   if (updates.proposedMajor !== undefined) row.proposed_major = updates.proposedMajor;
-  if (updates.email !== undefined) row.email = updates.email;
-  if (updates.subscriptionStatus !== undefined) row.subscription_status = updates.subscriptionStatus;
-  if (updates.subscriptionEnd !== undefined) row.subscription_end = updates.subscriptionEnd || null;
-  if (updates.stripeCustomerId !== undefined) row.stripe_customer_id = updates.stripeCustomerId;
-  if (updates.stripeSubscriptionId !== undefined) row.stripe_subscription_id = updates.stripeSubscriptionId;
-  if (updates.schools) {
-    for (let i = 0; i < 4; i++) {
-      const n = i + 1;
-      if (updates.schools[i]) {
-        row[`school${n}`] = updates.schools[i].name || '';
-        row[`school${n}_id`] = updates.schools[i].id || '';
-      }
-    }
+
+  if (Object.keys(row).length > 0) {
+    const { error } = await supabase
+      .from('profiles')
+      .update(row)
+      .eq('id', userId);
+    if (error) throw error;
   }
 
-  const { data, error } = await supabase
-    .from('profiles')
-    .update(row)
-    .eq('user_id', userId)
-    .select()
-    .single();
-  if (error) throw error;
-  return parseProfile(data);
+  if (updates.schools) {
+    await upsertSchools(userId, updates.schools);
+  }
+
+  return getProfile(userId);
 }
 
 export async function getProfileByStripeCustomerId(customerId) {
@@ -88,28 +83,67 @@ export async function getProfileByStripeCustomerId(customerId) {
     .maybeSingle();
   if (error) throw error;
   if (!data) return null;
-  return parseProfile(data);
+
+  const schools = await getSchools(data.id);
+  return parseProfile(data, schools);
 }
 
-function parseProfile(row) {
+// ─── School helpers (junction table) ─────────────────────
+
+async function getSchools(userId) {
+  const { data, error } = await supabase
+    .from('user_schools')
+    .select('school_name, school_id, sort_order')
+    .eq('user_id', userId)
+    .order('sort_order', { ascending: true });
+  if (error) throw error;
+  return (data || []).map(r => ({ name: r.school_name, id: r.school_id }));
+}
+
+async function upsertSchools(userId, schools) {
+  const valid = schools.filter(s => s?.name && s.name.trim() !== '');
+
+  const { error: delErr } = await supabase
+    .from('user_schools')
+    .delete()
+    .eq('user_id', userId);
+  if (delErr) throw delErr;
+
+  if (valid.length > 0) {
+    const rows = valid.map((s, i) => ({
+      user_id: userId,
+      school_name: s.name,
+      school_id: s.id || '',
+      sort_order: i,
+    }));
+    const { error: insErr } = await supabase
+      .from('user_schools')
+      .insert(rows);
+    if (insErr) throw insErr;
+  }
+}
+
+function parseProfile(row, schools = []) {
   return {
     id: row.id,
-    userId: row.user_id,
+    userId: row.id,
     displayName: row.display_name || '',
-    email: row.email || '',
     gpa: row.gpa != null ? Number(row.gpa) : undefined,
     sat: row.sat,
+    act: row.act_score,
     proposedMajor: row.proposed_major || '',
-    schools: [
-      { name: row.school1 || '', id: row.school1_id || '' },
-      { name: row.school2 || '', id: row.school2_id || '' },
-      { name: row.school3 || '', id: row.school3_id || '' },
-      { name: row.school4 || '', id: row.school4_id || '' },
-    ],
-    subscriptionStatus: row.subscription_status || null,
-    subscriptionEnd: row.subscription_end || null,
-    stripeCustomerId: row.stripe_customer_id || '',
-    stripeSubscriptionId: row.stripe_subscription_id || '',
+    schools,
+    homeState: row.home_state || '',
+    gradYear: row.grad_year,
+    onboardingComplete: !!row.onboarding_complete,
+    desiredClimate: row.desired_climate || '',
+    schoolSizePref: row.school_size_pref || '',
+    schoolTypePref: row.school_type_pref || '',
+    distancePref: row.distance_pref || '',
+    extracurriculars: row.extracurriculars || '',
+    careerInterests: row.career_interests || '',
+    strategyResult: row.strategy_result || null,
+    strategyGeneratedAt: row.strategy_generated_at || null,
   };
 }
 

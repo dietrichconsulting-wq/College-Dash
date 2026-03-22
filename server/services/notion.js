@@ -84,6 +84,8 @@ export async function updateProfile(userId, updates) {
     properties.GPA = { number: updates.gpa };
   if (updates.sat !== undefined)
     properties.SAT = { number: updates.sat };
+  if (updates.act !== undefined)
+    properties.ACT = { number: updates.act };
   if (updates.proposedMajor !== undefined)
     properties.ProposedMajor = { rich_text: [{ text: { content: updates.proposedMajor } }] };
   if (updates.schools) {
@@ -118,6 +120,7 @@ function parseProfile(page) {
     email: p.Email?.rich_text?.[0]?.plain_text || '',
     gpa: p.GPA?.number,
     sat: p.SAT?.number,
+    act: p.ACT?.number,
     proposedMajor: p.ProposedMajor?.rich_text?.[0]?.plain_text || '',
     schools: [
       { name: p.School1?.rich_text?.[0]?.plain_text || '', id: p.School1ID?.rich_text?.[0]?.plain_text || '' },

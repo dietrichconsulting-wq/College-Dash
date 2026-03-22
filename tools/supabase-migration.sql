@@ -3,30 +3,39 @@
 
 -- ─── Profiles ────────────────────────────────────────────
 create table if not exists profiles (
-  id             uuid primary key default gen_random_uuid(),
-  user_id        text unique not null,
-  display_name   text default '',
-  email          text default '',
-  gpa            numeric(4,2),
-  sat            integer,
-  proposed_major text default '',
-  school1        text default '',
-  school1_id     text default '',
-  school2        text default '',
-  school2_id     text default '',
-  school3        text default '',
-  school3_id     text default '',
-  school4        text default '',
-  school4_id     text default '',
-  subscription_status text check (subscription_status in ('trial','active','cancelled','expired')),
-  subscription_end    timestamptz,
-  stripe_customer_id     text default '',
-  stripe_subscription_id text default '',
-  created_at     timestamptz default now()
+  id                  uuid primary key default gen_random_uuid(),
+  display_name        text default '',
+  gpa                 numeric(4,2),
+  sat                 integer,
+  act_score           integer,
+  proposed_major      text default '',
+  home_state          text default '',
+  grad_year           integer,
+  onboarding_complete boolean default false,
+  desired_climate     text default '',
+  school_size_pref    text default '',
+  school_type_pref    text default '',
+  distance_pref       text default '',
+  extracurriculars    text default '',
+  career_interests    text default '',
+  strategy_result     jsonb,
+  strategy_generated_at timestamptz,
+  created_at          timestamptz default now(),
+  updated_at          timestamptz default now()
 );
 
-create index if not exists idx_profiles_user_id on profiles(user_id);
-create index if not exists idx_profiles_stripe_customer on profiles(stripe_customer_id);
+-- ─── User Schools (junction table, supports up to 12) ───
+create table if not exists user_schools (
+  id           uuid primary key default gen_random_uuid(),
+  user_id      uuid not null references profiles(id) on delete cascade,
+  school_name  text not null,
+  school_id    text default '',
+  sort_order   integer not null default 0,
+  created_at   timestamptz default now(),
+  unique(user_id, school_name)
+);
+
+create index if not exists idx_user_schools_user_id on user_schools(user_id);
 
 -- ─── Tasks ───────────────────────────────────────────────
 create table if not exists tasks (
@@ -88,6 +97,7 @@ create index if not exists idx_scholarships_scholarship_id on scholarships(schol
 -- ─── Row Level Security ──────────────────────────────────
 -- Enable RLS on all tables (policies added per your auth strategy)
 alter table profiles enable row level security;
+alter table user_schools enable row level security;
 alter table tasks enable row level security;
 alter table progress enable row level security;
 alter table scholarships enable row level security;

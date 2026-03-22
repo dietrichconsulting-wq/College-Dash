@@ -5,11 +5,11 @@ const router = Router();
 
 router.post('/generate', async (req, res, next) => {
   try {
-    const { gpa, sat, major, budget, climate } = req.body;
-    if (!gpa || !sat || !major) {
-      return res.status(400).json({ error: 'gpa, sat, and major are required' });
+    const { gpa, sat, act, major, budget, climate } = req.body;
+    if (!gpa || (!sat && !act) || !major) {
+      return res.status(400).json({ error: 'gpa, a test score (SAT or ACT), and major are required' });
     }
-    const strategy = await generateStrategy({ gpa, sat, major, budget, climate });
+    const strategy = await generateStrategy({ gpa, sat, act, major, budget, climate });
     res.json(strategy);
   } catch (err) {
     next(err);

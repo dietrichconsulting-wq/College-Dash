@@ -178,6 +178,7 @@ export default function ProfileSummary({ profile, completionPercent, onReorderSc
       <div className="profile-stats-row">
         <StatCard label="GPA" field="gpa" value={profile?.gpa?.toFixed(2)} inputType="number" step="0.01" onSave={onUpdateStat} />
         <StatCard label="SAT" field="sat" value={profile?.sat} inputType="number" onSave={onUpdateStat} />
+        <StatCard label="ACT" field="act" value={profile?.act} inputType="number" onSave={onUpdateStat} />
         <StatCard label="Major" field="major" value={profile?.proposedMajor} small onSave={onUpdateStat} />
 
         {/* Progress Ring Card */}

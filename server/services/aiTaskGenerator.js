@@ -33,7 +33,7 @@ function buildPrompt(profile, existingTasks) {
 
 STUDENT PROFILE:
 - GPA: ${profile.gpa || 'Not provided'}
-- SAT Score: ${profile.sat || 'Not provided'}
+- SAT Score: ${profile.sat || 'Not provided'}${profile.act ? `\n- ACT Score: ${profile.act}` : ''}
 - Intended Major: ${profile.proposedMajor || 'Not provided'}
 - Target Schools: ${schoolList}
 - Today's Date: ${today}

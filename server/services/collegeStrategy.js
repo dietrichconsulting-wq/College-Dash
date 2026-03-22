@@ -15,6 +15,7 @@ import { fileURLToPath } from 'url';
 import { batchCollegeProfiles } from './collegeDataAggregator.js';
 import { calculateChanceFromData } from './admissionChance.js';
 import { StrategyAISchema, safeParseAI } from './aiSchemas.js';
+import { getEffectiveSAT } from './actConcordance.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: resolve(__dirname, '../../.env') });
@@ -32,9 +33,12 @@ function getModel() {
  * Generate a tiered college strategy list.
  * Returns { reach: [], target: [], safety: [], rationale: string }
  */
-export async function generateStrategy({ gpa, sat, major, budget, climate }) {
+export async function generateStrategy({ gpa, sat, act, major, budget, climate }) {
   const gemini = getModel();
   if (!gemini) throw new Error('Gemini API key not configured');
+
+  const effective = getEffectiveSAT({ sat: sat ? Number(sat) : null, act: act ? Number(act) : null });
+  const effectiveSAT = effective.score;
 
   const budgetNote = budget
     ? `Annual budget cap of $${Number(budget).toLocaleString()} (maximum out-of-pocket after aid — factor in net price, not sticker price).`
@@ -44,12 +48,16 @@ export async function generateStrategy({ gpa, sat, major, budget, climate }) {
     ? `Preferred campus climate/region: ${climate}. Prioritize schools in that environment but include strong options elsewhere.`
     : 'No climate preference.';
 
+  const testScoreLine = act && !sat
+    ? `- ACT: ${act} (SAT equivalent: ${effectiveSAT || 'N/A'})`
+    : `- SAT: ${sat || 'Not provided'}${act ? `\n- ACT: ${act}` : ''}`;
+
   // ── Step 1: Get school recommendations from Gemini ─────────────────────
   const recommendPrompt = `You are a college admissions strategist. Generate a balanced college list for this US high school student.
 
 STUDENT PROFILE:
 - GPA: ${gpa}
-- SAT: ${sat}
+${testScoreLine}
 - Intended Major: ${major}
 - ${budgetNote}
 - ${climateNote}
@@ -106,7 +114,7 @@ Respond ONLY with valid JSON, no markdown:
       // ── Real admissions data (override AI) ──
       admitRate: real.admitRate ?? null,         // [REAL]
       yourChance: (real.admitRate != null)
-        ? calculateChanceFromData(Number(sat), Number(gpa), real)
+        ? calculateChanceFromData(effectiveSAT, Number(gpa), real)
         : null,                                  // [CALCULATED from real data, never AI-guessed]
       avgSAT: real.avgSAT ?? null,               // [REAL]
       sat25: real.sat25 ?? null,                 // [REAL]

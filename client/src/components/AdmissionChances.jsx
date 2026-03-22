@@ -67,17 +67,21 @@ function BreakdownFactor({ label, value, description }) {
   );
 }
 
-function BreakdownPanel({ breakdown, chance }) {
+function BreakdownPanel({ breakdown, chance, testScoreSource, originalACT }) {
   if (!breakdown) return null;
 
   const { baseRate, satFactor, gpaFactor, satPosition, studentSAT, studentGPA, schoolSAT25, schoolSAT75, schoolAvgSAT } = breakdown;
 
+  const actNote = testScoreSource === 'act' && originalACT
+    ? ` (ACT ${originalACT} → SAT ${studentSAT})`
+    : '';
+
   const satDesc = (() => {
-    if (!studentSAT) return 'No SAT score provided';
+    if (!studentSAT) return 'No test score provided';
     const range = schoolSAT25 && schoolSAT75 ? `${schoolSAT25}–${schoolSAT75}` : `avg ${schoolAvgSAT}`;
-    if (satPosition === 'above') return `Your ${studentSAT} is above the 75th pctile (${range})`;
-    if (satPosition === 'within') return `Your ${studentSAT} is within range (${range})`;
-    return `Your ${studentSAT} is below the 25th pctile (${range})`;
+    if (satPosition === 'above') return `Your ${studentSAT}${actNote} is above the 75th pctile (${range})`;
+    if (satPosition === 'within') return `Your ${studentSAT}${actNote} is within range (${range})`;
+    return `Your ${studentSAT}${actNote} is below the 25th pctile (${range})`;
   })();
 
   const gpaDesc = (() => {
@@ -110,7 +114,7 @@ function BreakdownPanel({ breakdown, chance }) {
         description={`Base admission rate from College Scorecard`}
       />
       <BreakdownFactor
-        label="SAT Adjustment"
+        label={testScoreSource === 'act' ? 'ACT/SAT Adjustment' : 'SAT Adjustment'}
         value={satFactor}
         description={satDesc}
       />
@@ -210,7 +214,7 @@ function SchoolChanceCard({ data, index }) {
 
       {/* Expandable breakdown panel */}
       {showBreakdown && data.breakdown && (
-        <BreakdownPanel breakdown={data.breakdown} chance={data.chance} />
+        <BreakdownPanel breakdown={data.breakdown} chance={data.chance} testScoreSource={data.testScoreSource} originalACT={data.originalACT} />
       )}
     </motion.div>
   );
@@ -225,6 +229,7 @@ export default function AdmissionChances({ userId, profile }) {
   const profileKey = [
     profile?.gpa,
     profile?.sat,
+    profile?.act,
     profile?.proposedMajor,
     ...(profile?.schools || []).map(s => s?.name),
   ].join('|');

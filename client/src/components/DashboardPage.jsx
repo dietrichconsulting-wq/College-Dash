@@ -85,27 +85,24 @@ export default function DashboardPage({ userId, profile, updateProfile, dark, on
   }, []);
 
   const handleUpdateStat = async (field, rawValue) => {
-    const keyMap = { gpa: 'gpa', sat: 'sat', major: 'proposedMajor' };
+    const keyMap = { gpa: 'gpa', sat: 'sat', act: 'act', major: 'proposedMajor' };
     const value = field === 'gpa' ? parseFloat(rawValue)
-      : field === 'sat' ? parseInt(rawValue, 10)
+      : (field === 'sat' || field === 'act') ? parseInt(rawValue, 10)
       : rawValue;
     await updateProfile({ [keyMap[field]]: value });
   };
 
   const saveSchools = (schools) => {
-    const padded = [...schools];
-    while (padded.length < 4) padded.push({ name: '', id: '' });
-    setSchoolOrder(schools.filter(s => s?.name && s.name.trim() !== ''));
-    api.put(`/profile/${userId}`, { schools: padded }).catch(err => {
+    const valid = schools.filter(s => s?.name && s.name.trim() !== '');
+    setSchoolOrder(valid);
+    api.put(`/profile/${userId}`, { schools: valid }).catch(err => {
       console.error('Failed to save schools:', err);
     });
   };
 
   const handleReorderSchools = (newOrder) => {
     setSchoolOrder(newOrder);
-    const padded = [...newOrder];
-    while (padded.length < 4) padded.push({ name: '', id: '' });
-    api.put(`/profile/${userId}`, { schools: padded }).catch(err => {
+    api.put(`/profile/${userId}`, { schools: newOrder }).catch(err => {
       console.error('Failed to save school order:', err);
     });
   };

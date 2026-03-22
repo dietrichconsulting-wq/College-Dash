@@ -113,6 +113,7 @@ export default function CollegeStrategy({ profile }) {
   const [form, setForm] = useState({
     gpa:     profile?.gpa     || '',
     sat:     profile?.sat     || '',
+    act:     profile?.act     || '',
     major:   profile?.proposedMajor || '',
     budget:  '',
     climate: '',
@@ -124,8 +125,8 @@ export default function CollegeStrategy({ profile }) {
   const handleChange = (field, value) => setForm(f => ({ ...f, [field]: value }));
 
   const handleGenerate = async () => {
-    if (!form.gpa || !form.sat || !form.major) {
-      setError('GPA, SAT, and major are required.');
+    if (!form.gpa || (!form.sat && !form.act) || !form.major) {
+      setError('GPA, a test score (SAT or ACT), and major are required.');
       return;
     }
     setError(null);
@@ -165,6 +166,8 @@ export default function CollegeStrategy({ profile }) {
           value={form.gpa} onChange={v => handleChange('gpa', v)} />
         <Field label="SAT Score" type="number" min="400" max="1600" placeholder="1400"
           value={form.sat} onChange={v => handleChange('sat', v)} />
+        <Field label="ACT Score" type="number" min="1" max="36" placeholder="28"
+          value={form.act} onChange={v => handleChange('act', v)} />
         <Field label="Intended Major" placeholder="Environmental Design"
           value={form.major} onChange={v => handleChange('major', v)} style={{ gridColumn: 'span 2' }} />
         <Field label="Annual Budget ($)" type="number" min="0" placeholder="30000"

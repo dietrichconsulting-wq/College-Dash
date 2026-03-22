@@ -25,7 +25,7 @@ function buildSystemPrompt(profile) {
 
 Student Profile:
 - GPA: ${profile.gpa || 'Not provided'}
-- SAT Score: ${profile.sat || 'Not provided'}
+- SAT Score: ${profile.sat || 'Not provided'}${profile.act ? `\n- ACT Score: ${profile.act}` : ''}
 - Proposed Major: ${profile.proposedMajor || 'Not provided'}
 - Target Schools: ${profile.schools?.filter(s => s.name).map(s => s.name).join(', ') || 'Not provided'}
 

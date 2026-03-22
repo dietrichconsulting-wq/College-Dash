@@ -29,11 +29,11 @@ function getModel() {
 /**
  * Fetch comparison data combining real API data with AI-generated personalization.
  */
-export async function compareColleges(schoolNames, { major, gpa, sat, homeState } = {}) {
+export async function compareColleges(schoolNames, { major, gpa, sat, act, homeState } = {}) {
   if (!schoolNames || schoolNames.length === 0) return [];
 
   const majorLabel = major || 'Undecided';
-  const hasProfile = gpa || sat;
+  const hasProfile = gpa || sat || act;
 
   // ── Step 1: Fetch real data for all schools in parallel ──────────────────
   const realData = await batchCollegeProfiles(schoolNames, homeState);

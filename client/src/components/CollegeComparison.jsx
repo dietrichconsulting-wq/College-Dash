@@ -238,6 +238,7 @@ export default function CollegeComparison({ profile }) {
         major: profile?.proposedMajor,
         gpa: profile?.gpa,
         sat: profile?.sat,
+        act: profile?.act,
         homeState: homeState || null,
       });
       setCompData(data);

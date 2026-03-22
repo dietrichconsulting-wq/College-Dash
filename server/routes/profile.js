@@ -9,9 +9,9 @@ const router = Router();
 router.post('/', async (req, res, next) => {
   try {
     const userId = req.body.userId || uuidv4();
-    const { displayName, email, gpa, sat, proposedMajor, schools } = req.body;
+    const { displayName, email, gpa, sat, act, proposedMajor, schools } = req.body;
 
-    await createProfile({ userId, displayName, email, gpa, sat, proposedMajor, schools });
+    await createProfile({ userId, displayName, email, gpa, sat, act, proposedMajor, schools });
     await seedTasksForUser(userId);
     await createProgress({
       entryId: uuidv4(),

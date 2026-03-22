@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { AdmissionTipSchema, safeParseAI } from './aiSchemas.js';
+import { getEffectiveSAT } from './actConcordance.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: resolve(__dirname, '../../.env') });
@@ -158,6 +159,8 @@ function calculateImprovement(currentSAT, studentGPA, school) {
  */
 export async function computeChances(profile) {
   const schools = (profile.schools || []).filter(s => s?.name && s.name.trim() !== '');
+  const effective = getEffectiveSAT(profile);
+  const effectiveSAT = effective.score;
 
   const results = await Promise.all(
     schools.map(async (s) => {
@@ -182,11 +185,11 @@ export async function computeChances(profile) {
         const college = await getCollege(collegeId);
         if (!college) return null;
 
-        const result = calculateChance(profile.sat, profile.gpa, college, { withBreakdown: true });
+        const result = calculateChance(effectiveSAT, profile.gpa, college, { withBreakdown: true });
         if (result == null) return null;
 
         const { chance, breakdown } = result;
-        const improvement = calculateImprovement(profile.sat, profile.gpa, college);
+        const improvement = calculateImprovement(effectiveSAT, profile.gpa, college);
 
         return {
           schoolName: s.name,
@@ -198,6 +201,8 @@ export async function computeChances(profile) {
           sat25: college.sat25,
           sat75: college.sat75,
           improvement,
+          testScoreSource: effective.source,
+          originalACT: effective.originalACT,
         };
       } catch {
         return null;
@@ -214,7 +219,7 @@ export async function computeChances(profile) {
       const prompt = `You are an expert college admissions AI. Evaluate this student's chances of admission to their target schools.
 STUDENT PROFILE:
 - GPA: ${profile.gpa || 'Not provided'}
-- SAT: ${profile.sat || 'Not provided'}
+- SAT: ${profile.sat || 'Not provided'}${profile.act ? `\n- ACT: ${profile.act}` : ''}
 - Intended Major: ${profile.proposedMajor || 'Not provided'}
 
 TARGET SCHOOLS (with baseline mathematical heuristic):

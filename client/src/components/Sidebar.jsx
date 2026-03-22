@@ -142,6 +142,12 @@ export default function Sidebar({ activePage, onNavigate, profile, dark }) {
               <span className="sidebar__footer-value">{profile.sat}</span>
             </>
           )}
+          {profile?.act && (
+            <>
+              <span className="sidebar__footer-label" style={{ marginLeft: 12 }}>ACT</span>
+              <span className="sidebar__footer-value">{profile.act}</span>
+            </>
+          )}
         </div>
       </div>
     </motion.aside>

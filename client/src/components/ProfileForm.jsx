@@ -2,12 +2,15 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import CollegeSearch from './CollegeSearch';
 
+const MAX_SCHOOLS = 12;
+
 export default function ProfileForm({ onSubmit }) {
   const [form, setForm] = useState({
     displayName: '',
     email: '',
     gpa: '',
     sat: '',
+    act: '',
     proposedMajor: '',
     schools: [
       { name: '', id: '' },
@@ -24,6 +27,18 @@ export default function ProfileForm({ onSubmit }) {
     setForm({ ...form, schools });
   };
 
+  const addSchoolSlot = () => {
+    if (form.schools.length < MAX_SCHOOLS) {
+      setForm({ ...form, schools: [...form.schools, { name: '', id: '' }] });
+    }
+  };
+
+  const removeSchoolSlot = (index) => {
+    if (form.schools.length > 1) {
+      setForm({ ...form, schools: form.schools.filter((_, i) => i !== index) });
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
@@ -32,6 +47,7 @@ export default function ProfileForm({ onSubmit }) {
         ...form,
         gpa: form.gpa ? parseFloat(form.gpa) : null,
         sat: form.sat ? parseInt(form.sat) : null,
+        act: form.act ? parseInt(form.act) : null,
       });
     } finally {
       setSubmitting(false);
@@ -70,7 +86,7 @@ export default function ProfileForm({ onSubmit }) {
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-3 gap-4">
         <div>
           <label className="block text-sm font-semibold mb-1.5 text-navy">GPA</label>
           <input
@@ -96,7 +112,20 @@ export default function ProfileForm({ onSubmit }) {
             className="w-full px-4 py-2.5 rounded-lg border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-navy focus:border-transparent transition-all"
           />
         </div>
+        <div>
+          <label className="block text-sm font-semibold mb-1.5 text-navy">ACT Score</label>
+          <input
+            type="number"
+            min="1"
+            max="36"
+            value={form.act}
+            onChange={e => setForm({ ...form, act: e.target.value })}
+            placeholder="e.g. 28"
+            className="w-full px-4 py-2.5 rounded-lg border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-navy focus:border-transparent transition-all"
+          />
+        </div>
       </div>
+      <p className="text-xs text-text-muted -mt-4">Enter SAT, ACT, or both. We'll use whichever helps you most.</p>
 
       <div>
         <label className="block text-sm font-semibold mb-1.5 text-navy">Proposed Major</label>
@@ -110,17 +139,41 @@ export default function ProfileForm({ onSubmit }) {
       </div>
 
       <div>
-        <label className="block text-sm font-semibold mb-2 text-navy">Target Schools (4)</label>
-        <p className="text-xs text-text-muted mb-3">School #1 is your top choice - its fight song plays when you complete tasks!</p>
+        <label className="block text-sm font-semibold mb-2 text-navy">Target Schools</label>
+        <p className="text-xs text-text-muted mb-3">School #1 is your top choice — its fight song plays when you complete tasks! Add up to {MAX_SCHOOLS}.</p>
         <div className="space-y-3">
           {form.schools.map((school, i) => (
-            <CollegeSearch
-              key={i}
-              index={i}
-              value={school}
-              onChange={handleSchoolChange}
-            />
+            <div key={i} className="flex items-center gap-2">
+              <div className="flex-1">
+                <CollegeSearch
+                  index={i}
+                  value={school}
+                  onChange={handleSchoolChange}
+                />
+              </div>
+              {form.schools.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => removeSchoolSlot(i)}
+                  className="p-1.5 text-gray-400 hover:text-red-500 transition-colors"
+                  title="Remove school"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
+            </div>
           ))}
+          {form.schools.length < MAX_SCHOOLS && (
+            <button
+              type="button"
+              onClick={addSchoolSlot}
+              className="w-full py-2 border-2 border-dashed border-gray-300 rounded-lg text-sm text-gray-500 hover:border-gray-400 hover:text-gray-600 transition-colors"
+            >
+              + Add School ({form.schools.length}/{MAX_SCHOOLS})
+            </button>
+          )}
         </div>
       </div>
 
