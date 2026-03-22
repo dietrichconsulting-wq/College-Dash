@@ -103,12 +103,12 @@ export function ComparePageClient({ profile }: ComparePageClientProps) {
   }
 
   const METRICS: { key: keyof ComparedSchool; label: string; subtitle?: string; tooltip?: string; format: (v: unknown) => string }[] = [
-    { key: 'admitRate', label: 'Admit Rate', format: v => v != null ? `${v}%` : '—' },
-    { key: 'yourChance', label: 'Your Chance', format: v => v != null ? `~${v}%` : '—' },  // rounded to 5% on backend
-    { key: 'avgSAT', label: 'Avg SAT', format: v => v != null ? String(v) : '—' },
-    { key: 'netCost', label: homeState ? `Tuition est. net (${homeState} resident)` : 'Tuition (est. net)', format: v => v != null ? `$${((v as number) / 1000).toFixed(0)}k` : '—' },
-    { key: 'gradRate', label: 'Grad Rate', format: v => v != null ? `${v}%` : '—' },
-    { key: 'retentionRate', label: 'Retention Rate', format: v => v != null ? `${v}%` : '—' },
+    { key: 'admitRate', label: 'Admit Rate', subtitle: 'overall · College Scorecard', tooltip: 'Overall admission rate for all applicants. Source: College Scorecard (U.S. Dept of Education).', format: v => v != null ? `${v}%` : '—' },
+    { key: 'yourChance', label: 'Your Chance', subtitle: 'AI estimate · not a guarantee', tooltip: 'AI-estimated admission probability based on your GPA & SAT vs the school\'s published admit rate and SAT range. Rounded to nearest 5%. This is not a guarantee of admission.', format: v => v != null ? `~${v}%` : '—' },
+    { key: 'avgSAT', label: 'Avg SAT', subtitle: 'admitted students · College Scorecard', tooltip: 'Average composite SAT score of admitted students. Source: College Scorecard (U.S. Dept of Education).', format: v => v != null ? String(v) : '—' },
+    { key: 'netCost', label: homeState ? `Tuition est. net (${homeState} resident)` : 'Tuition (est. net)', subtitle: 'after avg aid · College Scorecard', tooltip: 'Estimated annual cost after typical financial aid. Source: College Scorecard (U.S. Dept of Education).', format: v => v != null ? `$${((v as number) / 1000).toFixed(0)}k` : '—' },
+    { key: 'gradRate', label: 'Grad Rate', subtitle: '4-year · College Scorecard', tooltip: 'Percentage of full-time students who graduate within 4 years. Source: College Scorecard (U.S. Dept of Education).', format: v => v != null ? `${v}%` : '—' },
+    { key: 'retentionRate', label: 'Retention Rate', subtitle: 'first-year · College Scorecard', tooltip: 'Percentage of first-year full-time students who return for their second year. Source: College Scorecard (U.S. Dept of Education).', format: v => v != null ? `${v}%` : '—' },
     { key: 'medianEarnings10yr', label: 'Earnings 10yr', subtitle: 'school-wide median · US Dept of Education', tooltip: 'Median earnings of all students 10 years after enrollment, regardless of major. Source: College Scorecard (U.S. Dept of Education, based on IRS tax data).', format: v => v != null ? `$${((v as number) / 1000).toFixed(0)}k` : '—' },
   ]
 
