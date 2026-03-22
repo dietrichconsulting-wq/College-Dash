@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { isConfigured } from '../services/aiChat.js';
-import { getProfile, getTasks, createTask } from '../services/notion.js';
+import { getProfile, getTasks, createTask } from '../services/supabase.js';
 import { generateRoadmap } from '../services/aiTaskGenerator.js';
 
 const router = Router();

@@ -126,7 +126,7 @@ function BreakdownPanel({ breakdown, chance }) {
       </div>
 
       <div className="chance-breakdown__caveat">
-        Estimate only — does not account for essays, extracurriculars, class rank, or major-specific competitiveness.
+        Estimate only — does not account for essays, extracurriculars, class rank, or major-specific competitiveness. Base rates from U.S. Dept. of Education, College Scorecard.
       </div>
     </motion.div>
   );
@@ -163,12 +163,12 @@ function SchoolChanceCard({ data, index }) {
           {/* Stats row */}
           <div className="chance-card__stats">
             {data.admissionRate != null && (
-              <span className="chance-card__stat">
+              <span className="chance-card__stat" title="Source: U.S. Dept. of Education, College Scorecard">
                 Admit: {Math.round(data.admissionRate * 100)}%
               </span>
             )}
             {data.avgSAT && (
-              <span className="chance-card__stat">
+              <span className="chance-card__stat" title="Source: U.S. Dept. of Education, College Scorecard">
                 Avg SAT: {data.avgSAT}
               </span>
             )}
@@ -253,7 +253,7 @@ export default function AdmissionChances({ userId, profile }) {
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
-            AI Predicted
+            AI Estimate
           </span>
           <button
             onClick={() => setRefreshKey(k => k + 1)}
@@ -289,6 +289,12 @@ export default function AdmissionChances({ userId, profile }) {
             <SchoolChanceCard key={c.schoolId} data={c} index={i} />
           ))}
         </div>
+      )}
+
+      {!loading && chances.length > 0 && (
+        <p className="admission-chances__source">
+          Admit rates &amp; SAT data: U.S. Dept. of Education, College Scorecard 2024. "Your Chance" is an AI-generated estimate (rounded to nearest 5%) — not a guarantee of admission.
+        </p>
       )}
     </div>
   );

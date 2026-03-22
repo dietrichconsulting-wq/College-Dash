@@ -1,4 +1,4 @@
-import { getProfile } from '../services/notion.js';
+import { getProfile } from '../services/supabase.js';
 
 export default async function requireSubscription(req, res, next) {
   const userId = req.params.userId || req.query.userId || req.body?.userId;

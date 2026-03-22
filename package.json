@@ -9,14 +9,14 @@
     "dev": "concurrently \"npm run dev:client\" \"npm run dev:server\"",
     "build": "cd client && npm run build",
     "start": "cd server && node index.js",
-    "setup:notion": "node tools/setup-notion-dbs.js",
+    "setup:supabase": "echo 'Run tools/supabase-migration.sql in the Supabase SQL Editor'",
     "validate": "node tools/validate-env.js"
   },
   "devDependencies": {
     "concurrently": "^9.1.0"
   },
   "dependencies": {
-    "@notionhq/client": "^5.11.1",
+    "@supabase/supabase-js": "^2.99.3",
     "dotenv": "^17.3.1"
   }
 }

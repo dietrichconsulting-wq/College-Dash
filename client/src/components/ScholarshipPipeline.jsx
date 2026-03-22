@@ -1,7 +1,166 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useScholarships } from '../hooks/useScholarships';
 import { SkeletonCard } from './Skeleton';
+
+// ── Curated Scholarship Resources ──
+// Real, verified scholarship search websites — no AI-generated links.
+const SCHOLARSHIP_RESOURCES = [
+  {
+    name: 'Fastweb',
+    url: 'https://www.fastweb.com',
+    description: 'The largest free scholarship search engine with 1.5M+ scholarships. Creates a personalized profile and matches you to scholarships based on GPA, interests, and background. Best for: broad, high-volume searching.',
+    tags: ['Free', 'Profile-Based'],
+  },
+  {
+    name: 'Scholarships.com',
+    url: 'https://www.scholarships.com',
+    description: 'Aggregates scholarships from colleges, organizations, and private donors. Lets you filter by deadline, amount, and eligibility. Similar to Fastweb but with a different database, so use both. Best for: casting a wide net alongside Fastweb.',
+    tags: ['Free', 'Filter by Deadline'],
+  },
+  {
+    name: 'College Board BigFuture',
+    url: 'https://bigfuture.collegeboard.org/scholarships',
+    description: 'Run by the College Board (the SAT people). Curated database of 6,000+ scholarships vetted for legitimacy. Fewer results than Fastweb, but higher quality and lower scam risk. Best for: trusted, vetted scholarships.',
+    tags: ['Free', 'Vetted'],
+  },
+  {
+    name: 'Cappex (now Appily)',
+    url: 'https://www.appily.com/scholarships',
+    description: 'Matches you to scholarships and colleges based on your academic profile. Includes merit-based and need-based awards. Also shows your admission chances at schools. Best for: merit-based scholarships tied to specific colleges.',
+    tags: ['Free', 'Merit-Based'],
+  },
+  {
+    name: 'Bold.org',
+    url: 'https://bold.org',
+    description: 'A newer platform where donors create scholarships directly. Many are essay-based with smaller applicant pools, so your odds are often better. Scholarships range from $500 to $25,000+. Best for: less competitive, essay-based awards.',
+    tags: ['Free', 'Essay-Based'],
+  },
+  {
+    name: 'Going Merry',
+    url: 'https://www.goingmerry.com',
+    description: 'Combines scholarship search with a single application platform — apply to multiple scholarships with one profile. Partners with high schools and colleges. Best for: streamlining applications (apply to many with one form).',
+    tags: ['Free', 'One Application'],
+  },
+  {
+    name: 'Scholly',
+    url: 'https://myscholly.com',
+    description: 'A mobile-first scholarship matching app (featured on Shark Tank). Uses an algorithm to match you with scholarships based on your profile. Small subscription fee but highly targeted results. Best for: mobile users who want curated, high-match results.',
+    tags: ['Paid App', 'Mobile'],
+  },
+  {
+    name: 'Federal Student Aid (FAFSA)',
+    url: 'https://studentaid.gov',
+    description: 'The U.S. government\'s financial aid portal. Filing the FAFSA unlocks Pell Grants, work-study, and subsidized loans — many state and college scholarships also require it. Best for: need-based aid (file this first, before anything else).',
+    tags: ['Government', 'Need-Based'],
+  },
+  {
+    name: 'Your State\'s Higher Ed Agency',
+    url: 'https://www2.ed.gov/about/contacts/state/index.html',
+    description: 'Every state has its own scholarship and grant programs (e.g., Texas has TEXAS Grant, California has Cal Grant). This U.S. Dept. of Education directory links to each state agency. Best for: state-specific grants you might not find elsewhere.',
+    tags: ['Government', 'State-Specific'],
+  },
+  {
+    name: 'Your School\'s Financial Aid Office',
+    url: null,
+    description: 'Don\'t overlook institutional scholarships from the colleges you\'re applying to. Many schools auto-consider admitted students for merit aid, but some require separate applications. Check each school\'s financial aid page directly. Best for: school-specific awards with high acceptance rates.',
+    tags: ['Institutional', 'Direct'],
+  },
+];
+
+const TAG_COLORS = {
+  'Free':             { color: '#22C55E', bg: 'rgba(34,197,94,0.1)' },
+  'Paid App':         { color: '#F59E0B', bg: 'rgba(245,158,11,0.1)' },
+  'Government':       { color: '#3B82F6', bg: 'rgba(59,130,246,0.1)' },
+  'Institutional':    { color: '#8B5CF6', bg: 'rgba(139,92,246,0.1)' },
+  'Vetted':           { color: '#06B6D4', bg: 'rgba(6,182,212,0.1)' },
+  'Profile-Based':    { color: '#EC4899', bg: 'rgba(236,72,153,0.1)' },
+  'Filter by Deadline':{ color: '#F97316', bg: 'rgba(249,115,22,0.1)' },
+  'Merit-Based':      { color: '#10B981', bg: 'rgba(16,185,129,0.1)' },
+  'Essay-Based':      { color: '#A78BFA', bg: 'rgba(167,139,250,0.1)' },
+  'One Application':  { color: '#14B8A6', bg: 'rgba(20,184,166,0.1)' },
+  'Mobile':           { color: '#F472B6', bg: 'rgba(244,114,182,0.1)' },
+  'Need-Based':       { color: '#EF4444', bg: 'rgba(239,68,68,0.1)' },
+  'State-Specific':   { color: '#6366F1', bg: 'rgba(99,102,241,0.1)' },
+  'Direct':           { color: '#78716C', bg: 'rgba(120,113,108,0.1)' },
+};
+
+function ScholarshipResources() {
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <div className="scholarship-resources">
+      <button
+        className="scholarship-resources__toggle"
+        onClick={() => setExpanded(!expanded)}
+      >
+        <div className="scholarship-resources__toggle-left">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+          </svg>
+          <div>
+            <span className="scholarship-resources__toggle-title">Where to Find Scholarships</span>
+            <span className="scholarship-resources__toggle-sub">10 verified scholarship search tools and databases — no AI-generated links</span>
+          </div>
+        </div>
+        <svg
+          width="16" height="16" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" strokeWidth={2}
+          style={{ transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}
+        >
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+      </button>
+
+      <AnimatePresence>
+        {expanded && (
+          <motion.div
+            className="scholarship-resources__list"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            style={{ overflow: 'hidden' }}
+          >
+            {SCHOLARSHIP_RESOURCES.map((res) => (
+              <div key={res.name} className="scholarship-resource-card">
+                <div className="scholarship-resource-card__header">
+                  <span className="scholarship-resource-card__name">{res.name}</span>
+                  <div className="scholarship-resource-card__tags">
+                    {res.tags.map(tag => {
+                      const tc = TAG_COLORS[tag] || { color: '#9CA3AF', bg: 'rgba(156,163,175,0.1)' };
+                      return (
+                        <span key={tag} className="scholarship-resource-card__tag" style={{ color: tc.color, backgroundColor: tc.bg }}>
+                          {tag}
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+                <p className="scholarship-resource-card__desc">{res.description}</p>
+                {res.url && (
+                  <a
+                    href={res.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="scholarship-resource-card__link"
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" />
+                      <polyline points="15 3 21 3 21 9" />
+                      <line x1="10" y1="14" x2="21" y2="3" />
+                    </svg>
+                    Visit {res.name}
+                  </a>
+                )}
+              </div>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
 
 function ScholarshipPipelineSkeleton() {
   return (
@@ -397,6 +556,8 @@ export default function ScholarshipPipeline({ userId }) {
           </div>
         )}
       </div>
+
+      <ScholarshipResources />
 
       <div className="scholarship-pipeline__grid">
         {STAGES.map((stage, i) => (

@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { isConfigured, chat } from '../services/aiChat.js';
-import { getProfile } from '../services/notion.js';
+import { getProfile } from '../services/supabase.js';
 
 const router = Router();
 

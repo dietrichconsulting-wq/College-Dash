@@ -1,8 +1,7 @@
 import { Router } from 'express';
 import { v4 as uuidv4 } from 'uuid';
-import { createProfile, getProfile, updateProfile } from '../services/notion.js';
+import { createProfile, getProfile, updateProfile, createProgress } from '../services/supabase.js';
 import { seedTasksForUser } from '../services/seedTasks.js';
-import { createProgress } from '../services/notion.js';
 
 const router = Router();
 

@@ -54,12 +54,12 @@ function SchoolCard({ school, tier, index }) {
       </div>
 
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 2 }}>
-        <Stat label="Your Chance" value={`${school.yourChance ?? '—'}%`} color={cfg.color} />
-        <Stat label="Admit Rate" value={school.admitRate != null ? `${school.admitRate}%` : '—'} real={school._dataSources?.scorecard} />
-        <Stat label="Net Cost/yr" value={school.netCost != null ? `$${(school.netCost / 1000).toFixed(0)}k` : '—'} real={school._dataSources?.scorecard} />
-        {school.gradRate != null && <Stat label="Grad Rate" value={`${school.gradRate}%`} real />}
-        {school.usNewsRankDisplay && <Stat label="US News" value={school.usNewsRankDisplay} real />}
-        {school.medianEarnings10yr != null && <Stat label="Earnings 10yr" value={`$${(school.medianEarnings10yr / 1000).toFixed(0)}k`} real />}
+        <Stat label="Your Chance" value={`${school.yourChance ?? '—'}%`} color={cfg.color} title="AI estimate — not a guarantee" />
+        <Stat label="Admit Rate" value={school.admitRate != null ? `${school.admitRate}%` : '—'} real={school._dataSources?.scorecard} title="Source: U.S. Dept. of Education, College Scorecard 2024" />
+        <Stat label="Net Cost/yr" value={school.netCost != null ? `$${(school.netCost / 1000).toFixed(0)}k` : '—'} real={school._dataSources?.scorecard} title="Source: U.S. Dept. of Education, College Scorecard 2024" />
+        {school.gradRate != null && <Stat label="Grad Rate" value={`${school.gradRate}%`} real title="Source: U.S. Dept. of Education, College Scorecard 2024" />}
+        {school.usNewsRankDisplay && <Stat label="US News" value={school.usNewsRankDisplay} real title="~2024 published rankings" />}
+        {school.medianEarnings10yr != null && <Stat label="Earnings 10yr" value={`$${(school.medianEarnings10yr / 1000).toFixed(0)}k`} real title="Source: U.S. Dept. of Education, College Scorecard 2024" />}
       </div>
 
       {(school.sat25 && school.sat75) && (
@@ -78,9 +78,9 @@ function SchoolCard({ school, tier, index }) {
   );
 }
 
-function Stat({ label, value, color, real }) {
+function Stat({ label, value, color, real, title }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: 60 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: 60 }} title={title}>
       <span style={{ fontSize: 13, fontWeight: 700, color: color || 'var(--color-text)', display: 'flex', alignItems: 'center', gap: 3 }}>
         {value}
         {real && <span className="strat-real-badge">live</span>}
@@ -254,6 +254,13 @@ export default function CollegeStrategy({ profile }) {
             <TierSection tier="reach"  schools={result.reach}  />
             <TierSection tier="target" schools={result.target} />
             <TierSection tier="safety" schools={result.safety} />
+
+            <p style={{
+              fontSize: 11, color: 'var(--color-text-muted)', lineHeight: 1.5,
+              marginTop: 16, padding: '10px 0', borderTop: '1px solid var(--color-border)',
+            }}>
+              Stats marked <span className="strat-real-badge" style={{ display: 'inline', verticalAlign: 'middle' }}>live</span> are from the U.S. Dept. of Education, College Scorecard 2024. "Your Chance" is an AI-generated estimate and is <strong>not a guarantee of admission</strong>. School recommendations are AI-generated. Always verify on each school's official site.
+            </p>
           </motion.div>
         )}
       </AnimatePresence>

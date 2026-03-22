@@ -1,4 +1,4 @@
-# College Dashboard - Project Constitution
+# Stairway U — Project Constitution
 
 ## Product Goals
 1. **Scale-ready SaaS** — Design every feature to work for thousands of concurrent users (caching, rate limiting, efficient queries). Never take shortcuts that only work for a single user.
@@ -16,7 +16,7 @@
 ## Architecture
 - **Frontend**: React 18+ with Vite, Tailwind CSS v4, Framer Motion
 - **Backend**: Express on Node.js (ES modules), port 3001, binds to 0.0.0.0
-- **Database**: Notion API (4 databases: Profiles, Tasks, Progress, Scholarships)
+- **Database**: Supabase (Postgres) — 4 tables: profiles, tasks, progress, scholarships
 - **External APIs**: College Scorecard, Google Calendar, Gemini 2.5 Flash
 
 ## Data Schema
@@ -28,15 +28,16 @@
 ## Design Rules
 - **Dark mode by default** — All UI should be designed in dark mode as the primary theme.
 
-## Deployment Rules
-- **Two git remotes** — `origin` (College-Dash) is the source repo. `stairwayu` is the Vercel-connected production repo. **Always push to BOTH remotes** when deploying: `git push origin && git push stairwayu`. Forgetting `stairwayu` means the live site at stairwayu.com does not update.
+## Deployment
+- **Repo**: https://github.com/dietrichconsulting-wq/stairwayu
+- **Production**: stairwayu.com, deployed via Vercel watching `main`
+- **Push**: `git push stairwayu main` (or `git deploy` alias) to update the live site
 
 ## Behavioral Rules
 - Kanban and timeline update reactively on task changes
 - Confetti + fight song play when task moves to Done
 - 25 default tasks seeded on profile creation
 - AI chat scoped to portfolio recommendations and scholarship brainstorming only
-- Multi-user via UUID in localStorage, no auth (trusted local network)
 - All API keys in .env, never committed
 
 ## File Conventions
@@ -49,5 +50,5 @@
 - `npm run dev` - Start both client (Vite) and server (nodemon) in development
 - `npm run build` - Build client to server/public/
 - `npm start` - Production server serving built frontend
-- `npm run setup:notion` - Create Notion databases (one-time setup)
+- `npm run setup:supabase` - Instructions for running the Supabase migration SQL
 - `npm run validate` - Check .env variables

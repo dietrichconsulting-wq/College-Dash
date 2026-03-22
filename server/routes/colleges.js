@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { searchColleges, getCollege } from '../services/collegeScorecard.js';
-import { getProfile } from '../services/notion.js';
+import { getProfile } from '../services/supabase.js';
 import { computeChances } from '../services/admissionChance.js';
 import { compareColleges } from '../services/collegeComparison.js';
 import { getCollegeProfile } from '../services/collegeDataAggregator.js';

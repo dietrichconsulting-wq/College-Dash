@@ -6,7 +6,7 @@ import {
   updateScholarship,
   moveScholarship,
   deleteScholarship,
-} from '../services/notion.js';
+} from '../services/supabase.js';
 
 const router = Router();
 

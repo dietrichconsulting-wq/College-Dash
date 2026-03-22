@@ -51,7 +51,7 @@ const METRICS = [
     label: 'Your Chance',
     icon: '⭐',
     colorFn: v => v == null ? null : v >= 70 ? '#22C55E' : v >= 40 ? '#F59E0B' : '#EF4444',
-    tooltip: 'AI-estimated admission probability (rounded to 5%) based on your GPA & SAT vs the school\'s published admit rate and SAT range',
+    tooltip: 'AI-estimated admission probability (rounded to 5%) based on your GPA & SAT vs the school\'s published admit rate and SAT range. This is an estimate, not a guarantee.',
     highlight: true,
     ring: true,
     suffix: '%',
@@ -62,7 +62,7 @@ const METRICS = [
     label: 'Overall Admit Rate',
     icon: '🎯',
     colorFn: v => v == null ? null : v <= 20 ? '#EF4444' : v <= 40 ? '#F59E0B' : '#22C55E',
-    tooltip: "School's published overall admission rate — not personalized to you",
+    tooltip: "School's published overall admission rate — not personalized to you. Source: U.S. Dept. of Education, College Scorecard 2024",
     ring: true,
     suffix: '%',
   },
@@ -71,7 +71,7 @@ const METRICS = [
     label: 'Avg SAT',
     icon: '📝',
     colorFn: () => null,
-    tooltip: 'Average composite SAT score',
+    tooltip: 'Average composite SAT score. Source: U.S. Dept. of Education, College Scorecard 2024',
     counter: true,
   },
   {
@@ -79,7 +79,7 @@ const METRICS = [
     label: 'Est. Net Cost/yr',
     icon: '💰',
     colorFn: v => v == null ? null : v <= 20000 ? '#22C55E' : v <= 35000 ? '#F59E0B' : '#EF4444',
-    tooltip: 'Estimated annual cost after typical financial aid',
+    tooltip: 'Estimated annual cost after typical financial aid. Source: U.S. Dept. of Education, College Scorecard 2024',
     counterK: true,      // animate in thousands: $27k
   },
   {
@@ -87,7 +87,7 @@ const METRICS = [
     label: 'OOS Tuition',
     icon: '🏷️',
     colorFn: () => null,
-    tooltip: 'Official out-of-state tuition',
+    tooltip: 'Official out-of-state tuition. Source: U.S. Dept. of Education, College Scorecard 2024',
     counterK: true,
   },
   {
@@ -95,7 +95,7 @@ const METRICS = [
     label: 'Enrollment',
     icon: '🎓',
     colorFn: () => null,
-    tooltip: 'Total undergraduate enrollment',
+    tooltip: 'Total undergraduate enrollment. Source: U.S. Dept. of Education, College Scorecard 2024',
     counterK: true,
     enrollmentLabel: true,  // append size label
   },
@@ -127,7 +127,7 @@ const METRICS = [
     label: 'Grad Rate (4yr)',
     icon: '📊',
     colorFn: v => v == null ? null : v >= 80 ? '#22C55E' : v >= 65 ? '#F59E0B' : '#EF4444',
-    tooltip: '4-year graduation rate (College Scorecard)',
+    tooltip: '4-year graduation rate. Source: U.S. Dept. of Education, College Scorecard 2024',
     ring: true,
     suffix: '%',
     realData: true,
@@ -137,7 +137,7 @@ const METRICS = [
     label: 'Retention Rate',
     icon: '🔄',
     colorFn: v => v == null ? null : v >= 90 ? '#22C55E' : v >= 80 ? '#F59E0B' : '#EF4444',
-    tooltip: 'First-year full-time retention rate (College Scorecard)',
+    tooltip: 'First-year full-time retention rate. Source: U.S. Dept. of Education, College Scorecard 2024',
     ring: true,
     suffix: '%',
     realData: true,
@@ -147,7 +147,7 @@ const METRICS = [
     label: 'Median Earnings (10yr)',
     icon: '💼',
     colorFn: v => v == null ? null : v >= 60000 ? '#22C55E' : v >= 40000 ? '#F59E0B' : null,
-    tooltip: 'Median earnings 10 years after enrollment (College Scorecard)',
+    tooltip: 'Median earnings 10 years after enrollment. Source: U.S. Dept. of Education, College Scorecard 2024',
     counterK: true,
     realData: true,
   },
@@ -156,7 +156,7 @@ const METRICS = [
     label: 'SAT Range',
     icon: '📐',
     colorFn: () => null,
-    tooltip: 'SAT 25th–75th percentile range of admitted students (College Scorecard)',
+    tooltip: 'SAT 25th–75th percentile range of admitted students. Source: U.S. Dept. of Education, College Scorecard 2024',
     static: true,
     format: (_, school) => (school.sat25 && school.sat75) ? `${school.sat25}–${school.sat75}` : (school.avgSAT ? `~${school.avgSAT}` : '—'),
     realData: true,
@@ -166,7 +166,7 @@ const METRICS = [
     label: 'Type',
     icon: '🏛️',
     colorFn: () => null,
-    tooltip: 'Public or private institution (IPEDS)',
+    tooltip: 'Public or private institution. Source: IPEDS, U.S. Dept. of Education',
     static: true,
     format: v => v || '—',
     realData: true,
@@ -291,10 +291,10 @@ export default function CollegeComparison({ profile }) {
           <div className="comp-rationale-card">
             <h4 className="comp-rationale-title">How We Calculate</h4>
             <ul className="comp-rationale-list">
-              <li><strong>Admit Rate, SAT, Tuition, Net Cost, Grad Rate, Retention, Earnings</strong> — College Scorecard API (live)</li>
-              <li><strong>Location &amp; Type</strong> — IPEDS federal data</li>
-              <li><strong>US News Rank</strong> — ~2024 published rankings</li>
-              <li><strong>Your Chance</strong> — AI estimate (rounded to 5%) using your GPA &amp; SAT vs published admit rate &amp; SAT range. <em>Not a guarantee.</em></li>
+              <li><strong>Admit Rate, SAT, Tuition, Net Cost, Grad Rate, Retention, Earnings</strong> — Source: U.S. Dept. of Education, College Scorecard 2024</li>
+              <li><strong>Location &amp; Type</strong> — Source: IPEDS, U.S. Dept. of Education</li>
+              <li><strong>US News Rank</strong> — ~2024 published rankings (approximate)</li>
+              <li><strong>Your Chance</strong> — AI estimate (rounded to 5%) using your GPA &amp; SAT vs published admit rate &amp; SAT range. <em>This is an estimate, not a guarantee of admission.</em></li>
             </ul>
           </div>
           <div className="college-comparison__actions">
@@ -480,7 +480,7 @@ export default function CollegeComparison({ profile }) {
       )}
 
       <p className="college-comparison__disclaimer">
-        Rows marked <span style={{ color: '#22C55E', fontWeight: 600 }}>✓ Scorecard</span> use live College Scorecard data. US News ranks are approximate (~2024). "Your Chance" is AI-estimated (rounded to nearest 5%) and is not a guarantee. Always verify on each school's official site.
+        Data source: U.S. Dept. of Education, College Scorecard 2024. Location &amp; Type: IPEDS. US News Rank: ~2024 published rankings. "Your Chance" is an AI-generated estimate (rounded to nearest 5%) and is <strong>not a guarantee of admission</strong>. Always verify on each school's official site.
       </p>
     </div>
   );

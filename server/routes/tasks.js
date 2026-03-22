@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { v4 as uuidv4 } from 'uuid';
-import { getTasks, createTask, updateTask, moveTask, deleteTask } from '../services/notion.js';
+import { getTasks, createTask, updateTask, moveTask, deleteTask } from '../services/supabase.js';
 
 const router = Router();
 

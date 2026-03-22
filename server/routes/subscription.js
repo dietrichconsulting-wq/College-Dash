@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import Stripe from 'stripe';
-import { getProfile, updateProfile, getProfileByStripeCustomerId } from '../services/notion.js';
+import { getProfile, updateProfile, getProfileByStripeCustomerId } from '../services/supabase.js';
 
 const router = Router();
 const stripe = process.env.STRIPE_SECRET_KEY

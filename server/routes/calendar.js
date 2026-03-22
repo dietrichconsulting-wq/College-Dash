@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { createCalendarEvent, deleteCalendarEvent, hasTokens } from '../services/googleCalendar.js';
-import { updateTask } from '../services/notion.js';
+import { updateTask } from '../services/supabase.js';
 
 const router = Router();
 

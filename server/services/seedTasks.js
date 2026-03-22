@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import { createTask } from './notion.js';
+import { createTask } from './supabase.js';
 
 // Austin ISD timeline: assumes student starts dashboard in spring of junior year
 // SAT dates: typically Oct, Dec, Mar, May, Jun

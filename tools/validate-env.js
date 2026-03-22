@@ -1,10 +1,8 @@
 import 'dotenv/config';
 
 const required = [
-  'NOTION_API_KEY',
-  'NOTION_PROFILES_DB_ID',
-  'NOTION_TASKS_DB_ID',
-  'NOTION_PROGRESS_DB_ID',
+  'SUPABASE_URL',
+  'SUPABASE_SERVICE_KEY',
 ];
 
 const optional = [
