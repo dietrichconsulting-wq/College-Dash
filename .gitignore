@@ -5,7 +5,6 @@ dist-ssr
 *.local
 *.log
 npm-debug.log*
-server/public/assets
 .DS_Store
 .idea
 .vscode
