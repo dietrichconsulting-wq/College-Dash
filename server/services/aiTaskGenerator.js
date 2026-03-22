@@ -2,6 +2,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import dotenv from 'dotenv';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { RoadmapTaskSchema, safeParseAI } from './aiSchemas.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: resolve(__dirname, '../../.env') });
@@ -65,23 +66,16 @@ export async function generateRoadmap(profile, existingTasks = []) {
   const result = await gemini.generateContent(buildPrompt(profile, existingTasks));
   const text = result.response.text().trim();
 
-  // Parse JSON — handle possible markdown code fences
-  let jsonStr = text;
-  if (jsonStr.startsWith('```')) {
-    jsonStr = jsonStr.replace(/^```(?:json)?\s*/, '').replace(/\s*```$/, '');
+  const parseResult = safeParseAI(RoadmapTaskSchema, text);
+  if (!parseResult.success) {
+    console.error('AI roadmap response invalid:', parseResult.error);
+    return [];
   }
 
-  const tasks = JSON.parse(jsonStr);
-
-  // Validate structure
-  const validCategories = new Set(['Testing', 'Application', 'Financial', 'Visit', 'Portfolio', 'Recommendation', 'Other']);
-
-  return tasks
-    .filter(t => t.title && t.category && validCategories.has(t.category))
-    .map(t => ({
-      title: t.title.slice(0, 80),
-      description: t.description || '',
-      category: t.category,
-      dueDate: t.dueDate || null,
-    }));
+  return parseResult.data.map(t => ({
+    title: t.title.slice(0, 80),
+    description: t.description,
+    category: t.category,
+    dueDate: t.dueDate,
+  }));
 }

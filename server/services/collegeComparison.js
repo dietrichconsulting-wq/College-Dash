@@ -12,6 +12,7 @@ import dotenv from 'dotenv';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { batchCollegeProfiles } from './collegeDataAggregator.js';
+import { ComparisonAISchema, safeParseAI } from './aiSchemas.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: resolve(__dirname, '../../.env') });
@@ -75,14 +76,14 @@ Example: [{"name":"University of Oregon","yourChance":62}]`;
 
     try {
       const result = await gemini.generateContent(prompt);
-      let text = result.response.text().trim();
-      if (text.startsWith('```')) {
-        text = text.replace(/^```(?:json)?\s*/, '').replace(/\s*```$/, '');
-      }
-      const parsed = JSON.parse(text);
-      // Index by name for fast lookup
-      for (const item of parsed) {
-        if (item.name) aiData[item.name.toLowerCase()] = item;
+      const rawText = result.response.text();
+      const parseResult = safeParseAI(ComparisonAISchema, rawText);
+      if (!parseResult.success) {
+        console.error('College comparison AI response invalid:', parseResult.error);
+      } else {
+        for (const item of parseResult.data) {
+          if (item.name) aiData[item.name.toLowerCase()] = item;
+        }
       }
     } catch (err) {
       console.error('College comparison AI error:', err.message);

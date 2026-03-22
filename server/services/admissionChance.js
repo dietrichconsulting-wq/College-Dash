@@ -3,6 +3,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import dotenv from 'dotenv';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { AdmissionTipSchema, safeParseAI } from './aiSchemas.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: resolve(__dirname, '../../.env') });
@@ -236,20 +237,20 @@ Respond with ONLY a JSON array of objects. No markdown formatting.
 ]`;
 
       const aiResult = await gemini.generateContent(prompt);
-      let text = aiResult.response.text().trim();
-      if (text.startsWith('\`\`\`')) {
-        text = text.replace(/^\`\`\`(?:json)?\s*/, '').replace(/\s*\`\`\`$/, '');
+      const rawText = aiResult.response.text();
+      const parseResult = safeParseAI(AdmissionTipSchema, rawText);
+      if (!parseResult.success) {
+        console.error('Admission tip AI response invalid:', parseResult.error);
+      } else {
+        validResults.forEach(res => {
+          const aiData = parseResult.data.find(p => p.schoolId === res.schoolId);
+          if (aiData) {
+            // Never override the data-driven chance — AI provides tips only
+            res.aiTip = aiData.aiTip;
+            if (aiData.classification) res.classification = aiData.classification;
+          }
+        });
       }
-      const parsed = JSON.parse(text);
-
-      validResults.forEach(res => {
-        const aiData = parsed.find(p => p.schoolId === res.schoolId);
-        if (aiData) {
-          // Never override the data-driven chance — AI provides tips only
-          res.aiTip = aiData.aiTip;
-          if (aiData.classification) res.classification = aiData.classification;
-        }
-      });
     } catch (err) {
       console.error('Failed to augment admission chances with AI:', err);
     }

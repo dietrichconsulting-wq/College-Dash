@@ -2,6 +2,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import dotenv from 'dotenv';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { PortfolioTipSchema, safeParseAI } from './aiSchemas.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: resolve(__dirname, '../../.env') });
@@ -45,11 +46,13 @@ Respond ONLY with a JSON array. No markdown. Each object:
 
   try {
     const result = await gemini.generateContent(prompt);
-    let text = result.response.text().trim();
-    if (text.startsWith('```')) {
-      text = text.replace(/^```(?:json)?\s*/, '').replace(/\s*```$/, '');
+    const rawText = result.response.text();
+    const parseResult = safeParseAI(PortfolioTipSchema, rawText);
+    if (!parseResult.success) {
+      console.error('Portfolio advice AI response invalid:', parseResult.error);
+      return [];
     }
-    return JSON.parse(text);
+    return parseResult.data;
   } catch (err) {
     console.error('Portfolio advice AI error:', err);
     return [];

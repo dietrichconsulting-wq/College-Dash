@@ -14,6 +14,7 @@ import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { batchCollegeProfiles } from './collegeDataAggregator.js';
 import { calculateChanceFromData } from './admissionChance.js';
+import { StrategyAISchema, safeParseAI } from './aiSchemas.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: resolve(__dirname, '../../.env') });
@@ -75,13 +76,14 @@ Respond ONLY with valid JSON, no markdown:
 }`;
 
   const result = await gemini.generateContent(recommendPrompt);
-  let text = result.response.text().trim();
-  if (text.startsWith('```')) {
-    text = text.replace(/^```(?:json)?\s*/, '').replace(/\s*```$/, '');
+  const rawText = result.response.text();
+  const parseResult = safeParseAI(StrategyAISchema, rawText);
+  if (!parseResult.success) {
+    console.error('Strategy AI response invalid:', parseResult.error);
+    return { rationale: '', reach: [], target: [], safety: [] };
   }
 
-  const aiResult = JSON.parse(text);
-  const { rationale, schools: aiSchools = [] } = aiResult;
+  const { rationale, schools: aiSchools } = parseResult.data;
 
   if (!aiSchools.length) return { rationale, reach: [], target: [], safety: [] };
 
