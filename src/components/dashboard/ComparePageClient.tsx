@@ -102,14 +102,14 @@ export function ComparePageClient({ profile }: ComparePageClientProps) {
     }
   }
 
-  const METRICS: { key: keyof ComparedSchool; label: string; format: (v: unknown) => string }[] = [
+  const METRICS: { key: keyof ComparedSchool; label: string; subtitle?: string; tooltip?: string; format: (v: unknown) => string }[] = [
     { key: 'admitRate', label: 'Admit Rate', format: v => v != null ? `${v}%` : '—' },
     { key: 'yourChance', label: 'Your Chance', format: v => v != null ? `~${v}%` : '—' },  // rounded to 5% on backend
     { key: 'avgSAT', label: 'Avg SAT', format: v => v != null ? String(v) : '—' },
     { key: 'netCost', label: homeState ? `Tuition est. net (${homeState} resident)` : 'Tuition (est. net)', format: v => v != null ? `$${((v as number) / 1000).toFixed(0)}k` : '—' },
     { key: 'gradRate', label: 'Grad Rate', format: v => v != null ? `${v}%` : '—' },
     { key: 'retentionRate', label: 'Retention Rate', format: v => v != null ? `${v}%` : '—' },
-    { key: 'medianEarnings10yr', label: 'Earnings 10yr', format: v => v != null ? `$${((v as number) / 1000).toFixed(0)}k` : '—' },
+    { key: 'medianEarnings10yr', label: 'Earnings 10yr', subtitle: 'school-wide median · US Dept of Education', tooltip: 'Median earnings of all students 10 years after enrollment, regardless of major. Source: College Scorecard (U.S. Dept of Education, based on IRS tax data).', format: v => v != null ? `$${((v as number) / 1000).toFixed(0)}k` : '—' },
   ]
 
   const validCount = schools.filter(s => s.trim()).length
@@ -309,7 +309,10 @@ export function ComparePageClient({ profile }: ComparePageClientProps) {
             <tbody>
               {METRICS.map((m, ri) => (
                 <tr key={m.key} style={{ background: ri % 2 === 0 ? 'var(--color-column)' : 'transparent' }}>
-                  <td style={{ padding: '10px 12px', fontWeight: 600, color: 'var(--color-text)', borderRadius: ri % 2 === 0 ? '8px 0 0 8px' : undefined }}>{m.label}</td>
+                  <td style={{ padding: '10px 12px', fontWeight: 600, color: 'var(--color-text)', borderRadius: ri % 2 === 0 ? '8px 0 0 8px' : undefined }} title={m.tooltip}>
+                    {m.label}
+                    {m.subtitle && <div style={{ fontSize: 9, fontWeight: 400, color: 'var(--color-text-muted)', marginTop: 1 }}>{m.subtitle}</div>}
+                  </td>
                   {results.map(r => (
                     <td key={r.name} style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 600 }}>
                       {m.format(r[m.key])}
