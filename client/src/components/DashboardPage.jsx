@@ -254,6 +254,7 @@ export default function DashboardPage({ userId, profile, updateProfile, dark, on
         onClose={() => setSchoolsModalOpen(false)}
         schools={effectiveProfile?.schools || []}
         onSave={saveSchools}
+        dark={dark}
       />
 
       <CommandBar

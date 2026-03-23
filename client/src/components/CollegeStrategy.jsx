@@ -137,7 +137,7 @@ export default function CollegeStrategy({ profile, readOnly }) {
       const { data } = await api.post('/strategy/generate', { ...form, schools });
       setResult(data);
     } catch (err) {
-      setError('Failed to generate strategy. Check your API key and try again.');
+      setError('Something went wrong generating your strategy. Please try again.');
     } finally {
       setLoading(false);
     }

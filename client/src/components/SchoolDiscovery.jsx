@@ -211,7 +211,7 @@ export default function SchoolDiscovery({ profile, onSaveSchools }) {
       const { data } = await api.post('/discovery/find', { ...form, preferences });
       setResults(data.schools || []);
     } catch (err) {
-      setError('Failed to find schools. Check your API keys and try again.');
+      setError('Something went wrong finding schools. Please try again.');
     } finally {
       setLoading(false);
     }

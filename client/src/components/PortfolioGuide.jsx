@@ -296,7 +296,7 @@ function PortfolioItem({ item }) {
   );
 }
 
-function AISchoolTips({ tips, loading }) {
+function AISchoolTips({ tips, loading, error, onRetry }) {
   if (loading) {
     return (
       <div className="pg-ai-tips pg-ai-tips--loading">
@@ -306,6 +306,27 @@ function AISchoolTips({ tips, loading }) {
           ))}
         </div>
         <span>Generating school-specific tips…</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="pg-ai-tips" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '14px 16px' }}>
+        <span style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>
+          Couldn't load school-specific tips.
+        </span>
+        <button
+          onClick={onRetry}
+          style={{
+            fontSize: '12px', fontWeight: 600, padding: '4px 12px',
+            borderRadius: '6px', border: '1px solid var(--color-border)',
+            background: 'transparent', color: 'var(--color-primary)',
+            cursor: 'pointer', flexShrink: 0,
+          }}
+        >
+          Try Again
+        </button>
       </div>
     );
   }
@@ -358,15 +379,17 @@ export default function PortfolioGuide({ profile }) {
   const [activeKey, setActiveKey] = useState(profileMajorKey);
   const [aiTips, setAiTips] = useState({});
   const [aiLoading, setAiLoading] = useState({});
+  const [aiErrors, setAiErrors] = useState({});
 
   const major = MAJORS[activeKey];
 
   const fetchTips = async (key) => {
-    if (aiTips[key] || aiLoading[key]) return;
+    if (aiLoading[key]) return;
     const schools = (profile?.schools || []).filter(s => s?.name).map(s => s.name);
     if (!schools.length) return;
 
     setAiLoading(prev => ({ ...prev, [key]: true }));
+    setAiErrors(prev => ({ ...prev, [key]: false }));
     try {
       const { data } = await api.post('/portfolio/tips', {
         major: MAJORS[key].name,
@@ -376,7 +399,7 @@ export default function PortfolioGuide({ profile }) {
       });
       setAiTips(prev => ({ ...prev, [key]: data }));
     } catch {
-      setAiTips(prev => ({ ...prev, [key]: [] }));
+      setAiErrors(prev => ({ ...prev, [key]: true }));
     } finally {
       setAiLoading(prev => ({ ...prev, [key]: false }));
     }
@@ -518,7 +541,12 @@ export default function PortfolioGuide({ profile }) {
           </div>
 
           {/* AI School-Specific Tips */}
-          <AISchoolTips tips={aiTips[activeKey]} loading={!!aiLoading[activeKey]} />
+          <AISchoolTips
+            tips={aiTips[activeKey]}
+            loading={!!aiLoading[activeKey]}
+            error={!!aiErrors[activeKey]}
+            onRetry={() => fetchTips(activeKey)}
+          />
         </motion.div>
       </AnimatePresence>
     </div>

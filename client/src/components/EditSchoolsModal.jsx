@@ -4,7 +4,7 @@ import CollegeSearch from './CollegeSearch';
 
 const MAX_SCHOOLS = 12;
 
-export default function EditSchoolsModal({ open, onClose, schools, onSave }) {
+export default function EditSchoolsModal({ open, onClose, schools, onSave, dark }) {
   const [form, setForm] = useState([{ name: '', id: '' }]);
 
   useEffect(() => {
@@ -53,12 +53,12 @@ export default function EditSchoolsModal({ open, onClose, schools, onSave }) {
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
             onClick={e => e.stopPropagation()}
-            className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md max-h-[85vh] flex flex-col"
+            className={`${dark ? 'bg-[#1A2133] text-white' : 'bg-white text-gray-900'} rounded-xl shadow-2xl p-6 w-full max-w-md max-h-[85vh] flex flex-col`}
           >
             <h2 className="text-lg font-bold mb-1" style={{ color: 'var(--color-primary)' }}>
               Your Target Schools
             </h2>
-            <p className="text-xs text-text-muted mb-4">
+            <p className="text-xs mb-4" style={{ color: 'var(--color-text-muted)' }}>
               School #1 is your top choice. Its colors will theme the dashboard. Add up to {MAX_SCHOOLS} schools.
             </p>
             <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
@@ -66,20 +66,21 @@ export default function EditSchoolsModal({ open, onClose, schools, onSave }) {
                 {form.map((school, i) => (
                   <div key={i} className="flex items-end gap-2">
                     <div className="flex-1">
-                      <label className="block text-xs font-medium text-text-muted mb-1">
+                      <label className="block text-xs font-medium mb-1" style={{ color: 'var(--color-text-muted)' }}>
                         {i === 0 ? 'Top Choice' : `School ${i + 1}`}
                       </label>
                       <CollegeSearch
                         value={school}
                         onChange={handleSchoolChange}
                         index={i}
+                        dark={dark}
                       />
                     </div>
                     {form.length > 1 && (
                       <button
                         type="button"
                         onClick={() => removeSlot(i)}
-                        className="mb-0.5 p-1.5 text-gray-400 hover:text-red-500 transition-colors"
+                        className={`mb-0.5 p-1.5 ${dark ? 'text-gray-500 hover:text-red-400' : 'text-gray-400 hover:text-red-500'} transition-colors`}
                         title="Remove school"
                       >
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
@@ -93,7 +94,7 @@ export default function EditSchoolsModal({ open, onClose, schools, onSave }) {
                   <button
                     type="button"
                     onClick={addSlot}
-                    className="w-full py-2 border-2 border-dashed border-gray-300 rounded-lg text-sm text-gray-500 hover:border-gray-400 hover:text-gray-600 transition-colors"
+                    className={`w-full py-2 border-2 border-dashed rounded-lg text-sm transition-colors ${dark ? 'border-gray-600 text-gray-400 hover:border-gray-500 hover:text-gray-300' : 'border-gray-300 text-gray-500 hover:border-gray-400 hover:text-gray-600'}`}
                   >
                     + Add School ({form.length}/{MAX_SCHOOLS})
                   </button>
@@ -103,7 +104,7 @@ export default function EditSchoolsModal({ open, onClose, schools, onSave }) {
                 <button
                   type="button"
                   onClick={onClose}
-                  className="flex-1 py-2 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
+                  className={`flex-1 py-2 border rounded-lg text-sm font-medium transition-colors ${dark ? 'border-gray-600 text-gray-300 hover:bg-white/5' : 'border-gray-300 hover:bg-gray-50'}`}
                 >
                   Cancel
                 </button>

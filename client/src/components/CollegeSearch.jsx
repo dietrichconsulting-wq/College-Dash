@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import api from '../utils/api';
 
-export default function CollegeSearch({ value, onChange, index }) {
+export default function CollegeSearch({ value, onChange, index, dark }) {
   const [query, setQuery] = useState(value?.name || '');
   const [results, setResults] = useState([]);
   const [open, setOpen] = useState(false);
@@ -74,18 +74,18 @@ export default function CollegeSearch({ value, onChange, index }) {
         onChange={handleInput}
         onBlur={handleBlur}
         placeholder={`School ${index + 1} (type name)`}
-        className="w-full px-4 py-2.5 rounded-lg border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-navy focus:border-transparent transition-all"
+        className={`w-full px-4 py-2.5 rounded-lg border focus:outline-none focus:ring-2 focus:border-transparent transition-all ${dark ? 'border-gray-600 bg-white/5 text-white placeholder-gray-500 focus:ring-blue-500' : 'border-gray-300 bg-white focus:ring-blue-600'}`}
       />
       {open && results.length > 0 && (
-        <ul className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+        <ul className={`absolute z-50 w-full mt-1 border rounded-lg shadow-lg max-h-48 overflow-y-auto ${dark ? 'bg-[#1A2133] border-gray-600' : 'bg-white border-gray-200'}`}>
           {results.map(c => (
             <li
               key={c.id}
               onClick={() => handleSelect(c)}
-              className="px-4 py-2.5 cursor-pointer hover:bg-blue-50 transition-colors"
+              className={`px-4 py-2.5 cursor-pointer transition-colors ${dark ? 'hover:bg-white/10' : 'hover:bg-blue-50'}`}
             >
               <div className="font-medium text-sm">{c.name}</div>
-              <div className="text-xs text-text-muted">
+              <div className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
                 {c.city}, {c.state}
                 {c.admissionRate != null && ` | ${(c.admissionRate * 100).toFixed(0)}% acceptance`}
               </div>

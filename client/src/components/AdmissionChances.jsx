@@ -223,6 +223,7 @@ function SchoolChanceCard({ data, index }) {
 export default function AdmissionChances({ userId, profile }) {
   const [chances, setChances] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
   // Build a stable key from the profile fields that affect chances
@@ -239,15 +240,16 @@ export default function AdmissionChances({ userId, profile }) {
     let cancelled = false;
     setLoading(true);
 
+    setError(null);
     api.get(`/colleges/chances/${userId}`)
       .then(({ data }) => { if (!cancelled) setChances(data.chances || []); })
-      .catch(() => { if (!cancelled) setChances([]); })
+      .catch(() => { if (!cancelled) { setChances([]); setError('Couldn\'t calculate your admission estimates. Try refreshing.'); } })
       .finally(() => { if (!cancelled) setLoading(false); });
 
     return () => { cancelled = true; };
   }, [userId, profileKey, refreshKey]); // re-fetch when profile changes or manual refresh
 
-  if (!loading && chances.length === 0) return null;
+  if (!loading && !error && chances.length === 0) return null;
 
   return (
     <div className="admission-chances">
@@ -287,6 +289,21 @@ export default function AdmissionChances({ userId, profile }) {
       {loading ? (
         <div style={{ textAlign: 'center', padding: '24px', color: 'var(--color-text-muted)', fontSize: '13px' }}>
           Calculating your chances…
+        </div>
+      ) : error ? (
+        <div style={{ textAlign: 'center', padding: '24px' }}>
+          <p style={{ color: 'var(--color-text-muted)', fontSize: '13px', marginBottom: '10px' }}>{error}</p>
+          <button
+            onClick={() => setRefreshKey(k => k + 1)}
+            style={{
+              fontSize: '12px', fontWeight: 600, padding: '6px 14px',
+              borderRadius: '8px', border: '1px solid var(--color-border)',
+              background: 'transparent', color: 'var(--color-primary)',
+              cursor: 'pointer',
+            }}
+          >
+            Try Again
+          </button>
         </div>
       ) : (
         <div className="admission-chances__grid">
