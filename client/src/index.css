@@ -532,6 +532,21 @@ body>#root {
   font-weight: 700;
 }
 
+.school-chip--add {
+  background: transparent;
+  border-style: dashed;
+  border-color: var(--color-border);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  font-weight: 600;
+  transition: border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.school-chip--add:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
 .school-chip__badge {
   font-size: 0.65rem;
   line-height: 1;

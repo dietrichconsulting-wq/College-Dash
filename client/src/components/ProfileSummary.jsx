@@ -210,15 +210,27 @@ export default function ProfileSummary({ profile, completionPercent, onReorderSc
               ))}
             </Reorder.Group>
             {!readOnly && (
-              <button
-                onClick={onEditSchools}
-                className="school-chips-section__edit"
-              >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                </svg>
-                edit schools
-              </button>
+              <div className="flex items-center gap-2 mt-1">
+                <motion.button
+                  onClick={onEditSchools}
+                  whileHover={{ y: -2, scale: 1.05 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                  className="school-chip school-chip--add"
+                  title="Add or edit schools"
+                >
+                  <span style={{ fontSize: '1.1em', lineHeight: 1 }}>+</span>
+                  <span>Add School</span>
+                </motion.button>
+                <button
+                  onClick={onEditSchools}
+                  className="school-chips-section__edit"
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                  edit schools
+                </button>
+              </div>
             )}
           </>
         ) : !readOnly ? (

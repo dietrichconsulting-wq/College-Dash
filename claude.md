@@ -5,7 +5,7 @@
 2. **$9.99/month single tier, 7-day free trial** — One paid plan includes everything. Keep API costs near-zero per user (Gemini Flash only, aggressive caching, no expensive models). Every feature must justify its token cost.
 3. **Never guess or fabricate data** — The app must NEVER invent dates, costs, tuition, admission rates, rankings, or any factual data. Use authoritative APIs (College Scorecard, IPEDS) or display "—" / "N/A". LLM outputs must be clearly labeled as AI-generated advice, not facts.
 4. **Guide the user in every section** — Each tool/section must include a one-sentence explanation of what it does for the user. Examples:
-   - Dashboard: "Change your GPA, SAT, major, and schools to check your chance of getting in."
+   - Dashboard: "Change your GPA, SAT, ACT, major, and schools to check your chance of getting in."
    - Task List: "Track every step of your college application — check them off as you go."
    - Timeline: "See your progress toward key milestones on the road to acceptance."
    - AI Advisor: "Ask for personalized advice on your college list and scholarship strategy."
@@ -16,11 +16,11 @@
 ## Architecture
 - **Frontend**: React 18+ with Vite, Tailwind CSS v4, Framer Motion
 - **Backend**: Express on Node.js (ES modules), port 3001, binds to 0.0.0.0
-- **Database**: Supabase (Postgres) — 4 tables: profiles, tasks, progress, scholarships
+- **Database**: Supabase (Postgres) — 6 tables: profiles, tasks, progress, scholarships, parent_links, digest_log
 - **External APIs**: College Scorecard, Google Calendar, Gemini 2.5 Flash
 
 ## Data Schema
-- **Profiles**: UserID, DisplayName, GPA, SAT, ProposedMajor, School1-4 (name + Scorecard ID)
+- **Profiles**: UserID, DisplayName, GPA, SAT, ACT, ProposedMajor; schools stored in **user_schools** junction table (up to 12, ordered by sort_order)
 - **Tasks**: TaskID, UserID, Title, Description, Status (To Do/In Progress/Done), Category (7 types), DueDate, CalendarEventID, SortOrder, CompletedAt
 - **Progress**: EntryID, UserID, MilestoneKey (10 milestones), ReachedAt, Notes
 - **Scholarships**: ScholarshipID, UserID, Name, Amount, Deadline, EssayRequired, Difficulty (Easy/Medium/Hard), Stage (Researching/Applying/Submitted/Won), URL, Notes
@@ -36,7 +36,7 @@
 ## Behavioral Rules
 - Kanban and timeline update reactively on task changes
 - Confetti + fight song play when task moves to Done
-- 25 default tasks seeded on profile creation
+- 29 default tasks seeded on profile creation
 - AI chat scoped to portfolio recommendations and scholarship brainstorming only
 - All API keys in .env, never committed
 
