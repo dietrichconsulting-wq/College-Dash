@@ -213,7 +213,7 @@ export default function DashboardPage({ userId, profile, updateProfile, dark, on
 
         {/* ── Strategy page ── */}
         {activePage === 'strategy' && (
-          <CollegeStrategy profile={effectiveProfile} />
+          <CollegeStrategy profile={effectiveProfile} userId={userId} />
         )}
 
         {/* ── Profile page ── */}

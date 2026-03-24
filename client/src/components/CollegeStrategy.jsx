@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../utils/api';
 
@@ -109,7 +109,7 @@ function TierSection({ tier, schools }) {
   );
 }
 
-export default function CollegeStrategy({ profile, readOnly }) {
+export default function CollegeStrategy({ profile, userId, readOnly }) {
   const [form, setForm] = useState({
     gpa:     profile?.gpa     || '',
     sat:     profile?.sat     || '',
@@ -119,27 +119,35 @@ export default function CollegeStrategy({ profile, readOnly }) {
     climate: '',
   });
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState(readOnly && profile?.strategyResult ? profile.strategyResult : null);
+  const [result, setResult] = useState(
+    (profile?.strategyResult) ? profile.strategyResult : null
+  );
   const [error, setError] = useState(null);
+  const inflightRef = useRef(false);
 
   const handleChange = (field, value) => setForm(f => ({ ...f, [field]: value }));
 
-  const handleGenerate = async () => {
+  const handleGenerate = async (forceRefresh = false) => {
     if (!form.gpa || (!form.sat && !form.act) || !form.major) {
       setError('GPA, a test score (SAT or ACT), and major are required.');
       return;
     }
+    // Prevent duplicate clicks while a request is in flight
+    if (inflightRef.current) return;
+    inflightRef.current = true;
     setError(null);
     setLoading(true);
-    setResult(null);
     try {
       const schools = (profile?.schools || []).filter(s => s?.name?.trim()).map(s => s.name);
-      const { data } = await api.post('/strategy/generate', { ...form, schools });
+      const { data } = await api.post('/strategy/generate', {
+        ...form, schools, userId, forceRefresh,
+      });
       setResult(data);
     } catch (err) {
       setError('Something went wrong generating your strategy. Please try again.');
     } finally {
       setLoading(false);
+      inflightRef.current = false;
     }
   };
 
@@ -203,33 +211,54 @@ export default function CollegeStrategy({ profile, readOnly }) {
             <div style={{ color: '#EF4444', fontSize: 13, marginBottom: 12 }}>{error}</div>
           )}
 
-          <button
-            onClick={handleGenerate}
-            disabled={loading}
-            style={{
-              background: loading ? 'var(--color-text-muted)' : 'var(--color-primary)',
-              color: '#fff',
-              border: 'none',
-              borderRadius: 10,
-              padding: '11px 28px',
-              fontWeight: 700,
-              fontSize: 14,
-              cursor: loading ? 'not-allowed' : 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-              transition: 'background 0.2s',
-            }}
-          >
-            {loading ? (
-              <>
-                <span className="strategy-spinner" />
-                Generating…
-              </>
-            ) : (
-              <>✨ Generate Strategy</>
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+            <button
+              onClick={() => handleGenerate(false)}
+              disabled={loading}
+              style={{
+                background: loading ? 'var(--color-text-muted)' : 'var(--color-primary)',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 10,
+                padding: '11px 28px',
+                fontWeight: 700,
+                fontSize: 14,
+                cursor: loading ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                transition: 'background 0.2s',
+              }}
+            >
+              {loading ? (
+                <>
+                  <span className="strategy-spinner" />
+                  Generating…
+                </>
+              ) : result ? (
+                <>🔄 Regenerate Strategy</>
+              ) : (
+                <>✨ Generate Strategy</>
+              )}
+            </button>
+            {result && !loading && (
+              <button
+                onClick={() => handleGenerate(true)}
+                style={{
+                  background: 'transparent',
+                  color: 'var(--color-text-muted)',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: 8,
+                  padding: '9px 16px',
+                  fontSize: 12,
+                  cursor: 'pointer',
+                }}
+                title="Ignore cache and generate a fresh strategy"
+              >
+                Force Refresh
+              </button>
             )}
-          </button>
+          </div>
         </>
       )}
 

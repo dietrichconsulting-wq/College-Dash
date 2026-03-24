@@ -72,6 +72,8 @@ export async function updateProfile(userId, updates) {
   if (updates.stripeSubscriptionId !== undefined) row.stripe_subscription_id = updates.stripeSubscriptionId;
   if (updates.subscriptionStatus !== undefined) row.subscription_status = updates.subscriptionStatus;
   if (updates.subscriptionEnd !== undefined) row.subscription_end = updates.subscriptionEnd;
+  if (updates.strategyResult !== undefined) row.strategy_result = updates.strategyResult;
+  if (updates.strategyGeneratedAt !== undefined) row.strategy_generated_at = updates.strategyGeneratedAt;
 
   if (Object.keys(row).length > 0) {
     const { error } = await supabase

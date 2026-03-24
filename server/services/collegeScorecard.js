@@ -194,16 +194,21 @@ export async function getCollege(id) {
 
 /**
  * Look up a school by name — returns best match with full rich profile.
+ * Uses a multi-pass scoring system to prefer main campuses over satellites:
+ *   1. Exact normalized name match
+ *   2. Shorter names (main campus names are shorter than "X-Branch Campus")
+ *   3. Larger enrollment (main campuses have more students)
  * Returns null if not found or no API key.
  */
 export async function lookupByName(schoolName) {
   if (!API_KEY || !schoolName) return null;
 
+  // Request more results so we have a better pool to pick the right campus from
   const params = new URLSearchParams({
     api_key: API_KEY,
     'school.name': schoolName,
-    fields: RICH_FIELDS,
-    per_page: '5',
+    fields: RICH_FIELDS + ',latest.student.size',
+    per_page: '15',
     'school.degrees_awarded.predominant__range': '3..4', // bachelor's and graduate
   });
 
@@ -217,14 +222,47 @@ export async function lookupByName(schoolName) {
     const results = data.results || [];
     if (!results.length) return null;
 
-    // Pick best match: exact name match first, otherwise first result
-    const q = schoolName.toLowerCase().replace(/[^a-z0-9\s]/g, '');
-    const exact = results.find(r => {
-      const n = (r['school.name'] || '').toLowerCase().replace(/[^a-z0-9\s]/g, '');
-      return n === q || n.includes(q) || q.includes(n);
+    const q = schoolName.toLowerCase().replace(/[^a-z0-9\s]/g, '').trim();
+
+    // Score each result — higher is better match
+    const scored = results.map(r => {
+      const n = (r['school.name'] || '').toLowerCase().replace(/[^a-z0-9\s]/g, '').trim();
+      const enrollment = r['latest.student.size'] || 0;
+      let score = 0;
+
+      // Tier 1: Exact match after normalization
+      if (n === q) score += 10000;
+
+      // Tier 2: Name containment (query in name or name in query)
+      else if (n.includes(q)) score += 5000;
+      else if (q.includes(n)) score += 3000;
+
+      // Penalty for satellite/branch indicators in the name
+      // e.g. "University of Michigan-Dearborn" vs "University of Michigan-Ann Arbor"
+      const raw = (r['school.name'] || '').toLowerCase();
+      const branchIndicators = [
+        'branch', 'online', 'global campus', 'worldwide',
+        'continuing education', 'extension',
+      ];
+      if (branchIndicators.some(b => raw.includes(b))) score -= 2000;
+
+      // Prefer shorter names — main campus is typically "University of X",
+      // satellites append "-City" or "at City"
+      // Only apply within the same containment tier
+      score -= n.length;
+
+      // Prefer larger enrollment — main campuses are bigger
+      score += Math.min(enrollment / 100, 500);
+
+      // Prefer schools with admission data (non-test-optional reporting)
+      if (r['latest.admissions.admission_rate.overall'] != null) score += 200;
+
+      return { result: r, score, name: r['school.name'] };
     });
 
-    return mapRichResult(exact || results[0]);
+    scored.sort((a, b) => b.score - a.score);
+
+    return mapRichResult(scored[0].result);
   } catch {
     return null;
   }
