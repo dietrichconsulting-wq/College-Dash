@@ -6,7 +6,7 @@ const router = Router();
 
 router.get('/:userId', async (req, res, next) => {
   try {
-    const progress = await getProgress(req.params.userId);
+    const progress = await getProgress(req.userId);
     res.json(progress);
   } catch (err) {
     next(err);
@@ -15,7 +15,8 @@ router.get('/:userId', async (req, res, next) => {
 
 router.post('/', async (req, res, next) => {
   try {
-    const { userId, milestoneKey, notes } = req.body;
+    const userId = req.userId;
+    const { milestoneKey, notes } = req.body;
     await createProgress({ entryId: uuidv4(), userId, milestoneKey, notes });
     res.status(201).json({ success: true });
   } catch (err) {

@@ -12,7 +12,7 @@ export function useAIChat(userId) {
     setLoading(true);
 
     try {
-      const { data } = await api.post('/chat', { userId, messages: updatedMessages });
+      const { data } = await api.post('/chat', { messages: updatedMessages });
       const assistantMsg = { role: 'assistant', content: data.reply };
       setMessages(prev => [...prev, assistantMsg]);
     } catch (err) {

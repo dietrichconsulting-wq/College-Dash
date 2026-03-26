@@ -12,7 +12,7 @@ import CollegeStrategy from './CollegeStrategy';
 import { getSchoolColors, DEFAULT_THEME } from '../utils/schoolColors';
 import api from '../utils/api';
 
-export default function ParentDashboard({ parentId, dark, onToggleDark }) {
+export default function ParentDashboard({ parentId, dark, onToggleDark, onSignOut }) {
   const [activePage, setActivePage] = useState('dashboard');
   const [studentData, setStudentData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -91,7 +91,7 @@ export default function ParentDashboard({ parentId, dark, onToggleDark }) {
       <Sidebar activePage={activePage} onNavigate={setActivePage} profile={profile} dark={dark} readOnly />
 
       <div className="sidebar-layout__content">
-        <Header profile={profile} onToggleChat={noop} dark={dark} onToggleDark={onToggleDark} readOnly />
+        <Header profile={profile} onToggleChat={noop} dark={dark} onToggleDark={onToggleDark} onSignOut={onSignOut} readOnly />
 
         {/* Parent read-only banner */}
         <div className="mx-4 mt-2 mb-0">

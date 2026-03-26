@@ -7,7 +7,12 @@ const CLIMATE_OPTIONS = [
   'Midwest', 'Pacific Northwest', 'Northeast', 'Southeast', 'No Preference',
 ];
 
-const TIER_CONFIG = {
+const _dark = () => document.documentElement.getAttribute('data-theme') === 'dark';
+const getTierConfig = () => _dark() ? {
+  reach:  { label: 'Reach',  emoji: '🚀', color: '#FCA5A5', bg: 'rgba(252,165,165,0.08)', border: 'rgba(252,165,165,0.18)' },
+  target: { label: 'Target', emoji: '🎯', color: '#FDE68A', bg: 'rgba(253,230,138,0.08)', border: 'rgba(253,230,138,0.18)' },
+  safety: { label: 'Safety', emoji: '✅', color: '#86EFAC', bg: 'rgba(134,239,172,0.08)', border: 'rgba(134,239,172,0.18)' },
+} : {
   reach:  { label: 'Reach',  emoji: '🚀', color: '#EF4444', bg: 'rgba(239,68,68,0.07)',  border: 'rgba(239,68,68,0.2)'  },
   target: { label: 'Target', emoji: '🎯', color: '#F59E0B', bg: 'rgba(245,158,11,0.07)', border: 'rgba(245,158,11,0.2)' },
   safety: { label: 'Safety', emoji: '✅', color: '#22C55E', bg: 'rgba(34,197,94,0.07)',  border: 'rgba(34,197,94,0.2)'  },
@@ -35,7 +40,7 @@ function Stat({ label, value, color, real, title }) {
 }
 
 function DiscoveryCard({ school, index, onAdd, canAdd, alreadyAdded }) {
-  const cfg = TIER_CONFIG[school.tier] || TIER_CONFIG.target;
+  const cfg = getTierConfig()[school.tier] || TIER_CONFIG.target;
 
   return (
     <motion.div
@@ -378,7 +383,7 @@ export default function SchoolDiscovery({ profile, onSaveSchools }) {
 
             {[['reach', reachSchools], ['target', targetSchools], ['safety', safetySchools]].map(([tier, schools]) => {
               if (!schools.length) return null;
-              const cfg = TIER_CONFIG[tier];
+              const cfg = getTierConfig()[tier];
               return (
                 <div key={tier} style={{ marginBottom: 28 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>

@@ -13,8 +13,7 @@ router.post('/roadmap', async (req, res, next) => {
       return res.status(503).json({ error: 'AI not configured. Set GEMINI_API_KEY in .env' });
     }
 
-    const { userId } = req.body;
-    if (!userId) return res.status(400).json({ error: 'userId is required' });
+    const userId = req.userId;
 
     const profile = await getProfile(userId);
     if (!profile) return res.status(404).json({ error: 'Profile not found' });
@@ -37,9 +36,10 @@ router.post('/roadmap', async (req, res, next) => {
 // Accept selected tasks from the roadmap and create them
 router.post('/roadmap/accept', async (req, res, next) => {
   try {
-    const { userId, tasks } = req.body;
-    if (!userId || !Array.isArray(tasks)) {
-      return res.status(400).json({ error: 'userId and tasks[] are required' });
+    const userId = req.userId;
+    const { tasks } = req.body;
+    if (!Array.isArray(tasks)) {
+      return res.status(400).json({ error: 'tasks[] is required' });
     }
 
     const created = [];

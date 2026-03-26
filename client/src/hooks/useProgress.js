@@ -46,7 +46,7 @@ export function useProgress(userId) {
 
   const addMilestone = async (milestoneKey, notes) => {
     if (reachedKeys.has(milestoneKey)) return;
-    await api.post('/progress', { userId, milestoneKey, notes });
+    await api.post('/progress', { milestoneKey, notes });
     await fetchProgress();
   };
 

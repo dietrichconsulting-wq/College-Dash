@@ -32,7 +32,7 @@ router.get('/search', async (req, res, next) => {
 // Admission probability for all target schools
 router.get('/chances/:userId', async (req, res, next) => {
   try {
-    const profile = await getProfile(req.params.userId);
+    const profile = await getProfile(req.userId);
     if (!profile) return res.status(404).json({ error: 'Profile not found' });
     const chances = await computeChances(profile);
     res.json({ chances });

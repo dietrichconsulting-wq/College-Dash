@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import api from '../utils/api';
 
-export default function ParentOnboardingPage({ onComplete }) {
+export default function ParentOnboardingPage({ authUserId, onComplete }) {
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [linkCode, setLinkCode] = useState('');
@@ -15,8 +15,9 @@ export default function ParentOnboardingPage({ onComplete }) {
     setSubmitting(true);
 
     try {
-      // 1. Create the parent profile
+      // 1. Create the parent profile (use Supabase auth user ID)
       const { data: profile } = await api.post('/profile', {
+        userId: authUserId,
         displayName,
         email,
         accountType: 'parent',

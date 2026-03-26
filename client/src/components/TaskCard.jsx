@@ -1,17 +1,30 @@
 import { Draggable } from '@hello-pangea/dnd';
 import { motion } from 'framer-motion';
 
-// Muted pill palette — subtle bg + tinted text
-const CATEGORY_STYLES = {
-  Testing: { bg: 'rgba(59, 130, 246, 0.08)', color: '#2563EB' },
-  Application: { bg: 'rgba(139, 92, 246, 0.08)', color: '#7C3AED' },
-  Financial: { bg: 'rgba(34, 197, 94, 0.08)', color: '#16A34A' },
-  Visit: { bg: 'rgba(249, 115, 22, 0.08)', color: '#EA580C' },
-  Portfolio: { bg: 'rgba(236, 72, 153, 0.08)', color: '#DB2777' },
-  Recommendation: { bg: 'rgba(234, 179, 8, 0.08)', color: '#CA8A04' },
-  Other: { bg: 'rgba(100, 116, 139, 0.08)', color: '#475569' },
+// Muted pill palette — desaturated pastels for dark, saturated for light
+const _dark = () => document.documentElement.getAttribute('data-theme') === 'dark';
+const CATEGORY_LIGHT = {
+  Testing:        { bg: 'rgba(59, 130, 246, 0.08)',  color: '#2563EB' },
+  Application:    { bg: 'rgba(139, 92, 246, 0.08)',  color: '#7C3AED' },
+  Financial:      { bg: 'rgba(34, 197, 94, 0.08)',   color: '#16A34A' },
+  Visit:          { bg: 'rgba(249, 115, 22, 0.08)',  color: '#EA580C' },
+  Portfolio:      { bg: 'rgba(236, 72, 153, 0.08)',  color: '#DB2777' },
+  Recommendation: { bg: 'rgba(234, 179, 8, 0.08)',   color: '#CA8A04' },
+  Other:          { bg: 'rgba(100, 116, 139, 0.08)', color: '#475569' },
 };
-const DEFAULT_PILL = { bg: 'rgba(100, 116, 139, 0.08)', color: '#475569' };
+const CATEGORY_DARK = {
+  Testing:        { bg: 'rgba(125, 211, 252, 0.10)', color: '#7DD3FC' },
+  Application:    { bg: 'rgba(196, 181, 253, 0.10)', color: '#C4B5FD' },
+  Financial:      { bg: 'rgba(134, 239, 172, 0.10)', color: '#86EFAC' },
+  Visit:          { bg: 'rgba(253, 186, 116, 0.10)', color: '#FDBA74' },
+  Portfolio:      { bg: 'rgba(249, 168, 212, 0.10)', color: '#F9A8D4' },
+  Recommendation: { bg: 'rgba(253, 230, 138, 0.10)', color: '#FDE68A' },
+  Other:          { bg: 'rgba(168, 162, 158, 0.10)', color: '#A8A29E' },
+};
+const getCategoryStyles = () => _dark() ? CATEGORY_DARK : CATEGORY_LIGHT;
+const DEFAULT_PILL = _dark()
+  ? { bg: 'rgba(168, 162, 158, 0.10)', color: '#A8A29E' }
+  : { bg: 'rgba(100, 116, 139, 0.08)', color: '#475569' };
 
 export default function TaskCard({ task, index, onSyncCalendar, onDelete }) {
   return (
@@ -48,8 +61,8 @@ export default function TaskCard({ task, index, onSyncCalendar, onDelete }) {
               className="font-semibold px-2.5 py-0.5 rounded-full"
               style={{
                 fontSize: 'var(--font-size-micro)',
-                backgroundColor: (CATEGORY_STYLES[task.category] || DEFAULT_PILL).bg,
-                color: (CATEGORY_STYLES[task.category] || DEFAULT_PILL).color,
+                backgroundColor: (getCategoryStyles()[task.category] || DEFAULT_PILL).bg,
+                color: (getCategoryStyles()[task.category] || DEFAULT_PILL).color,
               }}
             >
               {task.category}

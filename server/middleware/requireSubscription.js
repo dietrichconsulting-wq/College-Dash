@@ -1,7 +1,9 @@
 import { getProfile } from '../services/supabase.js';
 
 export default async function requireSubscription(req, res, next) {
-  const userId = req.params.userId || req.query.userId || req.body?.userId;
+  // Prefer the JWT-verified userId set by requireAuth middleware.
+  // Fall back to params/query/body for public routes that don't use requireAuth.
+  const userId = req.userId || req.params.userId || req.query.userId || req.body?.userId;
 
   if (!userId) {
     return res.status(401).json({ error: 'userId required' });

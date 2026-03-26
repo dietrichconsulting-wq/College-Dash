@@ -7,7 +7,8 @@ const router = Router();
 // Sync a task to Google Calendar
 router.post('/sync', async (req, res, next) => {
   try {
-    const { userId, taskId, title, date, description } = req.body;
+    const userId = req.userId;
+    const { taskId, title, date, description } = req.body;
     if (!hasTokens(userId)) {
       return res.status(401).json({ error: 'Google Calendar not connected' });
     }
@@ -22,7 +23,7 @@ router.post('/sync', async (req, res, next) => {
 // Remove a calendar event
 router.delete('/:eventId', async (req, res, next) => {
   try {
-    const userId = req.query.userId;
+    const userId = req.userId;
     await deleteCalendarEvent(userId, req.params.eventId);
     res.json({ success: true });
   } catch (err) {

@@ -7,14 +7,18 @@ const CLIMATE_OPTIONS = [
   'Midwest', 'Pacific Northwest', 'Northeast', 'Southeast', 'No Preference',
 ];
 
-const TIER_CONFIG = {
+const _dark = () => document.documentElement.getAttribute('data-theme') === 'dark';
+const getTierConfig = () => _dark() ? {
+  reach:  { label: 'Reach',  emoji: '🚀', color: '#FCA5A5', bg: 'rgba(252,165,165,0.08)', border: 'rgba(252,165,165,0.18)' },
+  target: { label: 'Target', emoji: '🎯', color: '#FDE68A', bg: 'rgba(253,230,138,0.08)', border: 'rgba(253,230,138,0.18)' },
+  safety: { label: 'Safety', emoji: '✅', color: '#86EFAC', bg: 'rgba(134,239,172,0.08)', border: 'rgba(134,239,172,0.18)' },
+} : {
   reach:  { label: 'Reach',  emoji: '🚀', color: '#EF4444', bg: 'rgba(239,68,68,0.07)',  border: 'rgba(239,68,68,0.2)'  },
   target: { label: 'Target', emoji: '🎯', color: '#F59E0B', bg: 'rgba(245,158,11,0.07)', border: 'rgba(245,158,11,0.2)' },
   safety: { label: 'Safety', emoji: '✅', color: '#22C55E', bg: 'rgba(34,197,94,0.07)',  border: 'rgba(34,197,94,0.2)'  },
 };
-
 function SchoolCard({ school, tier, index }) {
-  const cfg = TIER_CONFIG[tier];
+  const cfg = getTierConfig()[tier];
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
@@ -91,7 +95,7 @@ function Stat({ label, value, color, real, title }) {
 }
 
 function TierSection({ tier, schools }) {
-  const cfg = TIER_CONFIG[tier];
+  const cfg = getTierConfig()[tier];
   if (!schools?.length) return null;
   return (
     <div style={{ marginBottom: 24 }}>
@@ -140,7 +144,7 @@ export default function CollegeStrategy({ profile, userId, readOnly }) {
     try {
       const schools = (profile?.schools || []).filter(s => s?.name?.trim()).map(s => s.name);
       const { data } = await api.post('/strategy/generate', {
-        ...form, schools, userId, forceRefresh,
+        ...form, schools, forceRefresh,
       });
       setResult(data);
     } catch (err) {

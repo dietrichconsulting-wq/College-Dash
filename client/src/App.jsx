@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
+import { useAuth } from './hooks/useAuth';
 import { useProfile } from './hooks/useProfile';
 import { useDarkMode } from './hooks/useDarkMode';
+import AuthPage from './components/AuthPage';
 import AccountTypeSelector from './components/AccountTypeSelector';
 import OnboardingPage from './components/OnboardingPage';
 import ParentOnboardingPage from './components/ParentOnboardingPage';
@@ -10,7 +12,8 @@ import ParentDashboard from './components/ParentDashboard';
 import api from './utils/api';
 
 function App() {
-  const { userId, profile, loading, createProfile, updateProfile, setProfile } = useProfile();
+  const { user, loading: authLoading, signIn, signUp, signOut } = useAuth();
+  const { userId, profile, loading: profileLoading, createProfile, updateProfile, setProfile } = useProfile(user?.id);
   const [dark, setDark] = useDarkMode();
   const [subChecked, setSubChecked] = useState(false);
   const [hasAccess, setHasAccess] = useState(false);
@@ -24,7 +27,6 @@ function App() {
     }
 
     if (profile.accountType === 'parent') {
-      // Parents ride on student's subscription
       api.get(`/parent/access/${userId}`)
         .then(({ data }) => {
           setHasAccess(data.hasAccess);
@@ -35,7 +37,6 @@ function App() {
           setSubChecked(true);
         });
     } else {
-      // Students check their own subscription
       api.get(`/subscription/status/${userId}`)
         .then(({ data }) => {
           setHasAccess(data.hasAccess);
@@ -67,7 +68,8 @@ function App() {
     }
   }, [userId]);
 
-  if (loading || !subChecked) {
+  // ── Loading spinner ──
+  if (authLoading || profileLoading || !subChecked) {
     return (
       <div className="min-h-screen bg-bg flex items-center justify-center">
         <div className="text-center">
@@ -78,31 +80,33 @@ function App() {
     );
   }
 
-  // ── No account yet: show account type selector, then onboarding ──
-  if (!userId || !profile) {
-    // Step 1: Choose account type
+  // ── Not authenticated: show sign-in / sign-up ──
+  if (!user) {
+    return <AuthPage signIn={signIn} signUp={signUp} />;
+  }
+
+  // ── Authenticated but no profile yet: onboarding ──
+  if (!profile) {
     if (!accountTypeChoice) {
       return <AccountTypeSelector onSelect={setAccountTypeChoice} />;
     }
 
-    // Step 2a: Parent onboarding
     if (accountTypeChoice === 'parent') {
       return (
         <ParentOnboardingPage
+          authUserId={user.id}
           onComplete={(parentProfile) => {
-            localStorage.setItem('userId', parentProfile.userId);
             setProfile(parentProfile);
-            setHasAccess(true); // Will be re-checked by useEffect
+            setHasAccess(true);
           }}
         />
       );
     }
 
-    // Step 2b: Student onboarding (existing flow)
     return <OnboardingPage onComplete={createProfile} />;
   }
 
-  // ── Parent account: show parent dashboard or inactive message ──
+  // ── Parent account ──
   if (profile.accountType === 'parent') {
     if (!hasAccess) {
       return (
@@ -113,13 +117,10 @@ function App() {
               Your student's subscription is not currently active. Parent access requires an active student subscription.
             </p>
             <button
-              onClick={() => {
-                localStorage.removeItem('userId');
-                window.location.reload();
-              }}
+              onClick={signOut}
               className="text-sm text-navy hover:underline"
             >
-              Sign in with a different account
+              Sign out
             </button>
           </div>
         </div>
@@ -131,11 +132,12 @@ function App() {
         parentId={userId}
         dark={dark}
         onToggleDark={() => setDark(d => !d)}
+        onSignOut={signOut}
       />
     );
   }
 
-  // ── Student account: existing paywall + dashboard flow ──
+  // ── Student account: paywall + dashboard ──
   if (!hasAccess) {
     return (
       <PaywallPage
@@ -156,6 +158,7 @@ function App() {
       updateProfile={updateProfile}
       dark={dark}
       onToggleDark={() => setDark(d => !d)}
+      onSignOut={signOut}
     />
   );
 }

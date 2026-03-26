@@ -74,7 +74,18 @@ function ProgressRing({ percent = 0 }) {
   );
 }
 
-function StatCard({ label, field, value, small, onSave, inputType = 'text', step, readOnly }) {
+// Dark-mode-aware stat colors: differentiated per metric, soft on dark backgrounds
+const STAT_COLORS = {
+  GPA:   { light: 'var(--color-primary)', dark: 'var(--color-stat-gpa, #5EEAD4)' },
+  SAT:   { light: 'var(--color-primary)', dark: 'var(--color-stat-sat, #FCD34D)' },
+  ACT:   { light: 'var(--color-primary)', dark: 'var(--color-stat-act, #7DD3FC)' },
+  Major: { light: 'var(--color-primary)', dark: 'var(--color-stat-major, #86EFAC)' },
+};
+
+function StatCard({ label, field, value, small, onSave, inputType = 'text', step, readOnly, dark }) {
+  const statColor = STAT_COLORS[label]
+    ? (dark ? STAT_COLORS[label].dark : STAT_COLORS[label].light)
+    : 'var(--color-primary)';
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(String(value ?? ''));
   const inputRef = useRef(null);
@@ -121,8 +132,8 @@ function StatCard({ label, field, value, small, onSave, inputType = 'text', step
           className="font-bold leading-none bg-transparent outline-none border-b-2 w-full"
           style={{
             fontSize: small ? 'var(--font-size-section-header)' : 'var(--font-size-card-metric)',
-            color: 'var(--color-primary)',
-            borderColor: 'var(--color-primary)',
+            color: statColor,
+            borderColor: statColor,
             lineHeight: 'var(--line-height-tight)',
           }}
         />
@@ -131,7 +142,7 @@ function StatCard({ label, field, value, small, onSave, inputType = 'text', step
           className="font-bold leading-none"
           style={{
             fontSize: small ? 'var(--font-size-section-header)' : 'var(--font-size-card-metric)',
-            color: 'var(--color-primary)',
+            color: statColor,
             lineHeight: 'var(--line-height-tight)',
           }}
         >
@@ -176,10 +187,10 @@ export default function ProfileSummary({ profile, completionPercent, onReorderSc
     >
       {/* Stats + Progress ring on the left */}
       <div className="profile-stats-row">
-        <StatCard label="GPA" field="gpa" value={profile?.gpa?.toFixed(2)} inputType="number" step="0.01" onSave={onUpdateStat} readOnly={readOnly} />
-        <StatCard label="SAT" field="sat" value={profile?.sat} inputType="number" onSave={onUpdateStat} readOnly={readOnly} />
-        <StatCard label="ACT" field="act" value={profile?.act} inputType="number" onSave={onUpdateStat} readOnly={readOnly} />
-        <StatCard label="Major" field="major" value={profile?.proposedMajor} small onSave={onUpdateStat} readOnly={readOnly} />
+        <StatCard label="GPA" field="gpa" value={profile?.gpa?.toFixed(2)} inputType="number" step="0.01" onSave={onUpdateStat} readOnly={readOnly} dark={dark} />
+        <StatCard label="SAT" field="sat" value={profile?.sat} inputType="number" onSave={onUpdateStat} readOnly={readOnly} dark={dark} />
+        <StatCard label="ACT" field="act" value={profile?.act} inputType="number" onSave={onUpdateStat} readOnly={readOnly} dark={dark} />
+        <StatCard label="Major" field="major" value={profile?.proposedMajor} small onSave={onUpdateStat} readOnly={readOnly} dark={dark} />
 
         {/* Progress Ring Card */}
         <motion.div

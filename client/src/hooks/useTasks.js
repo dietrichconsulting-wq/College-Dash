@@ -49,7 +49,7 @@ export function useTasks(userId) {
   };
 
   const createTask = async (taskData) => {
-    const { data } = await api.post('/tasks', { userId, ...taskData });
+    const { data } = await api.post('/tasks', taskData);
     await fetchTasks();
     return data;
   };
@@ -65,7 +65,7 @@ export function useTasks(userId) {
   };
 
   const acceptRoadmapTasks = async (tasks) => {
-    const { data } = await api.post('/generate/roadmap/accept', { userId, tasks });
+    const { data } = await api.post('/generate/roadmap/accept', { tasks });
     await fetchTasks();
     return data;
   };

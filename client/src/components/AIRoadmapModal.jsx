@@ -12,15 +12,26 @@ const CATEGORY_ICONS = {
   Other: '📌',
 };
 
-const CATEGORY_COLORS = {
-  Testing: { bg: 'rgba(59, 130, 246, 0.08)', color: '#2563EB', border: 'rgba(59, 130, 246, 0.2)' },
-  Application: { bg: 'rgba(139, 92, 246, 0.08)', color: '#7C3AED', border: 'rgba(139, 92, 246, 0.2)' },
-  Financial: { bg: 'rgba(34, 197, 94, 0.08)', color: '#16A34A', border: 'rgba(34, 197, 94, 0.2)' },
-  Visit: { bg: 'rgba(249, 115, 22, 0.08)', color: '#EA580C', border: 'rgba(249, 115, 22, 0.2)' },
-  Portfolio: { bg: 'rgba(236, 72, 153, 0.08)', color: '#DB2777', border: 'rgba(236, 72, 153, 0.2)' },
-  Recommendation: { bg: 'rgba(234, 179, 8, 0.08)', color: '#CA8A04', border: 'rgba(234, 179, 8, 0.2)' },
-  Other: { bg: 'rgba(100, 116, 139, 0.08)', color: '#475569', border: 'rgba(100, 116, 139, 0.2)' },
+const _dark = () => document.documentElement.getAttribute('data-theme') === 'dark';
+const CATEGORY_COLORS_LIGHT = {
+  Testing:        { bg: 'rgba(59, 130, 246, 0.08)',  color: '#2563EB', border: 'rgba(59, 130, 246, 0.2)' },
+  Application:    { bg: 'rgba(139, 92, 246, 0.08)',  color: '#7C3AED', border: 'rgba(139, 92, 246, 0.2)' },
+  Financial:      { bg: 'rgba(34, 197, 94, 0.08)',   color: '#16A34A', border: 'rgba(34, 197, 94, 0.2)' },
+  Visit:          { bg: 'rgba(249, 115, 22, 0.08)',  color: '#EA580C', border: 'rgba(249, 115, 22, 0.2)' },
+  Portfolio:      { bg: 'rgba(236, 72, 153, 0.08)',  color: '#DB2777', border: 'rgba(236, 72, 153, 0.2)' },
+  Recommendation: { bg: 'rgba(234, 179, 8, 0.08)',   color: '#CA8A04', border: 'rgba(234, 179, 8, 0.2)' },
+  Other:          { bg: 'rgba(100, 116, 139, 0.08)', color: '#475569', border: 'rgba(100, 116, 139, 0.2)' },
 };
+const CATEGORY_COLORS_DARK = {
+  Testing:        { bg: 'rgba(125, 211, 252, 0.10)', color: '#7DD3FC', border: 'rgba(125, 211, 252, 0.18)' },
+  Application:    { bg: 'rgba(196, 181, 253, 0.10)', color: '#C4B5FD', border: 'rgba(196, 181, 253, 0.18)' },
+  Financial:      { bg: 'rgba(134, 239, 172, 0.10)', color: '#86EFAC', border: 'rgba(134, 239, 172, 0.18)' },
+  Visit:          { bg: 'rgba(253, 186, 116, 0.10)', color: '#FDBA74', border: 'rgba(253, 186, 116, 0.18)' },
+  Portfolio:      { bg: 'rgba(249, 168, 212, 0.10)', color: '#F9A8D4', border: 'rgba(249, 168, 212, 0.18)' },
+  Recommendation: { bg: 'rgba(253, 230, 138, 0.10)', color: '#FDE68A', border: 'rgba(253, 230, 138, 0.18)' },
+  Other:          { bg: 'rgba(168, 162, 158, 0.10)', color: '#A8A29E', border: 'rgba(168, 162, 158, 0.18)' },
+};
+const getCategoryColors = () => _dark() ? CATEGORY_COLORS_DARK : CATEGORY_COLORS_LIGHT;
 
 function formatDate(dateStr) {
   if (!dateStr) return '';
@@ -31,7 +42,8 @@ function formatDate(dateStr) {
 }
 
 function TaskCard({ task, index, selected, onToggle }) {
-  const cat = CATEGORY_COLORS[task.category] || CATEGORY_COLORS.Other;
+  const colors = getCategoryColors();
+  const cat = colors[task.category] || colors.Other;
   const icon = CATEGORY_ICONS[task.category] || '📌';
 
   return (
@@ -114,7 +126,7 @@ export default function AIRoadmapModal({ open, onClose, userId, onTasksAccepted 
     setPhase('loading');
     setError(null);
     try {
-      const { data } = await api.post('/generate/roadmap', { userId });
+      const { data } = await api.post('/generate/roadmap', {});
       setTasks(data.tasks);
       // Select all by default
       setSelected(new Set(data.tasks.map((_, i) => i)));

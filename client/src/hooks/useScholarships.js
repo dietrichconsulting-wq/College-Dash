@@ -29,7 +29,7 @@ export function useScholarships(userId) {
   }, [fetchScholarships]);
 
   const createScholarship = async (scholarship) => {
-    const { data } = await api.post('/scholarships', { userId, ...scholarship });
+    const { data } = await api.post('/scholarships', scholarship);
     setColumns(prev => ({
       ...prev,
       [data.stage]: [...prev[data.stage], data],

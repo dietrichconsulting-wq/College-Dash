@@ -37,36 +37,36 @@ body::before {
   --glass-inner-bg:    rgba(248, 250, 252, 0.60);
 }
 
-/* ── 3. Dark mode glass overrides ── */
+/* ── 3. Dark mode glass overrides — warm neutral tones ── */
 
 [data-theme="dark"] {
-  --glass-bg:          rgba(10, 17, 32, 0.65);
-  --glass-border:      1px solid rgba(255, 255, 255, 0.09);
+  --glass-bg:          rgba(28, 29, 36, 0.72);
+  --glass-border:      1px solid rgba(255, 255, 255, 0.07);
   --glass-shadow:
-    0 4px 24px rgba(0, 0, 0, 0.45),
-    0 1px 4px  rgba(0, 0, 0, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    0 4px 24px rgba(0, 0, 0, 0.50),
+    0 1px 4px  rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
   --glass-blur:        blur(20px) saturate(160%);
-  --glass-inner-bg:    rgba(20, 30, 50, 0.60);
+  --glass-inner-bg:    rgba(37, 39, 48, 0.60);
 }
 
 [data-theme="dark"] body {
-  background-color: #070C18;
+  background-color: #121318;
 }
 
 [data-theme="dark"] body::before {
   background:
     radial-gradient(ellipse 75% 55% at 8% 3%,
-      color-mix(in srgb, var(--color-primary, #2563EB) 20%, transparent) 0%,
+      color-mix(in srgb, var(--color-primary, #5EEAD4) 12%, transparent) 0%,
       transparent 65%),
     radial-gradient(ellipse 55% 45% at 92% 8%,
-      color-mix(in srgb, var(--color-accent, #60A5FA) 14%, transparent) 0%,
+      color-mix(in srgb, var(--color-accent, #7DD3FC) 10%, transparent) 0%,
       transparent 58%),
     radial-gradient(ellipse 45% 55% at 60% 90%,
-      color-mix(in srgb, var(--color-gold, #F59E0B) 11%, transparent) 0%,
+      color-mix(in srgb, var(--color-gold, #FCD34D) 8%, transparent) 0%,
       transparent 55%),
     radial-gradient(ellipse 50% 40% at 20% 75%,
-      color-mix(in srgb, var(--color-secondary, #818CF8) 10%, transparent) 0%,
+      color-mix(in srgb, var(--color-secondary, #86EFAC) 7%, transparent) 0%,
       transparent 52%);
 }
 
@@ -121,13 +121,13 @@ body::before {
 /* ── 7. Glassmorphism header ── */
 
 .header-bar {
-  background: rgba(10, 15, 30, 0.72) !important;
-  backdrop-filter: blur(24px) saturate(200%) !important;
-  -webkit-backdrop-filter: blur(24px) saturate(200%) !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  background: rgba(18, 19, 24, 0.82) !important;
+  backdrop-filter: blur(24px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
   box-shadow:
-    0 4px 24px rgba(0, 0, 0, 0.18),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.05) !important;
+    0 4px 24px rgba(0, 0, 0, 0.22),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.04) !important;
 }
 
 /* Keep the header accent glow line */
@@ -153,10 +153,10 @@ body::before {
 .roadmap-modal,
 .scholarship-modal,
 .ai-roadmap-modal {
-  background: rgba(8, 14, 26, 0.82) !important;
+  background: rgba(18, 19, 24, 0.88) !important;
   backdrop-filter: blur(28px) saturate(180%) !important;
   -webkit-backdrop-filter: blur(28px) saturate(180%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.10) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
 
 [data-theme="light"] .cmd-bar,
@@ -179,7 +179,7 @@ body::before {
   box-shadow:
     0 12px 40px rgba(0, 0, 0, 0.55),
     0 4px 12px rgba(0, 0, 0, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+    inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
 }
 
 /* ── 11. Text contrast boost over glass ── */
@@ -189,9 +189,9 @@ body::before {
   --color-text-muted: #475569;
 }
 
-/* Dark mode — keep existing muted color */
+/* Dark mode — warm stone muted (not cold blue-gray) */
 [data-theme="dark"] {
-  --color-text-muted: #A8B5C4;
+  --color-text-muted: #A8A29E;
 }
 
 /* ── 12. Admission chances cards glass ── */
@@ -220,7 +220,7 @@ body::before {
 }
 
 [data-theme="dark"] .fixed.right-0.top-0.bottom-0 {
-  background: rgba(8, 14, 26, 0.88) !important;
+  background: rgba(18, 19, 24, 0.90) !important;
 }
 
 /* ── 15. Progress ring card ── */
@@ -243,8 +243,8 @@ body::before {
 }
 
 [data-theme="dark"] .cmd-hint-badge {
-  background: rgba(15, 23, 42, 0.72) !important;
-  border-color: rgba(255,255,255,0.10) !important;
+  background: rgba(28, 29, 36, 0.78) !important;
+  border-color: rgba(255,255,255,0.08) !important;
 }
 
 /* ── 17. Scrollbar polish ── */

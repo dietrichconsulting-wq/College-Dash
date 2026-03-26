@@ -7,7 +7,7 @@ const router = Router();
 // Get all tasks for user
 router.get('/:userId', async (req, res, next) => {
   try {
-    const tasks = await getTasks(req.params.userId);
+    const tasks = await getTasks(req.userId);
     res.json(tasks);
   } catch (err) {
     next(err);
@@ -17,7 +17,8 @@ router.get('/:userId', async (req, res, next) => {
 // Create a custom task
 router.post('/', async (req, res, next) => {
   try {
-    const { userId, title, description, category, dueDate, sortOrder } = req.body;
+    const userId = req.userId;
+    const { title, description, category, dueDate, sortOrder } = req.body;
     const taskId = uuidv4();
     await createTask({ taskId, userId, title, description, status: 'To Do', category, dueDate, sortOrder });
     res.status(201).json({ taskId });

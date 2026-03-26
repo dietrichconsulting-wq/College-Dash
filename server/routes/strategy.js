@@ -12,7 +12,8 @@ const CACHE_TTL_MS = 60 * 60 * 1000;
 
 router.post('/generate', async (req, res, next) => {
   try {
-    const { userId, gpa, sat, act, major, budget, climate, schools, forceRefresh } = req.body;
+    const userId = req.userId;
+    const { gpa, sat, act, major, budget, climate, schools, forceRefresh } = req.body;
     if (!gpa || (!sat && !act) || !major) {
       return res.status(400).json({ error: 'gpa, a test score (SAT or ACT), and major are required' });
     }

@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -20,6 +21,7 @@ import subscriptionRoutes from './routes/subscription.js';
 import parentRoutes from './routes/parent.js';
 import cronRoutes from './routes/cron.js';
 import errorHandler from './middleware/errorHandler.js';
+import requireAuth from './middleware/requireAuth.js';
 import requireSubscription from './middleware/requireSubscription.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -28,30 +30,62 @@ dotenv.config({ path: resolve(__dirname, '../.env') });
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-app.use(cors());
+// ─── CORS: only allow our own origins ────────────────────
+const allowedOrigins = [
+  'https://stairwayu.com',
+  'https://www.stairwayu.com',
+  process.env.NODE_ENV !== 'production' && 'http://localhost:5173',
+  process.env.NODE_ENV !== 'production' && 'http://localhost:3001',
+].filter(Boolean);
+
+app.use(cors({
+  origin(origin, cb) {
+    // Allow requests with no origin (server-to-server, curl, mobile apps)
+    if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
+    cb(new Error('Not allowed by CORS'));
+  },
+  credentials: true,
+}));
+
+// ─── Rate limiting ───────────────────────────────────────
+const publicLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 50,                   // 50 requests per window
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests, please try again later' },
+});
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 200,                  // authenticated users get higher limit
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests, please try again later' },
+});
 
 // Stripe webhook needs raw body for signature verification — must come before express.json()
 app.use('/api/subscription/webhook', express.raw({ type: 'application/json' }));
 app.use(express.json());
 
-// Public routes (no subscription check)
-app.use('/api/profile', profileRoutes);
-app.use('/api/subscription', subscriptionRoutes);
-app.use('/api/parent', parentRoutes);
-app.use('/api/cron', cronRoutes);
+// Public routes (no auth required — rate-limited)
+app.use('/api/profile', publicLimiter, profileRoutes);
+app.use('/api/subscription', publicLimiter, subscriptionRoutes);
+app.use('/api/parent', publicLimiter, parentRoutes);
+app.use('/api/cron', cronRoutes); // protected by CRON_SECRET, not rate-limited
 
-// Protected routes (subscription required)
-app.use('/api/tasks', requireSubscription, taskRoutes);
-app.use('/api/progress', requireSubscription, progressRoutes);
-app.use('/api/colleges', requireSubscription, collegeRoutes);
-app.use('/api/auth', requireSubscription, authRoutes);
-app.use('/api/calendar', requireSubscription, calendarRoutes);
-app.use('/api/chat', requireSubscription, chatRoutes);
-app.use('/api/generate', requireSubscription, generateRoutes);
-app.use('/api/scholarships', requireSubscription, scholarshipRoutes);
-app.use('/api/portfolio', requireSubscription, portfolioRoutes);
-app.use('/api/strategy', requireSubscription, strategyRoutes);
-app.use('/api/discovery', requireSubscription, discoveryRoutes);
+// Protected routes (JWT auth + subscription check + rate-limited)
+app.use('/api/tasks', authLimiter, requireAuth, requireSubscription, taskRoutes);
+app.use('/api/progress', authLimiter, requireAuth, requireSubscription, progressRoutes);
+app.use('/api/colleges', authLimiter, requireAuth, requireSubscription, collegeRoutes);
+app.use('/api/auth', authLimiter, requireAuth, requireSubscription, authRoutes);
+app.use('/api/calendar', authLimiter, requireAuth, requireSubscription, calendarRoutes);
+app.use('/api/chat', authLimiter, requireAuth, requireSubscription, chatRoutes);
+app.use('/api/generate', authLimiter, requireAuth, requireSubscription, generateRoutes);
+app.use('/api/scholarships', authLimiter, requireAuth, requireSubscription, scholarshipRoutes);
+app.use('/api/portfolio', authLimiter, requireAuth, requireSubscription, portfolioRoutes);
+app.use('/api/strategy', authLimiter, requireAuth, requireSubscription, strategyRoutes);
+app.use('/api/discovery', authLimiter, requireAuth, requireSubscription, discoveryRoutes);
 
 // Serve static frontend in production
 app.use(express.static(resolve(__dirname, 'public')));

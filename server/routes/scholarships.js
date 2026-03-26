@@ -13,7 +13,7 @@ const router = Router();
 // GET /api/scholarships/:userId
 router.get('/:userId', async (req, res, next) => {
   try {
-    const columns = await getScholarships(req.params.userId);
+    const columns = await getScholarships(req.userId);
     res.json(columns);
   } catch (err) {
     next(err);
@@ -23,7 +23,8 @@ router.get('/:userId', async (req, res, next) => {
 // POST /api/scholarships
 router.post('/', async (req, res, next) => {
   try {
-    const { userId, name, amount, deadline, essayRequired, difficulty, stage, url, notes } = req.body;
+    const userId = req.userId;
+    const { name, amount, deadline, essayRequired, difficulty, stage, url, notes } = req.body;
     const scholarshipId = uuidv4();
     const scholarship = await createScholarship({
       scholarshipId, userId, name, amount, deadline,

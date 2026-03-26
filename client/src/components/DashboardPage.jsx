@@ -27,7 +27,7 @@ function slugify(name) {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 }
 
-export default function DashboardPage({ userId, profile, updateProfile, dark, onToggleDark }) {
+export default function DashboardPage({ userId, profile, updateProfile, dark, onToggleDark, onSignOut }) {
   const [activePage, setActivePage] = useState('dashboard');
   const [chatOpen, setChatOpen] = useState(false);
   const [schoolsModalOpen, setSchoolsModalOpen] = useState(false);
@@ -135,7 +135,7 @@ export default function DashboardPage({ userId, profile, updateProfile, dark, on
       <Sidebar activePage={activePage} onNavigate={setActivePage} profile={effectiveProfile} dark={dark} />
 
       <div className="sidebar-layout__content">
-      <Header profile={effectiveProfile} onToggleChat={() => setChatOpen(!chatOpen)} dark={dark} onToggleDark={onToggleDark} />
+      <Header profile={effectiveProfile} onToggleChat={() => setChatOpen(!chatOpen)} dark={dark} onToggleDark={onToggleDark} onSignOut={onSignOut} />
 
       <main className="max-w-5xl mx-auto px-3 py-4 md:px-4 md:py-8">
 

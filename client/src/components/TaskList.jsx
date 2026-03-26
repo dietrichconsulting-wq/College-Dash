@@ -24,16 +24,27 @@ function TaskListSkeleton() {
   );
 }
 
-// ── Category palette ──
-const CATEGORY_STYLES = {
-  Testing: { bg: 'rgba(59, 130, 246, 0.08)', color: '#2563EB' },
-  Application: { bg: 'rgba(139, 92, 246, 0.08)', color: '#7C3AED' },
-  Financial: { bg: 'rgba(34, 197, 94, 0.08)', color: '#16A34A' },
-  Visit: { bg: 'rgba(249, 115, 22, 0.08)', color: '#EA580C' },
-  Portfolio: { bg: 'rgba(236, 72, 153, 0.08)', color: '#DB2777' },
-  Recommendation: { bg: 'rgba(234, 179, 8, 0.08)', color: '#CA8A04' },
-  Other: { bg: 'rgba(100, 116, 139, 0.08)', color: '#475569' },
+// ── Category palette — desaturated pastels for dark mode ──
+const _dark = () => document.documentElement.getAttribute('data-theme') === 'dark';
+const CATEGORY_LIGHT = {
+  Testing:        { bg: 'rgba(59, 130, 246, 0.08)',  color: '#2563EB' },
+  Application:    { bg: 'rgba(139, 92, 246, 0.08)',  color: '#7C3AED' },
+  Financial:      { bg: 'rgba(34, 197, 94, 0.08)',   color: '#16A34A' },
+  Visit:          { bg: 'rgba(249, 115, 22, 0.08)',  color: '#EA580C' },
+  Portfolio:      { bg: 'rgba(236, 72, 153, 0.08)',  color: '#DB2777' },
+  Recommendation: { bg: 'rgba(234, 179, 8, 0.08)',   color: '#CA8A04' },
+  Other:          { bg: 'rgba(100, 116, 139, 0.08)', color: '#475569' },
 };
+const CATEGORY_DARK = {
+  Testing:        { bg: 'rgba(125, 211, 252, 0.10)', color: '#7DD3FC' },
+  Application:    { bg: 'rgba(196, 181, 253, 0.10)', color: '#C4B5FD' },
+  Financial:      { bg: 'rgba(134, 239, 172, 0.10)', color: '#86EFAC' },
+  Visit:          { bg: 'rgba(253, 186, 116, 0.10)', color: '#FDBA74' },
+  Portfolio:      { bg: 'rgba(249, 168, 212, 0.10)', color: '#F9A8D4' },
+  Recommendation: { bg: 'rgba(253, 230, 138, 0.10)', color: '#FDE68A' },
+  Other:          { bg: 'rgba(168, 162, 158, 0.10)', color: '#A8A29E' },
+};
+const getCategoryStyles = () => _dark() ? CATEGORY_DARK : CATEGORY_LIGHT;
 const DEFAULT_PILL = { bg: 'rgba(100, 116, 139, 0.08)', color: '#475569' };
 
 // ── Priority helpers — derived from due date urgency ──
@@ -100,7 +111,7 @@ function TaskRow({ task, index, onDone, onEdit, onDelete, onSnooze, readOnly }) 
   const [completing, setCompleting] = useState(false);
   const priority = getPriority(task);
   const pm = PRIORITY_META[priority];
-  const pill = CATEGORY_STYLES[task.category] || DEFAULT_PILL;
+  const pill = getCategoryStyles()[task.category] || DEFAULT_PILL;
 
   const handleComplete = useCallback(() => {
     setCompleting(true);
@@ -460,7 +471,7 @@ export default function TaskList({
                 className="task-list__done-container"
               >
                 {doneTasks.map((task, i) => {
-                  const pill = CATEGORY_STYLES[task.category] || DEFAULT_PILL;
+                  const pill = getCategoryStyles()[task.category] || DEFAULT_PILL;
                   return (
                     <div key={task.taskId} className={`task-done-row ${i > 0 ? 'task-done-row--bordered' : ''}`}>
                       <div className="task-done-row__check">

@@ -3,11 +3,14 @@ import { motion } from 'framer-motion';
 import { getSchoolColors, getSchoolShortName } from '../utils/schoolColors';
 import api from '../utils/api';
 
+const isDark = () => document.documentElement.getAttribute('data-theme') === 'dark';
+
 function getChanceLevel(chance) {
-  if (chance >= 70) return { label: 'Strong', color: '#22C55E', bg: 'rgba(34, 197, 94, 0.08)' };
-  if (chance >= 50) return { label: 'Good', color: '#3B82F6', bg: 'rgba(59, 130, 246, 0.08)' };
-  if (chance >= 30) return { label: 'Moderate', color: '#F59E0B', bg: 'rgba(245, 158, 11, 0.08)' };
-  return { label: 'Reach', color: '#EF4444', bg: 'rgba(239, 68, 68, 0.08)' };
+  const dark = isDark();
+  if (chance >= 70) return { label: 'Strong', color: dark ? '#86EFAC' : '#22C55E', bg: dark ? 'rgba(134,239,172,0.10)' : 'rgba(34, 197, 94, 0.08)' };
+  if (chance >= 50) return { label: 'Good',   color: dark ? '#7DD3FC' : '#3B82F6', bg: dark ? 'rgba(125,211,252,0.10)' : 'rgba(59, 130, 246, 0.08)' };
+  if (chance >= 30) return { label: 'Moderate', color: dark ? '#FDE68A' : '#F59E0B', bg: dark ? 'rgba(253,230,138,0.10)' : 'rgba(245, 158, 11, 0.08)' };
+  return { label: 'Reach', color: dark ? '#FCA5A5' : '#EF4444', bg: dark ? 'rgba(252,165,165,0.10)' : 'rgba(239, 68, 68, 0.08)' };
 }
 
 function ChanceRing({ percent, color, size = 64 }) {
@@ -181,7 +184,7 @@ function SchoolChanceCard({ data, index }) {
           {/* AI Tip or Math tip */}
           {data.aiTip ? (
             <div className="chance-card__tip">
-              <svg className="chance-card__tip-icon" style={{ color: '#8b5cf6' }} width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+              <svg className="chance-card__tip-icon" style={{ color: isDark() ? '#C4B5FD' : '#8b5cf6' }} width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
               <span>
@@ -298,7 +301,7 @@ export default function AdmissionChances({ userId, profile }) {
             style={{
               fontSize: '12px', fontWeight: 600, padding: '6px 14px',
               borderRadius: '8px', border: '1px solid var(--color-border)',
-              background: 'transparent', color: 'var(--color-primary)',
+              background: 'transparent', color: 'var(--color-accent-text, var(--color-primary))',
               cursor: 'pointer',
             }}
           >
