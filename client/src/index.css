@@ -283,6 +283,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   position: relative;
+  overflow-x: hidden;
   min-height: 100vh;
 }
 
@@ -410,11 +411,24 @@ body>#root {
    Profile Stats Row + Progress Ring
    ══════════════════════════════════════════════════════════════ */
 
+/* ── Profile Summary Wrapper ── */
+.profile-summary-wrapper {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  width: 100%;
+  overflow: hidden;
+  min-width: 0;
+}
+
 .profile-stats-row {
   display: grid;
   grid-template-columns: repeat(3, 1fr) auto;
   gap: 1rem;
   flex: 1;
+  min-width: 0;
   align-items: stretch;
 }
 
@@ -3891,4 +3905,98 @@ body>#root {
 
 [data-theme="dark"] .comp-school-name {
   filter: brightness(1.25);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   Journey Timeline
+   ══════════════════════════════════════════════════════════════ */
+
+/* Desktop: horizontal layout (default) */
+.journey-timeline-card {
+  overflow-x: auto;
+}
+
+.journey-timeline {
+  display: flex;
+  align-items: center;
+  min-width: 800px;
+}
+
+.journey-timeline__step {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.journey-timeline__node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.journey-timeline__label {
+  margin-top: 0.625rem;
+  text-align: center;
+}
+
+.journey-timeline__connector {
+  flex: 1;
+  height: 4px;
+  margin: 0 0.25rem;
+  border-radius: 9999px;
+  transition: background-color 0.2s;
+  overflow: hidden;
+}
+
+/* ── Mobile: vertical stepper ── */
+@media (max-width: 640px) {
+  .journey-timeline-card {
+    overflow-x: hidden;
+  }
+
+  .journey-timeline {
+    flex-direction: column;
+    align-items: flex-start;
+    min-width: 0;
+    gap: 0;
+  }
+
+  .journey-timeline__step {
+    flex-direction: column;
+    align-items: flex-start;
+    flex: none;
+    width: 100%;
+  }
+
+  .journey-timeline__node {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .journey-timeline__label {
+    margin-top: 0;
+    text-align: left;
+  }
+
+  .journey-timeline__connector {
+    width: 4px;
+    height: 1.25rem;
+    flex: none;
+    margin: 0.25rem 0 0.25rem calc(1.125rem - 2px); /* center under the 36px dot */
+    border-radius: 9999px;
+  }
+}
+
+/* ── Mobile: profile summary stacking ── */
+@media (max-width: 768px) {
+  .profile-summary-wrapper {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .school-chips-section {
+    align-items: flex-start;
+  }
 }

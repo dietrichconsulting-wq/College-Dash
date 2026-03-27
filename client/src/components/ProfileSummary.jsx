@@ -183,7 +183,7 @@ export default function ProfileSummary({ profile, completionPercent, onReorderSc
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.1 }}
-      className="flex flex-col md:flex-row items-stretch md:items-start justify-between gap-6 mb-8 w-full"
+      className="profile-summary-wrapper"
     >
       {/* Stats + Progress ring on the left */}
       <div className="profile-stats-row">
